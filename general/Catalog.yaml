@@ -1,0 +1,9 @@
+---
+apiVersion: kubara.io/v1alpha1
+kind: Catalog
+metadata:
+  name: general
+  annotations:
+    org.opencontainers.image.source: https://github.com/kubara-io/catalogs
+spec:
+  version: 1.0.0
