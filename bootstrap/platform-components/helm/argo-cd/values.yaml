@@ -1,29 +1,38 @@
 ---
 namespace: {}
 externalSecrets: {}
+dexRestarter:
+  enabled: true
+  image:
+    repository: "alpine/kubectl"
+    tag: "1.36.2"
+  maxAttempts: "30"
+  interval: "10"  # in seconds
+  secretName: "oauth2-credentials"
 defaultProject:
   name: default
   description: |-
     The default project is just here to validate your authentication.
     It is completely restricted and cannot be used to spawn any projects.
   clusterResourceBlacklist:
-    - group: '*'
-      kind: '*'
+    - group: "*"
+      kind: "*"
   clusterResourceWhitelist:
-    - group: ''
-      kind: ''
+    - group: ""
+      kind: ""
   destinations:
-    - name: ''
-      server: ''
-  sourceRepos: ['']
+    - name: ""
+      server: ""
+  sourceRepos:
+    - ""
 argo-cd:
   createAggregateRoles: true
   notifications:
     enabled: false
   global:
     env:
-      - name: TZ
-        value: Europe/Berlin
+      - name: "TZ"
+        value: "Europe/Berlin"
     pdb:
       enabled: false
       minAvailable: 1
@@ -73,7 +82,8 @@ argo-cd:
     pdb:
       enabled: false
       minAvailable: 1
-    extraArgs: [--enable-gzip]
+    extraArgs:
+      - --enable-gzip
     metrics:
       enabled: false
     serviceAccount:
@@ -89,13 +99,13 @@ argo-cd:
       exec.enabled: false
       server.rbac.log.enforce.enable: true
       jsonnet.enable: false
-      resource.respectRBAC: normal
+      resource.respectRBAC: "normal"
       accounts.wizard: login, apiKey
       accounts.wizard.enabled: true
       admin.enabled: false
     rbac:
       create: true
-      policy.default: role:authenticated
+      policy.default: "role:authenticated"
       policy.authenticated.csv: |
         p, role:authenticated, projects, get, default, allow
       policy.wizard.csv: |
@@ -140,12 +150,10 @@ argo-cd:
             labels:
               severity: critical
             annotations:
-              summary: '[Argo CD] No reported applications'
+              summary: "[Argo CD] No reported applications"
               description: >
-                Argo CD has not reported any applications data for the past 15 minutes
-                which
-                means that it must be down or not functioning properly.  This needs
-                to be
+                Argo CD has not reported any applications data for the past 15 minutes which
+                means that it must be down or not functioning properly.  This needs to be
                 resolved for this cloud to continue to maintain state.
           - alert: ArgoAppNotSynced
             expr: |
@@ -154,12 +162,10 @@ argo-cd:
             labels:
               severity: warning
             annotations:
-              summary: '[{{`{{$labels.name}}`}}] Application not synchronized'
+              summary: "[{{`{{$labels.name}}`}}] Application not synchronized"
               description: >
-                The application [{{`{{$labels.name}}`}} has not been synchronized
-                for over
-                12 hours which means that the state of this cloud has drifted away
-                from the
+                The application [{{`{{$labels.name}}`}} has not been synchronized for over
+                12 hours which means that the state of this cloud has drifted away from the
                 state inside Git.
           - alert: ArgoAppUnhealthy
             expr: |
@@ -168,6 +174,6 @@ argo-cd:
             labels:
               severity: warning
             annotations:
-              summary: '[{{`{{$labels.name}}`}}] Application not synchronized'
+              summary: "[{{`{{$labels.name}}`}}] Application not synchronized"
               description: >-
                 The application [{{`{{$labels.name}}`}} is currently not healthy.

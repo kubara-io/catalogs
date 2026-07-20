@@ -86,6 +86,7 @@ inClusterName: {{ .cluster.name }}
 inClusterSecretLabels:
 {{- if (eq .cluster.type "hub") }}
 ## Hub labels
+  argocd: "{{ .cluster.argocd.selfManaged | default "disabled" }}"
 {{- range $serviceName := keys .cluster.services | sortAlpha }}
   {{ $serviceName }}: "{{ index $.cluster.services $serviceName "status" | default "disabled" }}"
 {{- end }}

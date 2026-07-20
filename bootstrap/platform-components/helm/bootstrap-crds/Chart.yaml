@@ -1,0 +1,19 @@
+---
+apiVersion: v2
+name: crds
+description: A wrapper helm chart library for all CRD dependencies necessary for kubara
+type: library
+version: 1.0.0
+dependencies:
+  # Certificate CRDs
+  - name: cert-manager
+    version: v1.21.0
+    repository: https://charts.jetstack.io
+  # Observability CRDs
+  - name: kube-prometheus-stack
+    repository: https://prometheus-community.github.io/helm-charts
+    version: 87.15.1
+  # External-Secret CRDs
+  - name: external-secrets
+    repository: https://charts.external-secrets.io/
+    version: 2.7.0  # https://artifacthub.io/packages/helm/external-secrets-operator/external-secrets
