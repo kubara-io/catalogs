@@ -74,7 +74,7 @@ jobs:
         run: .scripts/source-terraform-checks.sh
 
   integration-generate:
-    name: Generate with kubara
+    name: Generate all services with kubara
     runs-on: ubuntu-latest
     env:
       KUBARA_PROJECT_NAME: kubara
@@ -177,6 +177,16 @@ jobs:
 
       - name: Populate configuration
         run: .ci/kubara/.scripts/kubara-config-update.sh "$OUTPUT_GENERATED_DIR/config.yaml"
+
+      - name: Enable all services
+        run: |
+          yq eval '
+            .clusters[0].services[].status = "enabled" |
+            .clusters[0].services.metallb.config.publicLoadBalancerIPs = "192.0.2.10" |
+            .clusters[0].services.metallb.config.loadBalancerAddressPool = ["192.0.2.10-192.0.2.20"] |
+            .clusters[0].services.velero.config.backupStorage.bucketName = "kubara-ci-velero" |
+            .clusters[0].services.velero.config.backupStorage.s3Url = "https://object.storage.eu01.onstackit.cloud"
+          ' -i "$OUTPUT_GENERATED_DIR/config.yaml"
 
       - name: Generate platform artifacts
         env:
