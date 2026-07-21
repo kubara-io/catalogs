@@ -127,7 +127,7 @@ externalSecrets:
     name: {{ .cluster.name }}-{{ .cluster.stage }}
 {{ end }}
 
-{{ if (eq (index .cluster.services "oauth2-proxy" "status") "enabled") }}
+{{ if eq (dig "cluster" "services" "oauth2-proxy" "status" "disabled" .) "enabled" }}
   secrets:
     oauth2-credentials:
       dataFrom:
@@ -211,7 +211,7 @@ argo-cd:
       rules:
         enabled: false
       serviceMonitor:
-        {{- if (eq (index .cluster.services "kube-prometheus-stack" "status") "enabled") }}
+        {{- if eq (dig "cluster" "services" "kube-prometheus-stack" "status" "disabled" .) "enabled" }}
         enabled: true
         {{- end }}
         additionalLabels:
