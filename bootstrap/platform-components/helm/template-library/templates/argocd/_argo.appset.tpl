@@ -2,6 +2,9 @@
 {{- $globalCtx := index . 1 }}
 {{- $localCtx := index . 0 }}
 {{- range $key, $app := $localCtx.apps }}
+{{- $appName := default "" $app.name }}
+{{- $appPath := default "" $app.path }}
+{{- $isArgoCdApp := or (eq $appName "argo-cd") (eq $appName "argocd") (eq $appPath "argo-cd") (eq $appPath "argocd") }}
 apiVersion: argoproj.io/v1alpha1
 kind: ApplicationSet
 metadata:
@@ -14,7 +17,11 @@ spec:
           matchLabels:
             {{ $app.name }}: enabled
   syncPolicy:
+    {{- if $isArgoCdApp }}
+    preserveResourcesOnDeletion: true
+    {{- else }}
     preserveResourcesOnDeletion: {{ default false $app.preserveResourcesOnDeletion }}
+    {{- end }}
   template:
     metadata:
       name: "{{ `{{name}}` }}-{{ $app.name }}"

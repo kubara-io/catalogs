@@ -2,7 +2,7 @@
 apiVersion: v2
 name: crds
 description: A wrapper helm chart library for all CRD dependencies necessary for kubara
-type: library
+type: application
 version: 1.0.0
 dependencies:
   # Certificate CRDs
@@ -15,5 +15,5 @@ dependencies:
     version: 87.15.1
   # External-Secret CRDs
   - name: external-secrets
-    repository: https://charts.external-secrets.io/
+    repository: https://charts.external-secrets.io
     version: 2.7.0  # https://artifacthub.io/packages/helm/external-secrets-operator/external-secrets
