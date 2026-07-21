@@ -57,4 +57,3 @@ if [[ ${#FAILED[@]} -gt 0 ]]; then
 fi
 
 echo "All Helm source checks passed."
-
