@@ -2,6 +2,8 @@
 
 This layer configures OpenBao after the CCE infrastructure layer has installed OpenBao and the operator has initialized and unsealed it.
 
+Terraform 1.11 or newer is required because the Vault provider configuration uses write-only attributes for sensitive OIDC credentials.
+
 The Terraform state uses the same OBS backend bucket as the infrastructure layer, but a separate state key:
 
 ```hcl
