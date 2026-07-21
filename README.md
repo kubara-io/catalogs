@@ -13,6 +13,18 @@ Today this repo contains the official catalogs that kubara uses as its default p
 
 These catalogs are versioned and meant to be packaged and distributed as OCI artifacts.
 
+## Publishing
+
+Catalogs are published independently from git tags. Before creating a tag,
+update `spec.version` in the corresponding `Catalog.yaml` and merge that change
+to `main`.
+
+- `bootstrap-v1.0.1` publishes `bootstrap/` as version `1.0.1`
+- `general-v1.0.1` publishes `general/` as version `1.0.1`
+
+The tag version must match the catalog manifest exactly. Published versions are
+immutable, so use a new version instead of moving or recreating a release tag.
+
 ## What is this repo for?
 
 This repo is the maintainable source for the official kubara catalogs.

@@ -1,0 +1,107 @@
+name: publish catalog
+
+on:
+  push:
+    tags:
+      - "bootstrap-v*"
+      - "general-v*"
+
+permissions:
+  contents: read
+  packages: write
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  KUBARA_REF: main
+
+jobs:
+  publish:
+    name: Publish catalog
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout catalogs
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          fetch-depth: 0
+
+      - name: Resolve catalog and version
+        id: release
+        env:
+          TAG: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+          if ! git merge-base --is-ancestor "$GITHUB_SHA" origin/main; then
+            echo "Release tags must point to a commit on main" >&2
+            exit 1
+          fi
+
+          case "$TAG" in
+            bootstrap-v*) catalog=bootstrap; version="${TAG#bootstrap-v}" ;;
+            general-v*) catalog=general; version="${TAG#general-v}" ;;
+            *) echo "Unsupported tag: $TAG" >&2; exit 1 ;;
+          esac
+
+          manifest_version="$(awk '$1 == "version:" { print $2; exit }' "$catalog/Catalog.yaml")"
+          if [[ -z "$version" || "$version" != "$manifest_version" ]]; then
+            echo "Tag version $version does not match $catalog/Catalog.yaml ($manifest_version)" >&2
+            exit 1
+          fi
+
+          ref="oci://ghcr.io/${GITHUB_REPOSITORY_OWNER}/catalogs/${catalog}:${version}"
+          {
+            echo "catalog=$catalog"
+            echo "version=$version"
+            echo "ref=$ref"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Checkout kubara CLI
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          repository: kubara-io/kubara
+          ref: ${{ env.KUBARA_REF }}
+          path: .ci/kubara
+
+      - name: Setup Go
+        uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6.5.0
+        with:
+          go-version-file: .ci/kubara/src/go.mod
+          cache-dependency-path: .ci/kubara/src/go.sum
+
+      - name: Build kubara CLI
+        working-directory: .ci/kubara/src
+        run: go build -o "${RUNNER_TEMP}/kubara" .
+
+      - name: Login to GitHub Container Registry
+        env:
+          GHCR_TOKEN: ${{ github.token }}
+          HOME: ${{ runner.temp }}/kubara-home
+        run: |
+          printf '%s' "$GHCR_TOKEN" | "${RUNNER_TEMP}/kubara" catalog login \
+            --username "$GITHUB_ACTOR" \
+            --password-stdin \
+            ghcr.io
+
+      - name: Ensure version is not published
+        env:
+          CATALOG_REF: ${{ steps.release.outputs.ref }}
+          HOME: ${{ runner.temp }}/kubara-home
+        run: |
+          if "${RUNNER_TEMP}/kubara" catalog pull "$CATALOG_REF" >/dev/null 2>&1; then
+            echo "Catalog version already exists: $CATALOG_REF" >&2
+            exit 1
+          fi
+
+      - name: Package and publish catalog
+        env:
+          CATALOG: ${{ steps.release.outputs.catalog }}
+          CATALOG_REF: ${{ steps.release.outputs.ref }}
+          HOME: ${{ runner.temp }}/kubara-home
+        run: |
+          set -euo pipefail
+          cd "$CATALOG"
+          "${RUNNER_TEMP}/kubara" catalog package \
+            "oci://ghcr.io/${GITHUB_REPOSITORY_OWNER}/catalogs/"
+          "${RUNNER_TEMP}/kubara" catalog push "$CATALOG_REF"

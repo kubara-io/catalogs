@@ -1,204 +1,89 @@
-name: 'pr-checks'
+name: catalog checks
+
 on:
   push:
-    branches:
-      - 'main'
+    branches: [main]
     paths:
-      - 'src/**'
-      - '.github/workflows/pr-checks.yaml'
-      - '.scripts/**'
-      - '.github/helm-profiles/**'
+      - "bootstrap/**"
+      - "general/**"
+      - ".scripts/**"
+      - ".github/workflows/pr-checks.yaml"
   pull_request:
-    branches:
-      - 'main'
+    branches: [main]
     paths:
-      - 'src/**'
-      - '.github/workflows/pr-checks.yaml'
-      - '.scripts/**'
-      - '.github/helm-profiles/**'
+      - "bootstrap/**"
+      - "general/**"
+      - ".scripts/**"
+      - ".github/workflows/pr-checks.yaml"
   workflow_dispatch:
-
-env:
-  CODE_PATH: ${{ github.workspace }}/src
-  REPORT_DIR: ${{ github.workspace }}/reports
-  RENDER_DIR: ${{ github.workspace }}/rendered
-  OUTPUT_GENERATED_DIR: ${{ github.workspace }}/output-generated
-  # renovate: datasource=github-releases depName=yannh/kubeconform
-  KUBECONFORM_VERSION: "v0.8.0"
-  # renovate: datasource=github-releases depName=terraform-linters/tflint
-  TFLINT_VERSION: "v0.63.1"
-  ARTIFACT_RETENTION_DAYS: "15"
 
 permissions:
   contents: read
-  packages: read
-  security-events: write
-  actions: read
+
+env:
+  # Keep catalog validation aligned with the CLI implementation used by kubara.
+  KUBARA_REF: main
+  # renovate: datasource=github-releases depName=terraform-linters/tflint
+  TFLINT_VERSION: "v0.63.1"
 
 jobs:
-  run-kubara-init-and-generate:
-    needs: [go-static-analysis, go-unit-tests]
+  catalog-packaging:
+    name: Validate catalog packages
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        shell: bash
-        working-directory: ${{ github.workspace }}
-    outputs:
-      success: ${{ steps.commit.outputs.success }}
-    env:
-      # .env updates (must match src/internal/envconfig/env)
-      KUBARA_PROJECT_NAME: "kubara"
-      KUBARA_PROJECT_STAGE: "tst"
-      KUBARA_DOCKERCONFIG_BASE64: "000000"
-      KUBARA_ARGOCD_WIZARD_ACCOUNT_PASSWORD: "000000"
-      KUBARA_ARGOCD_HELM_REPO_USERNAME: "git"
-      KUBARA_ARGOCD_HELM_REPO_PASSWORD: "000000"
-      KUBARA_ARGOCD_HELM_REPO_URL: "https://kubara.io/kubara.git"
-      KUBARA_ARGOCD_GIT_HTTPS_URL: "https://kubara.io/kubara.git"
-      KUBARA_ARGOCD_GIT_PAT_OR_PASSWORD: "000000"
-      KUBARA_ARGOCD_GIT_USERNAME: "git"
-
-      # config.yaml updates
-      KUBARA_DNS_NAME: "kubara-tst.stackit.run"
-      KUBARA_STACKIT_PROJECT_ID: "00000000-0000-0000-0000-000000000000"
-      KUBARA_TERRAFORM_PROVIDER: "stackit"
-      KUBARA_CLUSTER_TYPE: "hub"
-      KUBARA_SSO_ORG: "Kubara"
-      KUBARA_SSO_TEAM: "Test"
-      KUBARA_KUBERNETES_TYPE: "ske"
-      KUBARA_KUBERNETES_VERSION: "1.35.0"
-
     steps:
-      - name: Checkout
+      - name: Checkout catalogs
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+
+      - name: Checkout kubara CLI
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          repository: kubara-io/kubara
+          ref: ${{ env.KUBARA_REF }}
+          path: .ci/kubara
 
       - name: Setup Go
         uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6.5.0
         with:
-          go-version-file: src/go.mod
-          cache: true
-          cache-dependency-path: src/go.sum
+          go-version-file: .ci/kubara/src/go.mod
+          cache-dependency-path: .ci/kubara/src/go.sum
 
-      - name: Create output directory
-        run: |
-          echo "output dir: ${{ env.OUTPUT_GENERATED_DIR }}"
-          mkdir -p "${{ env.OUTPUT_GENERATED_DIR }}"
+      - name: Build kubara CLI
+        working-directory: .ci/kubara/src
+        run: go build -o "${RUNNER_TEMP}/kubara" .
 
-      - name: kubara init --prep
-        run: |
-          set -euo pipefail
-          cd src
-          go run main.go --work-dir "${{ env.OUTPUT_GENERATED_DIR }}" init --prep
-
-      - name: Update .env (strict template mode)
+      - name: Validate catalog packaging
+        env:
+          HOME: ${{ runner.temp }}/kubara-home
         run: |
           set -euo pipefail
-          .scripts/kubara-env-update.sh "${{ env.OUTPUT_GENERATED_DIR }}/.env"
+          for catalog in bootstrap general; do
+            echo "::group::Package ${catalog}"
+            (
+              cd "${catalog}"
+              "${RUNNER_TEMP}/kubara" catalog package oci://local.invalid/kubara/catalogs/
+            )
+            echo "::endgroup::"
+          done
 
-      - name: kubara init
-        run: |
-          set -euo pipefail
-          cd src
-          go run main.go --work-dir "${{ env.OUTPUT_GENERATED_DIR }}" init
-
-      - name: Update config.yaml (strict mode)
-        run: |
-          set -euo pipefail
-          .scripts/kubara-config-update.sh "${{ env.OUTPUT_GENERATED_DIR }}/config.yaml"
-
-      - name: Generate kubara artifacts
-        run: |
-          cd src
-          go run main.go --work-dir "${{ env.OUTPUT_GENERATED_DIR }}" generate
-
-      - name: Upload generated helm and terraform files
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
-        with:
-          name: kubara-generated-files-${{ github.run_attempt }}-${{ github.sha }}-${{ github.run_number }}
-          retention-days: ${{ env.ARTIFACT_RETENTION_DAYS }}
-          path: ${{ env.OUTPUT_GENERATED_DIR }}
-
-  helm-checks:
-    needs: run-kubara-init-and-generate
+  helm:
+    name: Validate Helm charts
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        shell: bash
     steps:
-      - name: Checkout CI overlay profiles
+      - name: Checkout catalogs
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
-        with:
-          sparse-checkout: |
-            .github/helm-profiles
-            .scripts
 
-      - name: Download generated kubara artifacts
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
-        with:
-          name: kubara-generated-files-${{ github.run_attempt }}-${{ github.sha }}-${{ github.run_number }}
+      - name: Verify Helm
+        run: helm version --short
 
-      - name: Verify preinstalled Helm
-        run: |
-          set -euo pipefail
-          helm version --short
-
-      - name: Cache kubeconform
-        id: cache-kubeconform
-        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
-        with:
-          path: ~/.local/bin/kubeconform
-          key: tools-kubeconform-${{ env.KUBECONFORM_VERSION }}-${{ runner.os }}-${{ runner.arch }}
-
-      - name: Install kubeconform (if missing)
-        run: |
-          set -euo pipefail
-          mkdir -p ~/.local/bin
-
-          if ! [ -x "$HOME/.local/bin/kubeconform" ]; then
-            KUBECONFORM_ARCHIVE="kubeconform-linux-amd64.tar.gz"
-            KUBECONFORM_BASE_URL="https://github.com/yannh/kubeconform/releases/download/${{ env.KUBECONFORM_VERSION }}"
-            KUBECONFORM_SHA256="$(curl -fsSL "$KUBECONFORM_BASE_URL/CHECKSUMS" | awk '/  kubeconform-linux-amd64.tar.gz$/ {print $1}')"
-            TMP_ARCHIVE="$(mktemp)"
-
-            curl -fsSL "$KUBECONFORM_BASE_URL/$KUBECONFORM_ARCHIVE" -o "$TMP_ARCHIVE"
-            echo "$KUBECONFORM_SHA256  $TMP_ARCHIVE" | sha256sum -c -
-            tar xzf "$TMP_ARCHIVE" -C "$HOME/.local/bin" kubeconform
-            rm -f "$TMP_ARCHIVE"
-            chmod +x "$HOME/.local/bin/kubeconform"
-          fi
-
-          kubeconform -v
-
-      - name: Lint, render and validate Helm charts
+      - name: Run Helm checks
         run: .scripts/helm-checks.sh
 
-      - name: Upload Helm validation results
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
-        if: always()
-        with:
-          name: helm-validation-${{ github.run_attempt }}-${{ github.sha }}-${{ github.run_number }}
-          retention-days: ${{ env.ARTIFACT_RETENTION_DAYS }}
-          path: |
-            ${{ env.REPORT_DIR }}/helm/
-            ${{ env.RENDER_DIR }}/
-
-  terraform-checks:
-    needs: run-kubara-init-and-generate
+  terraform:
+    name: Validate Terraform modules
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        shell: bash
     steps:
-      - name: Checkout CI scripts
+      - name: Checkout catalogs
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
-        with:
-          sparse-checkout: |
-            .scripts
-
-      - name: Download generated kubara artifacts
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
-        with:
-          name: kubara-generated-files-${{ github.run_attempt }}-${{ github.sha }}-${{ github.run_number }}
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@dfe3c3f87815947d99a8997f908cb6525fc44e9e # v4
@@ -210,13 +95,5 @@ jobs:
         with:
           tflint_version: ${{ env.TFLINT_VERSION }}
 
-      - name: Validate Terraform modules and environments
+      - name: Run Terraform checks
         run: .scripts/terraform-checks.sh
-
-      - name: Upload Terraform validation results
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
-        if: always()
-        with:
-          name: terraform-validation-${{ github.run_attempt }}-${{ github.sha }}-${{ github.run_number }}
-          retention-days: ${{ env.ARTIFACT_RETENTION_DAYS }}
-          path: ${{ env.REPORT_DIR }}/terraform
