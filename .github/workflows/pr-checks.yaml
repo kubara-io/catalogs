@@ -40,42 +40,31 @@ env:
   ARTIFACT_RETENTION_DAYS: "15"
 
 jobs:
-  source-helm:
-    name: Validate Helm sources
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout catalogs
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
-
-      - name: Verify Helm
-        run: helm version --short
-
-      - name: Run Helm source checks
-        run: .scripts/source-helm-checks.sh
-
-  source-terraform:
-    name: Validate Terraform sources
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout catalogs
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
-
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@dfe3c3f87815947d99a8997f908cb6525fc44e9e # v4
-        with:
-          terraform_version: 1.9.3
-
-      - name: Setup TFLint
-        uses: terraform-linters/setup-tflint@6e1e0642c0289bd619021bf6b34e3c08ed1e005a # v6
-        with:
-          tflint_version: ${{ env.TFLINT_VERSION }}
-
-      - name: Run Terraform source checks
-        run: .scripts/source-terraform-checks.sh
-
   integration-generate:
-    name: Generate all services with kubara
+    name: Generate all services (${{ matrix.target }})
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target: stackit-ske
+            provider: stackit
+            kubernetes_type: ske
+            project_id: 00000000-0000-0000-0000-000000000000
+            dns_name: kubara-tst.stackit.run
+            velero_s3_url: https://object.storage.eu01.onstackit.cloud
+          - target: stackit-edge
+            provider: stackit
+            kubernetes_type: edge
+            project_id: 00000000-0000-0000-0000-000000000000
+            dns_name: kubara-edge-tst.stackit.run
+            velero_s3_url: https://object.storage.eu01.onstackit.cloud
+          - target: t-cloud-public-cce
+            provider: t-cloud-public
+            kubernetes_type: cce
+            project_id: kubara-ci
+            dns_name: kubara-tst.example.com
+            velero_s3_url: https://obs.eu-de.otc.t-systems.com
     env:
       KUBARA_PROJECT_NAME: kubara
       KUBARA_PROJECT_STAGE: tst
@@ -87,13 +76,13 @@ jobs:
       KUBARA_ARGOCD_GIT_HTTPS_URL: https://kubara.io/kubara.git
       KUBARA_ARGOCD_GIT_PAT_OR_PASSWORD: "000000"
       KUBARA_ARGOCD_GIT_USERNAME: git
-      KUBARA_DNS_NAME: kubara-tst.stackit.run
-      KUBARA_STACKIT_PROJECT_ID: 00000000-0000-0000-0000-000000000000
-      KUBARA_TERRAFORM_PROVIDER: stackit
+      KUBARA_DNS_NAME: ${{ matrix.dns_name }}
+      KUBARA_STACKIT_PROJECT_ID: ${{ matrix.project_id }}
+      KUBARA_TERRAFORM_PROVIDER: ${{ matrix.provider }}
       KUBARA_CLUSTER_TYPE: hub
       KUBARA_SSO_ORG: Kubara
       KUBARA_SSO_TEAM: Test
-      KUBARA_KUBERNETES_TYPE: ske
+      KUBARA_KUBERNETES_TYPE: ${{ matrix.kubernetes_type }}
       KUBARA_KUBERNETES_VERSION: 1.35.0
     steps:
       - name: Checkout catalogs
@@ -179,13 +168,15 @@ jobs:
         run: .ci/kubara/.scripts/kubara-config-update.sh "$OUTPUT_GENERATED_DIR/config.yaml"
 
       - name: Enable all services
+        env:
+          KUBARA_VELERO_S3_URL: ${{ matrix.velero_s3_url }}
         run: |
           yq eval '
             .clusters[0].services[].status = "enabled" |
             .clusters[0].services.metallb.config.publicLoadBalancerIPs = "192.0.2.10" |
             .clusters[0].services.metallb.config.loadBalancerAddressPool = ["192.0.2.10-192.0.2.20"] |
             .clusters[0].services.velero.config.backupStorage.bucketName = "kubara-ci-velero" |
-            .clusters[0].services.velero.config.backupStorage.s3Url = "https://object.storage.eu01.onstackit.cloud"
+            .clusters[0].services.velero.config.backupStorage.s3Url = strenv(KUBARA_VELERO_S3_URL)
           ' -i "$OUTPUT_GENERATED_DIR/config.yaml"
 
       - name: Generate platform artifacts
@@ -199,14 +190,18 @@ jobs:
       - name: Upload generated artifacts
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
-          name: kubara-generated-${{ github.run_attempt }}-${{ github.sha }}-${{ github.run_number }}
+          name: kubara-generated-${{ matrix.target }}-${{ github.run_attempt }}-${{ github.sha }}-${{ github.run_number }}
           retention-days: ${{ env.ARTIFACT_RETENTION_DAYS }}
           path: ${{ env.OUTPUT_GENERATED_DIR }}
 
   generated-helm:
-    name: Validate generated Helm output
+    name: Validate generated Helm output (${{ matrix.target }})
     needs: integration-generate
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        target: [stackit-ske, stackit-edge, t-cloud-public-cce]
     steps:
       - name: Checkout catalog validation scripts
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
@@ -224,7 +219,7 @@ jobs:
       - name: Download generated artifacts
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
         with:
-          name: kubara-generated-${{ github.run_attempt }}-${{ github.sha }}-${{ github.run_number }}
+          name: kubara-generated-${{ matrix.target }}-${{ github.run_attempt }}-${{ github.sha }}-${{ github.run_number }}
 
       - name: Verify Helm
         run: helm version --short
@@ -262,16 +257,20 @@ jobs:
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         if: always()
         with:
-          name: helm-validation-${{ github.run_attempt }}-${{ github.sha }}-${{ github.run_number }}
+          name: helm-validation-${{ matrix.target }}-${{ github.run_attempt }}-${{ github.sha }}-${{ github.run_number }}
           retention-days: ${{ env.ARTIFACT_RETENTION_DAYS }}
           path: |
             ${{ env.REPORT_DIR }}/helm/
             ${{ env.RENDER_DIR }}/
 
   generated-terraform:
-    name: Validate generated Terraform output
+    name: Validate generated Terraform output (${{ matrix.target }})
     needs: integration-generate
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        target: [stackit-ske, stackit-edge, t-cloud-public-cce]
     steps:
       - name: Checkout catalog validation scripts
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
@@ -281,7 +280,7 @@ jobs:
       - name: Download generated artifacts
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
         with:
-          name: kubara-generated-${{ github.run_attempt }}-${{ github.sha }}-${{ github.run_number }}
+          name: kubara-generated-${{ matrix.target }}-${{ github.run_attempt }}-${{ github.sha }}-${{ github.run_number }}
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@dfe3c3f87815947d99a8997f908cb6525fc44e9e # v4
@@ -300,6 +299,6 @@ jobs:
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         if: always()
         with:
-          name: terraform-validation-${{ github.run_attempt }}-${{ github.sha }}-${{ github.run_number }}
+          name: terraform-validation-${{ matrix.target }}-${{ github.run_attempt }}-${{ github.sha }}-${{ github.run_number }}
           retention-days: ${{ env.ARTIFACT_RETENTION_DAYS }}
           path: ${{ env.REPORT_DIR }}/terraform

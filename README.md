@@ -28,9 +28,11 @@ immutable, so use a new version instead of moving or recreating a release tag.
 ## Compatibility checks
 
 Catalog changes are packaged locally and exercised through the full kubara
-`init` and `generate` flow before their generated Helm and Terraform output is
-validated. The default kubara revision is pinned in the catalog checks workflow
-to keep pull request results reproducible.
+`init` and `generate` flow with every service enabled before their generated
+Helm and Terraform output is validated. The compatibility matrix covers every
+supported provider and Kubernetes type combination: STACKIT SKE, STACKIT Edge,
+and T Cloud Public CCE. The default kubara revision is pinned in the catalog
+checks workflow to keep pull request results reproducible.
 
 Maintainers can run the `catalog checks` workflow manually with a `kubara_ref`
 override to test a tag, commit SHA, branch, or pull request ref. The pinned
