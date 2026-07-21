@@ -25,6 +25,18 @@ to `main`.
 The tag version must match the catalog manifest exactly. Published versions are
 immutable, so use a new version instead of moving or recreating a release tag.
 
+## Compatibility checks
+
+Catalog changes are packaged locally and exercised through the full kubara
+`init` and `generate` flow before their generated Helm and Terraform output is
+validated. The default kubara revision is pinned in the catalog checks workflow
+to keep pull request results reproducible.
+
+Maintainers can run the `catalog checks` workflow manually with a `kubara_ref`
+override to test a tag, commit SHA, branch, or pull request ref. The pinned
+revision should move to the latest compatible stable release once the external
+catalog model is available in a kubara release.
+
 ## What is this repo for?
 
 This repo is the maintainable source for the official kubara catalogs.
