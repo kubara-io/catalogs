@@ -1,0 +1,90 @@
+---
+name: Generate platform
+description: Renders a kubara platform from the working-tree catalogs.
+
+inputs:
+  kubara:
+    description: Path to the kubara binary.
+    required: true
+  kubara-scripts:
+    description: Path to the kubara repository's .scripts directory.
+    required: true
+  work-dir:
+    description: Directory to generate into.
+    required: true
+  provider:
+    description: Terraform provider.
+    default: stackit
+  kubernetes-type:
+    description: Kubernetes flavour.
+    default: ske
+  dns-name:
+    default: kubara-tst.stackit.run
+  project-id:
+    default: 00000000-0000-0000-0000-000000000000
+  velero-s3-url:
+    default: https://object.storage.eu01.onstackit.cloud
+
+runs:
+  using: composite
+  steps:
+    - name: Generate platform
+      shell: bash
+      env:
+        HOME: ${{ runner.temp }}/kubara-home
+        KUBARA: ${{ inputs.kubara }}
+        SCRIPTS: ${{ inputs.kubara-scripts }}
+        WORK_DIR: ${{ inputs.work-dir }}
+        KUBARA_PROJECT_NAME: kubara
+        KUBARA_PROJECT_STAGE: tst
+        KUBARA_DOCKERCONFIG_BASE64: "000000"
+        KUBARA_ARGOCD_WIZARD_ACCOUNT_PASSWORD: "000000"
+        KUBARA_ARGOCD_HELM_REPO_USERNAME: git
+        KUBARA_ARGOCD_HELM_REPO_PASSWORD: "000000"
+        KUBARA_ARGOCD_HELM_REPO_URL: https://kubara.io/kubara.git
+        KUBARA_ARGOCD_GIT_HTTPS_URL: https://kubara.io/kubara.git
+        KUBARA_ARGOCD_GIT_PAT_OR_PASSWORD: "000000"
+        KUBARA_ARGOCD_GIT_USERNAME: git
+        KUBARA_CLUSTER_TYPE: hub
+        KUBARA_SSO_ORG: Kubara
+        KUBARA_SSO_TEAM: Test
+        KUBARA_KUBERNETES_VERSION: 1.35.0
+        KUBARA_TERRAFORM_PROVIDER: ${{ inputs.provider }}
+        KUBARA_KUBERNETES_TYPE: ${{ inputs.kubernetes-type }}
+        KUBARA_DNS_NAME: ${{ inputs.dns-name }}
+        KUBARA_STACKIT_PROJECT_ID: ${{ inputs.project-id }}
+        KUBARA_VELERO_S3_URL: ${{ inputs.velero-s3-url }}
+      run: |
+        set -euo pipefail
+        bootstrap="${GITHUB_WORKSPACE}/bootstrap"
+        general="${GITHUB_WORKSPACE}/general"
+        mkdir -p "$WORK_DIR"
+
+        # Cache the working-tree catalogs locally so `init` resolves them
+        # without reaching for the published versions.
+        for catalog in bootstrap general; do
+          (cd "$catalog" && "$KUBARA" catalog package "oci://ghcr.io/${GITHUB_REPOSITORY_OWNER}/catalogs/")
+        done
+
+        "$KUBARA" --work-dir "$WORK_DIR" init --prep
+        "$SCRIPTS/kubara-env-update.sh" "$WORK_DIR/.env"
+        "$KUBARA" --work-dir "$WORK_DIR" --catalog "$general" --catalog-overwrite init
+        "$SCRIPTS/kubara-config-update.sh" "$WORK_DIR/config.yaml"
+
+        # `init` writes the CLI's pinned catalog refs (…/general:1.1.0) into
+        # config.yaml. Left alone, `generate` would render the PUBLISHED catalog
+        # instead of this working tree — silently wrong on any version bump.
+        BOOTSTRAP="$bootstrap" GENERAL="$general" yq eval '
+          .bootstrapCatalog = strenv(BOOTSTRAP) |
+          .clusters[].catalogs = [strenv(GENERAL)]
+        ' -i "$WORK_DIR/config.yaml"
+
+        yq eval '
+          .clusters[0].services[].status = "enabled" |
+          .clusters[0].services.metallb.config.publicLoadBalancerIPs = "192.0.2.10" |
+          .clusters[0].services.metallb.config.loadBalancerAddressPool = ["192.0.2.10-192.0.2.20"] |
+          .clusters[0].services.velero.config.backupStorage.bucketName = "kubara-ci-velero" |
+          .clusters[0].services.velero.config.backupStorage.s3Url = strenv(KUBARA_VELERO_S3_URL)
+        ' -i "$WORK_DIR/config.yaml"
+
+        "$KUBARA" --work-dir "$WORK_DIR" generate
