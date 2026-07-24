@@ -9,6 +9,52 @@ dexRestarter:
   maxAttempts: "30"
   interval: "10"  # in seconds
   secretName: "oauth2-credentials"
+clusterCredentialRotator:
+  enabled: false
+  schedule: "0 * * * *"
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 1
+  failedJobsHistoryLimit: 3
+  startingDeadlineSeconds: 300
+  image:
+    repository: "alpine/kubectl"
+    tag: "1.36.2"
+    pullPolicy: IfNotPresent
+  serviceAccount:
+    create: true
+    name: "cluster-credential-rotator"
+  resources: {}
+  secret:
+    labelKey: "kubara.io/cluster-credential-rotator"
+    labelValue: "true"
+    requiredType: "kubara.io/argocd-cluster-bootstrap"
+    bootstrapKubeconfigKey: "bootstrapKubeconfig"
+    generatedConfigKey: "config"
+  remoteAccess:
+    namespace: "kubara"
+    serviceAccountName: "kubara-argocd-manager"
+    clusterRoleBindingName: "kubara-argocd-manager"
+    clusterRoleName: "cluster-admin"
+  token:
+    duration: "720h"
+    refreshBefore: "168h"
+  # Managed secrets are created separately and discovered by the configured label.
+  # The minimum supported shape is:
+  #
+  # apiVersion: v1
+  # kind: Secret
+  # metadata:
+  #   name: spoke-dev
+  #   namespace: argocd
+  #   labels:
+  #     argocd.argoproj.io/secret-type: cluster
+  #     kubara.io/cluster-credential-rotator: "true"
+  # type: kubara.io/argocd-cluster-bootstrap
+  # stringData:
+  #   bootstrapKubeconfig: |
+  #     apiVersion: v1
+  #     kind: Config
+  #     ...
 defaultProject:
   name: default
   description: |-
