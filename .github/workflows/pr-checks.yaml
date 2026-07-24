@@ -360,7 +360,7 @@ jobs:
           while read -r img; do
             echo "- $img" >> "$GITHUB_STEP_SUMMARY"
           done < reports/images.txt
-          [[ -f reports/chart.txt]] || exit 0 
+          [[ -f reports/chart.txt ]] || exit 0 
           echo "### Helm Chart Image Versions" >> "$GITHUB_STEP_SUMMARY"
           while read -r img; do
             echo "- $img" >> "$GITHUB_STEP_SUMMARY"
