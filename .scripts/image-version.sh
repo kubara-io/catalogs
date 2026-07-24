@@ -15,7 +15,7 @@ CONFIG_FILE="${CONFIG_FILE:-config.yaml}"
 CLUSTER_NAME="$(yq -r '.clusters[0].name' "$CONFIG_FILE")"
 CONFIGS="${CONFIGS:-platform-configs/${CLUSTER_NAME}/helm}"
 IMAGE_OUTPUT_FILE="${IMAGE_OUTPUT_FILE:-}"
-HELM_IMAGE_OUTPUT_FILE="${HELM_IMAGE_OUTPUT_FILE:-}"
+HELM_CHART_VERSION_FILE="${HELM_CHART_VERSION_FILE:-}"
 
 [[ -d "$MANAGED" ]]     || { echo "::error::Missing $MANAGED — run 'kubara generate' first"; exit 1; }
 command -v helm >/dev/null 2>&1 || { echo "::error::helm not found on PATH"; exit 1; }
@@ -72,7 +72,7 @@ done
 # captured
 IMAGES="$(
   cat "$render_dir"/*.yaml |
-    grep -E '^[[:space:]]*image:' || true |
+    { grep -E '^[[:space:]]*image:' || true; } |
     sed -E "s/^[[:space:]]*image:[[:space:]]*//; s/[\"']//g" |
     grep -vE '[*!]' |          # drop kyverno wildcard/negation entries
     grep -vE '^[[:space:]]*$' |
@@ -106,7 +106,7 @@ echo "$HELM_CHART_VERSIONS"
 [[ -n "$HELM_CHART_VERSIONS" ]] || { echo "::warning::No helm image references found"; exit 0; }
 
 
-if [[ -n "$HELM_IMAGE_OUTPUT_FILE" ]]; then
-    echo "$HELM_CHART_VERSIONS" > "$HELM_IMAGE_OUTPUT_FILE"
-    echo "::notice:: Helm Image list written to $HELM_IMAGE_OUTPUT_FILE"
+if [[ -n "$HELM_CHART_VERSION_FILE" ]]; then
+    echo "$HELM_CHART_VERSIONS" > "$HELM_CHART_VERSION_FILE"
+    echo "::notice:: Helm Image list written to $HELM_CHART_VERSION_FILE"
 fi

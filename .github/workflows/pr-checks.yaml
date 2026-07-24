@@ -87,13 +87,11 @@ jobs:
       KUBARA_KUBERNETES_TYPE: ${{ matrix.kubernetes_type }}
       KUBARA_KUBERNETES_VERSION: 1.35.0
     steps:
-      - name: Checkout catalogs
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Checkout
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
 
-      # Needed in both acquisition modes: the job below runs kubara's helper
-      # scripts (.ci/kubara/.scripts/*.sh) regardless of how the CLI is obtained.
-      - name: Checkout kubara
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Setup Go
+        uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6.5.0
         with:
           repository: kubara-io/kubara
           ref: ${{ env.KUBARA_REF }}
@@ -346,10 +344,11 @@ jobs:
         run: helm version --short
 
       - name: Extract container images
+        env:
+          IMAGE_OUTPUT_FILE: ${{ github.workspace }}/reports/image.txt
+          HELM_CHART_VERSION_FILE: ${{ github.workspace }}/reports/chart.txt" 
         run: |
           mkdir -p reports
-          IMAGE_OUTPUT_FILE="$PWD/reports/images.txt" 
-          HELM_CHART_VERSION_FILE="$PWD/reports/chart.txt" 
           .scripts/image-version.sh
 
       - name: Write image summary
