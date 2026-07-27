@@ -27,10 +27,10 @@ kubara can consume these catalogs during schema generation, config initializatio
 
 If you want to understand how catalogs fit into the bigger platform model, these docs are the best entry points:
 
-- [Catalogs concept](https://docs.kubara.io/2_concepts/catalogs/)
-- [Catalog templating](https://docs.kubara.io/2_concepts/catalog_templating/)
-- [Components overview](https://docs.kubara.io/6_components/components_overview/)
-- [Architecture overview](https://docs.kubara.io/7_architecture/architecture_overview/)
+- [Catalogs concept](https://docs.kubara.io/latest-stable/2_concepts/catalogs/)
+- [Catalog templating](https://docs.kubara.io/latest-stable/2_concepts/catalog_templating/)
+- [Components overview](https://docs.kubara.io/latest-stable/6_components/components_overview/)
+- [Architecture overview](https://docs.kubara.io/latest-stable/7_architecture/architecture_overview/)
 
 ## Community and future direction
 
@@ -51,8 +51,8 @@ If you want to propose a new stack, extend an existing catalog, improve service 
 
 If you want to build your own catalog or adapt ideas from this repo:
 
-1. Read [How to create a catalog](https://docs.kubara.io/4_building_your_platform/create_catalog/)
-2. Read [Catalog distribution](https://docs.kubara.io/2_concepts/catalog_distribution/)
+1. Read [How to create a catalog](https://docs.kubara.io/latest-stable/4_building_your_platform/create_catalog/)
+2. Read [Catalog distribution](https://docs.kubara.io/latest-stable/2_concepts/catalog_distribution/)
 3. Use this repo as a real example of catalog structure and layout
 
 ## License
