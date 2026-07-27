@@ -101,9 +101,9 @@ jobs:
           GHCR_TOKEN: ${{ github.token }}
           HOME: ${{ runner.temp }}/kubara-home
         run: |
-          "${RUNNER_TEMP}/kubara" catalog login \
+          printf '%s\n' "$GHCR_TOKEN" | "${RUNNER_TEMP}/kubara" catalog login \
             --username "$GITHUB_ACTOR" \
-            --password "$GHCR_TOKEN" \
+            --password-stdin \
             ghcr.io
 
       - name: Ensure version is not published
