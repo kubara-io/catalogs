@@ -5,7 +5,7 @@ dexRestarter:
   enabled: true
   image:
     repository: "alpine/kubectl"
-    tag: "1.36.2"
+    tag: "1.36.3"
   maxAttempts: "30"
   interval: "10"  # in seconds
   secretName: "oauth2-credentials"
