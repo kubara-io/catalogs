@@ -19,7 +19,11 @@
   ],
   "packageRules": [
     {
-      "matchFiles": ["**/Chart.{yaml,yml}"],
+      "matchFileNames": ["bootstrap/**/Chart.yaml"],
+      "groupName": "bootstrap helm charts",
+      "groupSlug": "bootstrap-helm-charts",
+      "separateMajorMinor": false,
+      "separateMinorPatch": false,
       "bumpVersions": [
         {
           "filePatterns": ["{{packageFileDir}}/Chart.{yaml,yml}"],
@@ -31,7 +35,58 @@
         "commands": [
           "./.scripts/renovate_bot_update_helm_changelog.sh \"{{{depName}}}\" \"{{{currentVersion}}}\" \"{{{newVersion}}}\" \"{{{packageFileDir}}}\" \"{{#if isMajor}}major{{/if}}{{#if isMinor}}minor{{/if}}{{#if isPatch}}patch{{/if}}\""
         ],
-        "fileFilters": ["**/CHANGELOG.md"],
+        "fileFilters": ["**/CHANGELOG.md", "bootstrap/Catalog.yaml"],
+        "executionMode": "update"
+      }
+    },
+    {
+      "matchFileNames": ["general/**/Chart.yaml"],
+      "groupName": "general helm charts",
+      "groupSlug": "general-helm-charts",
+      "separateMajorMinor": false,
+      "separateMinorPatch": false,
+      "bumpVersions": [
+        {
+          "filePatterns": ["{{packageFileDir}}/Chart.{yaml,yml}"],
+          "matchStrings": ["version:\\s(?<version>[^\\s]+)"],
+          "bumpType": "{{#if isMajor}}major{{else if isMinor}}minor{{else}}patch{{/if}}"
+        }
+      ],
+      "postUpgradeTasks": {
+        "commands": [
+          "./.scripts/renovate_bot_update_helm_changelog.sh \"{{{depName}}}\" \"{{{currentVersion}}}\" \"{{{newVersion}}}\" \"{{{packageFileDir}}}\" \"{{#if isMajor}}major{{/if}}{{#if isMinor}}minor{{/if}}{{#if isPatch}}patch{{/if}}\""
+        ],
+        "fileFilters": ["**/CHANGELOG.md", "general/Catalog.yaml"],
+        "executionMode": "update"
+      }
+    },
+    {
+      "matchManagers": ["terraform"],
+      "matchFileNames": ["bootstrap/**/*.tf", "bootstrap/**/*.tf.tplt"],
+      "groupName": "bootstrap terraform",
+      "groupSlug": "bootstrap-terraform",
+      "separateMajorMinor": false,
+      "separateMinorPatch": false,
+      "postUpgradeTasks": {
+        "commands": [
+          "./.scripts/renovate_bot_update_catalog_version.sh \"{{{packageFileDir}}}\" \"{{#if isMajor}}major{{else if isMinor}}minor{{else}}patch{{/if}}\""
+        ],
+        "fileFilters": ["bootstrap/Catalog.yaml"],
+        "executionMode": "update"
+      }
+    },
+    {
+      "matchManagers": ["terraform"],
+      "matchFileNames": ["general/**/*.tf", "general/**/*.tf.tplt"],
+      "groupName": "general terraform",
+      "groupSlug": "general-terraform",
+      "separateMajorMinor": false,
+      "separateMinorPatch": false,
+      "postUpgradeTasks": {
+        "commands": [
+          "./.scripts/renovate_bot_update_catalog_version.sh \"{{{packageFileDir}}}\" \"{{#if isMajor}}major{{else if isMinor}}minor{{else}}patch{{/if}}\""
+        ],
+        "fileFilters": ["general/Catalog.yaml"],
         "executionMode": "update"
       }
     }

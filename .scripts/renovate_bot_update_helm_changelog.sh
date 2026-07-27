@@ -80,3 +80,5 @@ awk -v ver="$NEW_CHART_VERSION" -v date="$TODAY" -v dep="$DEP_NAME" -v old="$DEP
     }
   }
 ' "$CHANGELOG" > "$CHANGELOG".new && mv "$CHANGELOG".new "$CHANGELOG"
+
+./.scripts/renovate_bot_update_catalog_version.sh "$CHART_DIR" "$BUMP_TYPE"
