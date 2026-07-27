@@ -10,7 +10,7 @@ dependencies:
     version: 0.2.0
   - name: loki
     repository: https://grafana.github.io/helm-charts
-    version: 7.0.0
+    version: 7.1.0
   - name: alloy
     repository: https://grafana.github.io/helm-charts
     version: 1.11.0

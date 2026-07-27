@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.6.0] - 2026-07-23
 ### Changed
 - Updated chart dependency version: alloy 1.10.1 → 1.11.0
+- Updated chart dependency version: loki 7.0.0 → 7.1.0
 
 ## [1.5.1] - 2026-07-13
 ### Changed
