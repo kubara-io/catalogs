@@ -53,7 +53,7 @@ jobs:
           ref="oci://ghcr.io/${GITHUB_REPOSITORY_OWNER}/catalogs/${catalog}:${version}"
           {
             echo "catalog=$catalog"
-            echo "version=$v0.0.1"
+            echo "version=$version"
             echo "ref=$ref"
           } >> "$GITHUB_OUTPUT"
 
