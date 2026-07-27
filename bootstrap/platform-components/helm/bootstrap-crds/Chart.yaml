@@ -16,4 +16,4 @@ dependencies:
   # External-Secret CRDs
   - name: external-secrets
     repository: https://charts.external-secrets.io
-    version: 2.7.0  # https://artifacthub.io/packages/helm/external-secrets-operator/external-secrets
+    version: 2.8.0  # https://artifacthub.io/packages/helm/external-secrets-operator/external-secrets
