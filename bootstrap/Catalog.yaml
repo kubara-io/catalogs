@@ -6,4 +6,4 @@ metadata:
   annotations:
     org.opencontainers.image.source: https://github.com/kubara-io/catalogs
 spec:
-  version: 1.0.0
+  version: 0.0.1
