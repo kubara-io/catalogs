@@ -19,7 +19,7 @@ external-secrets:
       limits:
         memory: 100Mi
   serviceMonitor:
-    enabled: false
+    enabled: true
   resources:
     requests:
       cpu: 10m

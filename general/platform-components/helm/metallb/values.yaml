@@ -37,11 +37,10 @@ metallb:
           memory: 100Mi
   prometheus:
     serviceMonitor:
-      enabled: false
-      controller:
+      enabled: true
   frr-k8s:
     prometheus:
       serviceMonitor:
-        enabled: false
+        enabled: true
 nodeSelectors: {}
 namespace: {}

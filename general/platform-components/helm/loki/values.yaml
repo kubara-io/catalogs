@@ -103,7 +103,11 @@ loki:
   # the loki.storage.bucketNames.chunks value is only added because of a templating bug in loki; actual value should be set as loki.loki.storage.bucketNames.chunks
   monitoring:
     serviceMonitor:
-      enabled: false
+      enabled: true
+    rules:
+      enabled: true
+    alerts:
+      enabled: true
   test:
     enabled: false
   gateway:
