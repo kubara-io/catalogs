@@ -15,7 +15,7 @@ cert-manager:
       memory: 100Mi
   prometheus:
     servicemonitor:
-      enabled: false
+      enabled: true
   installCRDs: true
   serviceAccount:
     automountServiceAccountToken: true

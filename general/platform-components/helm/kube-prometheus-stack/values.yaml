@@ -122,7 +122,7 @@ kube-prometheus-stack:
       enabled: false
     enabled: true
     serviceMonitor:
-      enabled: false
+      enabled: true
     resources:
       requests:
         cpu: 10m

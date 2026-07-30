@@ -5,7 +5,7 @@ metrics-server:
   metrics:
     enabled: true
   serviceMonitor:
-    enabled: false
+    enabled: true
   resources:
     requests:
       cpu: 10m
