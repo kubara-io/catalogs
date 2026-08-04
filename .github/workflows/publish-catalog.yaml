@@ -33,10 +33,10 @@ jobs:
           TAG: ${{ github.ref_name }}
         run: |
           set -euo pipefail
-          # if ! git merge-base --is-ancestor "$GITHUB_SHA" origin/main; then
-          #   echo "Release tags must point to a commit on main" >&2
-          #   exit 1
-          # fi
+          if ! git merge-base --is-ancestor "$GITHUB_SHA" origin/main; then
+            echo "Release tags must point to a commit on main" >&2
+            exit 1
+          fi
 
           case "$TAG" in
             bootstrap-v*) catalog=bootstrap; version="${TAG#bootstrap-v}" ;;
