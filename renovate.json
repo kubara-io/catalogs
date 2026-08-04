@@ -19,6 +19,14 @@
   ],
   "packageRules": [
     {
+      "matchFileNames": ["bootstrap/**"],
+      "addLabels": ["bootstrap"]
+    },
+    {
+      "matchFileNames": ["general/**"],
+      "addLabels": ["general"]
+    },
+    {
       "matchFiles": ["**/Chart.{yaml,yml}"],
       "bumpVersions": [
         {
