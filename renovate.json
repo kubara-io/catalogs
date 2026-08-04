@@ -104,8 +104,8 @@
     },
     {
       "matchFileNames": ["bootstrap/platform-configs/**/values.generated.yaml.tplt"],
-      "groupName": "bootstrap platform configs",
-      "groupSlug": "bootstrap-platform-configs",
+      "groupName": "bootstrap helm charts",
+      "groupSlug": "bootstrap-helm-charts",
       "separateMajorMinor": false,
       "separateMinorPatch": false,
       "postUpgradeTasks": {
@@ -118,8 +118,8 @@
     },
     {
       "matchFileNames": ["general/platform-configs/**/values.generated.yaml.tplt"],
-      "groupName": "general platform configs",
-      "groupSlug": "general-platform-configs",
+      "groupName": "general helm charts",
+      "groupSlug": "general-helm-charts",
       "separateMajorMinor": false,
       "separateMinorPatch": false,
       "postUpgradeTasks": {
