@@ -27,16 +27,18 @@ permissions:
   packages: read
 
 env:
-  # Pin the compatibility baseline until the external catalogs are included in
-  # a stable kubara release. Manual runs can override it with kubara_ref.
-  KUBARA_REF: ${{ inputs.kubara_ref || '748bcdda8304a92ea694995db7c822302296f051' }}
+  # Default to the latest stable kubara release that ships declarative external
+  # catalog support. Manual runs can override this with kubara_ref (a branch,
+  # PR, or commit SHA); a non-release ref switches CLI acquisition to a source
+  # build (see "Determine kubara acquisition mode" below).
+  KUBARA_REF: ${{ inputs.kubara_ref || 'v0.13.0' }}
   OUTPUT_GENERATED_DIR: ${{ github.workspace }}/output-generated
   REPORT_DIR: ${{ github.workspace }}/reports
   RENDER_DIR: ${{ github.workspace }}/rendered
   # renovate: datasource=github-releases depName=yannh/kubeconform
   KUBECONFORM_VERSION: "v0.8.0"
   # renovate: datasource=github-releases depName=terraform-linters/tflint
-  TFLINT_VERSION: "v0.63.1"
+  TFLINT_VERSION: "v0.64.0"
   ARTIFACT_RETENTION_DAYS: "15"
 
 jobs:
@@ -88,6 +90,8 @@ jobs:
       - name: Checkout catalogs
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
+      # Needed in both acquisition modes: the job below runs kubara's helper
+      # scripts (.ci/kubara/.scripts/*.sh) regardless of how the CLI is obtained.
       - name: Checkout kubara
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -95,35 +99,51 @@ jobs:
           ref: ${{ env.KUBARA_REF }}
           path: .ci/kubara
 
-      # TODO: Once KUBARA_REF points to a stable release containing external
-      # catalog support, replace the source build below with this verified
-      # release download. Keep the source build for branch, PR, and SHA overrides.
-      # - name: Install kubara release
-      #   env:
-      #     KUBARA_VERSION: ${{ env.KUBARA_REF }}
-      #   run: |
-      #     set -euo pipefail
-      #     version="${KUBARA_VERSION#v}"
-      #     archive="kubara_${version}_linux_amd64.tar.gz"
-      #     checksums="kubara_${version}_checksums.txt"
-      #     base_url="https://github.com/kubara-io/kubara/releases/download/${KUBARA_VERSION}"
-      #     temp_dir="$(mktemp -d)"
-      #     trap 'rm -rf "$temp_dir"' EXIT
-      #     curl -fsSL "$base_url/$archive" -o "$temp_dir/$archive"
-      #     curl -fsSL "$base_url/$checksums" -o "$temp_dir/$checksums"
-      #     checksum="$(awk -v file="$archive" '$2 == file {print $1}' "$temp_dir/$checksums")"
-      #     [[ -n "$checksum" ]]
-      #     echo "$checksum  $temp_dir/$archive" | sha256sum -c -
-      #     tar xzf "$temp_dir/$archive" -C "$RUNNER_TEMP" kubara
-      #     chmod +x "$RUNNER_TEMP/kubara"
+      # A release tag (vX.Y.Z) provides the CLI from the published binary; any
+      # other ref (branch, PR, or commit SHA supplied via kubara_ref) builds the
+      # CLI from the checked-out source so unreleased kubara changes can still be
+      # validated.
+      - name: Determine kubara acquisition mode
+        id: kubara-mode
+        run: |
+          set -euo pipefail
+          if [[ "${KUBARA_REF}" =~ ^v[0-9] ]]; then
+            mode=release
+          else
+            mode=source
+          fi
+          echo "mode=${mode}" >> "$GITHUB_OUTPUT"
+          echo "Resolved kubara acquisition mode '${mode}' for ref '${KUBARA_REF}'"
+
+      - name: Install kubara release
+        if: steps.kubara-mode.outputs.mode == 'release'
+        env:
+          KUBARA_VERSION: ${{ env.KUBARA_REF }}
+        run: |
+          set -euo pipefail
+          version="${KUBARA_VERSION#v}"
+          archive="kubara_${version}_linux_amd64.tar.gz"
+          checksums="kubara_${version}_checksums.txt"
+          base_url="https://github.com/kubara-io/kubara/releases/download/${KUBARA_VERSION}"
+          temp_dir="$(mktemp -d)"
+          trap 'rm -rf "$temp_dir"' EXIT
+          curl -fsSL "$base_url/$archive" -o "$temp_dir/$archive"
+          curl -fsSL "$base_url/$checksums" -o "$temp_dir/$checksums"
+          checksum="$(awk -v file="$archive" '$2 == file {print $1}' "$temp_dir/$checksums")"
+          [[ -n "$checksum" ]]
+          echo "$checksum  $temp_dir/$archive" | sha256sum -c -
+          tar xzf "$temp_dir/$archive" -C "$RUNNER_TEMP" kubara
+          chmod +x "$RUNNER_TEMP/kubara"
 
       - name: Setup Go
-        uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6.5.0
+        if: steps.kubara-mode.outputs.mode == 'source'
+        uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         with:
           go-version-file: .ci/kubara/src/go.mod
           cache-dependency-path: .ci/kubara/src/go.sum
 
       - name: Build kubara CLI
+        if: steps.kubara-mode.outputs.mode == 'source'
         working-directory: .ci/kubara/src
         run: go build -o "${RUNNER_TEMP}/kubara" .
 
