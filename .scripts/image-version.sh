@@ -71,6 +71,7 @@ done
 # and images refs passed via environment, this does not represent an exhaustive list of images
 # captured
 IMAGES="$(
+  shopt -s nullglob # prevents failing if nothing's matched
   cat "$render_dir"/*.yaml |
     { grep -E '^[[:space:]]*image:' || true; } |
     sed -E "s/^[[:space:]]*image:[[:space:]]*//; s/[\"']//g" |
@@ -81,15 +82,16 @@ IMAGES="$(
 
 echo "Done Rendering!"
 
-[[ -n "$IMAGES" ]] || { echo "::warning::No image references found"; exit 0; }
 
+# errors during templating are listed, but not critical for extraction
 if ((${#FAILED[@]})); then
     echo "::warning:: Errors during templating: "
     for err in "${FAILED[@]}"; do
         echo "- $err"
     done
-    exit 1
 fi
+
+[[ -n "$IMAGES" ]] || { echo "::warning::No image references found"; exit 0; }
 
 if [[ -n "$IMAGE_OUTPUT_FILE" ]]; then
     echo "$IMAGES" > "$IMAGE_OUTPUT_FILE"
