@@ -2,6 +2,10 @@
 namespace: {}
 externalSecrets: {}
 velero:
+  metrics:
+    enabled: true
+    serviceMonitor:
+      enabled: true
   containerSecurityContext:
     readOnlyRootFilesystem: true
     allowPrivilegeEscalation: false

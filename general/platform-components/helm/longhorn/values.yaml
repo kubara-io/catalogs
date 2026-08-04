@@ -15,6 +15,6 @@ longhorn:
     snapshotterReplicaCount: 1
   metrics:
     serviceMonitor:
-      enabled: false
+      enabled: true
   preUpgradeChecker:
     jobEnabled: false

@@ -66,7 +66,9 @@ argo-cd:
       minAvailable: 1
     replicas: 1
     metrics:
-      enabled: false
+      enabled: true
+      serviceMonitor:
+        enabled: true
     resources:
       requests:
         cpu: 100m
@@ -85,7 +87,9 @@ argo-cd:
     extraArgs:
       - --enable-gzip
     metrics:
-      enabled: false
+      enabled: true
+      serviceMonitor:
+        enabled: true
     serviceAccount:
       automountServiceAccountToken: true
     resources:
@@ -129,6 +133,10 @@ argo-cd:
         memory: 1000Mi
       limits:
         memory: 1000Mi
+    metrics:
+      enabled: true
+      serviceMonitor:
+        enabled: true
   controller:
     resources:
       requests:
@@ -137,11 +145,11 @@ argo-cd:
       limits:
         memory: 2000Mi
     metrics:
-      enabled: false
+      enabled: true
       serviceMonitor:
-        enabled: false
+        enabled: true
       rules:
-        enabled: false
+        enabled: true
         spec:
           - alert: ArgoAppMissing
             expr: |

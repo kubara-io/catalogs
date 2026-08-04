@@ -254,7 +254,7 @@ reloader:
     #   action: replace
     targetLabels: []
   podMonitor:
-    enabled: false
+    enabled: true
     # Set the namespace the podMonitor should be deployed
     # namespace: monitoring
 

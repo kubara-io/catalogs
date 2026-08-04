@@ -27,10 +27,15 @@ terraform version
 tflint --version
 
 FAILED_DIRS=()
-TARGET_DIRS=(
-  "platform-components/terraform/stackit/modules"
-  "platform-configs/kubara/terraform"
-)
+TARGET_DIRS=("platform-configs/kubara/terraform")
+if [[ -d platform-components/terraform ]]; then
+  while IFS= read -r modules_dir; do
+    TARGET_DIRS+=("$modules_dir")
+  done < <(
+    find platform-components/terraform \
+      -mindepth 2 -maxdepth 2 -type d -name modules | sort
+  )
+fi
 
 # ---- Preconditions ----------------------------------------------------------
 # This script validates generated Terraform output and expects kubara generate
@@ -80,7 +85,10 @@ for BASE_DIR in "${TARGET_DIRS[@]}"; do
     fi
 
     echo "🧪 terraform validate" | tee -a "$LOG"
-    if ! terraform -chdir="$DIR" validate | tee -a "$LOG"; then
+    if grep -RqE 'configuration_aliases[[:space:]]*=' "$DIR"; then
+      echo "Skipping standalone validate: module requires a provider alias from its caller" \
+        | tee -a "$LOG"
+    elif ! terraform -chdir="$DIR" validate | tee -a "$LOG"; then
       echo "::error file=$DIR::terraform validate failed"
       FAILED_DIRS+=("$DIR")
     fi
