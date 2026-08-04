@@ -37,7 +37,7 @@ kyverno:
         limits:
           memory: 384Mi
     serviceMonitor:
-      enabled: false
+      enabled: true
   backgroundController:
     resources:
       requests:
@@ -46,7 +46,7 @@ kyverno:
       limits:
         memory: 128Mi
     serviceMonitor:
-      enabled: false
+      enabled: true
   cleanupController:
     resources:
       requests:
@@ -55,7 +55,7 @@ kyverno:
       limits:
         memory: 128Mi
     serviceMonitor:
-      enabled: false
+      enabled: true
   reportsController:
     resources:
       requests:
@@ -64,4 +64,4 @@ kyverno:
       limits:
         memory: 128Mi
     serviceMonitor:
-      enabled: false
+      enabled: true

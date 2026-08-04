@@ -86,10 +86,10 @@ jobs:
       KUBARA_KUBERNETES_VERSION: 1.35.0
     steps:
       - name: Checkout catalogs
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Checkout kubara
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           repository: kubara-io/kubara
           ref: ${{ env.KUBARA_REF }}
@@ -204,12 +204,12 @@ jobs:
         target: [stackit-ske, stackit-edge, t-cloud-public-cce]
     steps:
       - name: Checkout catalog validation scripts
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           sparse-checkout: .scripts
 
       - name: Checkout kubara Helm profiles
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           repository: kubara-io/kubara
           ref: ${{ env.KUBARA_REF }}
@@ -273,7 +273,7 @@ jobs:
         target: [stackit-ske, stackit-edge, t-cloud-public-cce]
     steps:
       - name: Checkout catalog validation scripts
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           sparse-checkout: .scripts
 
