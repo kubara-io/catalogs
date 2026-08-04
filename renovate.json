@@ -10,10 +10,14 @@
   "customManagers": [
     {
       "customType": "regex",
-      "description": "Update Docker image tags in Helm values templates",
-      "managerFilePatterns": ["/values\\.ya?ml\\.tplt$/"],
+      "description": "Update Docker image tags in Helm component values and generated config templates",
+      "managerFilePatterns": [
+        "/(bootstrap|general)/platform-components/helm/[^/]+/values\\.ya?ml$/",
+        "/(bootstrap|general)/platform-configs/helm/[^/]+/values\\.generated\\.ya?ml\\.tplt$/"
+      ],
       "matchStrings": [
-        "repository:\\s*[\"']?(?<depName>[^\"'\\s]+)[\"']?\\s*\\n\\s*tag:\\s*[\"']?(?<currentValue>[^\"'\\s]+)[\"']?"
+        "repository:\\s*[\"']?(?<depName>[^\"'\\s]+)[\"']?\\s*\\n\\s*tag:\\s*[\"']?(?<currentValue>[^\"'\\s]+)[\"']?",
+        "tag:\\s*[\"']?(?<currentValue>[^\"'\\s]+)[\"']?\\s*\\n\\s*repository:\\s*[\"']?(?<depName>[^\"'\\s]+)[\"']?"
       ],
       "datasourceTemplate": "docker",
       "versioningTemplate": "docker"
@@ -21,7 +25,10 @@
   ],
   "packageRules": [
     {
-      "matchFileNames": ["bootstrap/**/Chart.yaml"],
+      "matchFileNames": [
+        "bootstrap/**/Chart.yaml",
+        "bootstrap/platform-components/**/values.yaml"
+      ],
       "groupName": "bootstrap helm charts",
       "groupSlug": "bootstrap-helm-charts",
       "separateMajorMinor": false,
@@ -42,7 +49,10 @@
       }
     },
     {
-      "matchFileNames": ["general/**/Chart.yaml"],
+      "matchFileNames": [
+        "general/**/Chart.yaml",
+        "general/platform-components/**/values.yaml"
+      ],
       "groupName": "general helm charts",
       "groupSlug": "general-helm-charts",
       "separateMajorMinor": false,
@@ -82,6 +92,34 @@
       "matchFileNames": ["general/**/*.tf", "general/**/*.tf.tplt"],
       "groupName": "general terraform",
       "groupSlug": "general-terraform",
+      "separateMajorMinor": false,
+      "separateMinorPatch": false,
+      "postUpgradeTasks": {
+        "commands": [
+          "./.scripts/renovate_bot_update_catalog_version.sh \"{{{packageFileDir}}}\" \"{{#if isMajor}}major{{else if isMinor}}minor{{else}}patch{{/if}}\""
+        ],
+        "fileFilters": ["general/Catalog.yaml"],
+        "executionMode": "update"
+      }
+    },
+    {
+      "matchFileNames": ["bootstrap/platform-configs/**/values.generated.yaml.tplt"],
+      "groupName": "bootstrap platform configs",
+      "groupSlug": "bootstrap-platform-configs",
+      "separateMajorMinor": false,
+      "separateMinorPatch": false,
+      "postUpgradeTasks": {
+        "commands": [
+          "./.scripts/renovate_bot_update_catalog_version.sh \"{{{packageFileDir}}}\" \"{{#if isMajor}}major{{else if isMinor}}minor{{else}}patch{{/if}}\""
+        ],
+        "fileFilters": ["bootstrap/Catalog.yaml"],
+        "executionMode": "update"
+      }
+    },
+    {
+      "matchFileNames": ["general/platform-configs/**/values.generated.yaml.tplt"],
+      "groupName": "general platform configs",
+      "groupSlug": "general-platform-configs",
       "separateMajorMinor": false,
       "separateMinorPatch": false,
       "postUpgradeTasks": {
