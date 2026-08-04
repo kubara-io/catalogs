@@ -13,6 +13,32 @@ Today this repo contains the official catalogs that kubara uses as its default p
 
 These catalogs are versioned and meant to be packaged and distributed as OCI artifacts.
 
+## Publishing
+
+Catalogs are published independently from git tags. Before creating a tag,
+update `spec.version` in the corresponding `Catalog.yaml` and merge that change
+to `main`.
+
+- `bootstrap-v1.0.1` publishes `bootstrap/` as version `1.0.1`
+- `general-v1.0.1` publishes `general/` as version `1.0.1`
+
+The tag version must match the catalog manifest exactly. Published versions are
+immutable, so use a new version instead of moving or recreating a release tag.
+
+## Compatibility checks
+
+Catalog changes are packaged locally and exercised through the full kubara
+`init` and `generate` flow with every service enabled before their generated
+Helm and Terraform output is validated. The compatibility matrix covers every
+supported provider and Kubernetes type combination: STACKIT SKE, STACKIT Edge,
+and T Cloud Public CCE. The default kubara revision is pinned in the catalog
+checks workflow to keep pull request results reproducible.
+
+Maintainers can run the `catalog checks` workflow manually with a `kubara_ref`
+override to test a tag, commit SHA, branch, or pull request ref. The pinned
+revision should move to the latest compatible stable release once the external
+catalog model is available in a kubara release.
+
 ## What is this repo for?
 
 This repo is the maintainable source for the official kubara catalogs.
