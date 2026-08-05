@@ -91,12 +91,6 @@ if ((${#FAILED[@]})); then
     done
 fi
 
-[[ -n "$IMAGES" ]] || { echo "::warning::No image references found"; exit 0; }
-
-if [[ -n "$IMAGE_OUTPUT_FILE" ]]; then
-    echo "$IMAGES" > "$IMAGE_OUTPUT_FILE"
-    echo "::notice::Image list written to $IMAGE_OUTPUT_FILE"
-fi
 
 echo "$IMAGES"
 
@@ -105,8 +99,14 @@ echo "Extracting Helm Dependencies"
 HELM_CHART_VERSIONS="$(find "$MANAGED" -name Chart.yaml -exec yq '.dependencies[] | select(.name != "template-library") | .name + ": " + .version' {} \;)"
 echo "$HELM_CHART_VERSIONS"
 
+# If either no images are found nor chart versions exit
+[[ -n "$IMAGES" ]] || { echo "::warning::No image references found"; exit 0; }
 [[ -n "$HELM_CHART_VERSIONS" ]] || { echo "::warning::No helm image references found"; exit 0; }
 
+if [[ -n "$IMAGE_OUTPUT_FILE" ]]; then
+    echo "$IMAGES" > "$IMAGE_OUTPUT_FILE"
+    echo "::notice::Image list written to $IMAGE_OUTPUT_FILE"
+fi
 
 if [[ -n "$HELM_CHART_VERSION_FILE" ]]; then
     echo "$HELM_CHART_VERSIONS" > "$HELM_CHART_VERSION_FILE"
