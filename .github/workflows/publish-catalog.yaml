@@ -97,14 +97,22 @@ jobs:
             exit 1
           fi
 
-      - name: Package and publish catalog
-        env:
-          CATALOG: ${{ steps.release.outputs.catalog }}
-          CATALOG_REF: ${{ steps.release.outputs.ref }}
-          HOME: ${{ runner.temp }}/kubara-home
+      # - name: Package and publish catalog
+      #   env:
+      #     CATALOG: ${{ steps.release.outputs.catalog }}
+      #     CATALOG_REF: ${{ steps.release.outputs.ref }}
+      #     HOME: ${{ runner.temp }}/kubara-home
+      #   run: |
+      #     set -euo pipefail
+      #     cd "$CATALOG"
+      #    "${RUNNER_TEMP}/kubara" catalog package \
+      #      "oci://ghcr.io/${GITHUB_REPOSITORY_OWNER}/catalogs/"
+      #    "${RUNNER_TEMP}/kubara" catalog push "$CATALOG_REF"
+      - name: Generate Changelog
         run: |
-          set -euo pipefail
-          cd "$CATALOG"
-          "${RUNNER_TEMP}/kubara" catalog package \
-            "oci://ghcr.io/${GITHUB_REPOSITORY_OWNER}/catalogs/"
-          "${RUNNER_TEMP}/kubara" catalog push "$CATALOG_REF"
+          gh search prs --repo=kubara-io/catalogs  \
+            --sort created "created:>=$(git log -2 --format=%as $catalog* | tail -n 1)" \ 
+            --json number,title,author \
+            --template '{{range .}}* {{.title}} (#{{.number}}) by @{{.author.login}}{{"\n"}}{{end}}'
+
+
