@@ -109,6 +109,8 @@ jobs:
       #      "oci://ghcr.io/${GITHUB_REPOSITORY_OWNER}/catalogs/"
       #    "${RUNNER_TEMP}/kubara" catalog push "$CATALOG_REF"
       - name: Generate Changelog
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
           gh search prs --repo=kubara-io/catalogs  \
             --sort created "created:>=$(git log -2 --format=%as $catalog* | tail -n 1)" \ 
