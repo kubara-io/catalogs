@@ -17,11 +17,20 @@ concurrency:
 env:
   # renovate: datasource=github-releases depName=kubara-io/kubara
   KUBARA_REF: "v0.13.0"
+  OUTPUT_GENERATED_DIR: ${{ github.workspace }}/output-generated
+  # setup-oras requires version without "v" in "vX.X.X"
+  # renovate: datasource=github-releases depName=oras-project/oras extractVersion=^v(?<version>.*)$
+  ORAS_VERSION: "1.3.1" 
+  REPORT_DIR: ${{ github.workspace }}/reports
+  ARTIFACT_RETENTION_DAYS: "15"
 
 jobs:
   publish:
     name: Publish catalog
     runs-on: ubuntu-latest
+    outputs:
+      catalog: ${{ steps.release.outputs.catalog }}
+      version: ${{ steps.release.outputs.version }}
     steps:
       - name: Checkout catalogs
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
@@ -108,3 +117,119 @@ jobs:
           "${RUNNER_TEMP}/kubara" catalog package \
             "oci://ghcr.io/${GITHUB_REPOSITORY_OWNER}/catalogs/"
           "${RUNNER_TEMP}/kubara" catalog push "$CATALOG_REF"
+  
+  extract-images:
+    name: Extract container images
+    needs: publish
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Checkout catalogs
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      
+      - name: Checkout kubara
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: kubara-io/kubara
+          ref: ${{ env.KUBARA_REF }}
+          path: .ci/kubara
+
+      - name: Install kubara release
+        env:
+          KUBARA_VERSION: ${{ env.KUBARA_REF }}
+        run: |
+          set -euo pipefail
+          version="${KUBARA_VERSION#v}"
+          archive="kubara_${version}_linux_amd64.tar.gz"
+          checksums="kubara_${version}_checksums.txt"
+          base_url="https://github.com/kubara-io/kubara/releases/download/${KUBARA_VERSION}"
+          temp_dir="$(mktemp -d)"
+          trap 'rm -rf "$temp_dir"' EXIT
+          curl -fsSL "$base_url/$archive" -o "$temp_dir/$archive"
+          curl -fsSL "$base_url/$checksums" -o "$temp_dir/$checksums"
+          checksum="$(awk -v file="$archive" '$2 == file {print $1}' "$temp_dir/$checksums")"
+          [[ -n "$checksum" ]]
+          echo "$checksum  $temp_dir/$archive" | sha256sum -c -
+          tar xzf "$temp_dir/$archive" -C "$RUNNER_TEMP" kubara
+          chmod +x "$RUNNER_TEMP/kubara"
+
+      - name: Install oras
+        uses: oras-project/setup-oras@1d808f7d7f6995cc68b7bf507bfe5c5446e1dc9d # v2.0.1
+        with:
+          version: ${{ env.ORAS_VERSION }}
+
+      
+      - name: Generate platform
+        uses: ./.github/actions/generate-platform
+        with:
+          kubara: ${{ runner.temp }}/kubara
+          kubara-scripts: ${{ github.workspace }}/.ci/kubara/.scripts
+          work-dir: ${{ env.OUTPUT_GENERATED_DIR }}
+      
+      - name: Extract container images
+        working-directory: ${{ env.OUTPUT_GENERATED_DIR }}
+        env:
+          IMAGE_OUTPUT_FILE: ${{ env.REPORT_DIR }}/images.txt
+          HELM_CHART_VERSION_FILE: ${{ env.REPORT_DIR }}/chart.txt
+        run: |
+          mkdir -p "$REPORT_DIR"
+          "${GITHUB_WORKSPACE}/.scripts/image-version.sh"
+
+      - name: Write image summary
+        if: always()
+        run: |
+          [[ -f "$REPORT_DIR/images.txt" ]] || exit 0
+          echo "### Container Images" >> "$GITHUB_STEP_SUMMARY"
+          while read -r img; do
+            echo "- $img" >> "$GITHUB_STEP_SUMMARY"
+          done < "$REPORT_DIR/images.txt"
+          [[ -f "$REPORT_DIR/chart.txt" ]] || exit 0
+          echo "### Helm Chart Image Versions" >> "$GITHUB_STEP_SUMMARY"
+          while read -r img; do
+            echo "- $img" >> "$GITHUB_STEP_SUMMARY"
+          done < "$REPORT_DIR/chart.txt"
+
+      - name: Push image lists alongside catalog
+        env:
+          GHCR_TOKEN: ${{ github.token }}
+          CATALOG: ${{ needs.publish.outputs.catalog }}
+          VERSION: ${{ needs.publish.outputs.version }}
+        run: |
+          set -euo pipefail
+          cd "$REPORT_DIR"
+
+          files=()
+          for report in images chart; do
+            if [[ -f "${report}.txt" ]]; then
+              files+=("${report}.txt:text/plain")
+            fi
+          done
+          if ((${#files[@]} == 0)); then
+            echo "::error::No image reports produced; nothing to push"
+            exit 1
+          fi
+
+          endpoint="ghcr.io/%{GITHUB_REPOSITORY_OWNER}/catalogs/${CATALOG}"
+          printf '%s\n' "$GHCR_TOKEN" |
+            oras login ghcr.io --username "$GITHUB_ACTOR" --password-stdin
+
+          oras attach "$endpoint" \
+            --artifact-type application/vnd.kubara.catalog.images.v1+text \
+            "${files[@]}"
+
+          echo "::notice::Attached image list to $endpoint"
+
+
+
+      - name: Upload image list
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        if: always()
+        with:
+          name: container-images-${{ github.ref_name }}-${{ github.run_attempt }}
+          retention-days: ${{ env.ARTIFACT_RETENTION_DAYS }}
+          path: ${{ env.REPORT_DIR }}/
