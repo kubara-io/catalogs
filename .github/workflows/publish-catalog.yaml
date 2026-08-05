@@ -214,12 +214,13 @@ jobs:
             exit 1
           fi
 
-          endpoint="ghcr.io/${GITHUB_REPOSITORY_OWNER}/catalogs/${CATALOG}:${VERSION}"
+          endpoint="ghcr.io/${GITHUB_REPOSITORY_OWNER}/catalogs/${CATALOG}-images:${VERSION}"
+
 
           printf '%s\n' "$GHCR_TOKEN" |
             oras login ghcr.io --username "$GITHUB_ACTOR" --password-stdin
 
-          oras attach "$endpoint" \
+          oras push "$endpoint" \
             --artifact-type application/vnd.kubara.catalog.images.v1+text \
             "${files[@]}"
 
