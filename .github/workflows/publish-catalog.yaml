@@ -214,8 +214,7 @@ jobs:
             exit 1
           fi
 
-          endpoint="ghcr.io/${GITHUB_REPOSITORY_OWNER}/catalogs/${CATALOG}-images:${VERSION}"
-
+          endpoint="ghcr.io/${GITHUB_REPOSITORY_OWNER}/catalogs/${CATALOG}-images:${VERSION},latest"
 
           printf '%s\n' "$GHCR_TOKEN" |
             oras login ghcr.io --username "$GITHUB_ACTOR" --password-stdin
