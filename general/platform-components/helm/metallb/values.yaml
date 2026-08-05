@@ -36,6 +36,10 @@ metallb:
         limits:
           memory: 100Mi
   prometheus:
+    # kube-prometheus-stack binds prometheus to a ClusterRole with the appopriate permissions already
+    # Setting it to true which is the default would not enable something new here
+    # Re-enable (and set serviceAccount/namespace) only if Prometheus loses cluster discover e.g metallb showing zero targets
+    rbacPrometheus: false
     serviceMonitor:
       enabled: true
   frr-k8s:
