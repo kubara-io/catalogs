@@ -3,7 +3,7 @@ apiVersion: v2
 name: metallb
 description: Umbrella Chart for metalb
 type: application
-version: 0.2.0
+version: 0.2.1
 dependencies:
   - name: template-library
     repository: file://../template-library
