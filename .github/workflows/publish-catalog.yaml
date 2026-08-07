@@ -109,7 +109,7 @@ jobs:
           LAST_RELEASE=$(git tag -l "$catalog-*" --sort=-v:refname --format='%(refname:short)' | sed -n '2p')
           CUTOFF_DATE=$(git tag -l --format="%(creatordate:iso)" $LAST_RELEASE)
           echo "Searching merged prs since version $LAST_RELEASE from $CUTOFF_DATE"
-          CHANGELOG="$(gh search prs --repo=${GITHUB_REPOSITORY}  \
+          CHANGELOG="$(gh search prs --repo=${GITHUB_REPOSITORY} --limit 100 \
             --sort created "merged:>=$CUTOFF_DATE" \
             --label $catalog \
             --json number,title,author \
