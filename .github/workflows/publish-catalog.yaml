@@ -9,7 +9,6 @@ on:
 permissions:
   contents: write
   packages: write
-  
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -115,6 +114,7 @@ jobs:
           set -euo pipefail
           LAST_RELEASE=$(git describe --tags --abbrev=0 --match "general-*")
           CUTOFF_DATE=$(git tag -l --format="%(creatordate:iso)" $LAST_RELEASE)
+          echo "Searching merged prs since version $LAST_RELEASE from $CUTOFF_DATE"
           CHANGELOG="$(gh search prs --repo=${GITHUB_REPOSITORY}  \
             --sort created "merged:>=$CUTOFF_DATE" \
             --label $catalog \
@@ -126,8 +126,17 @@ jobs:
             CHANGELOG="No specific PR changes found for this release."
           fi
 
-          gh release create "$TAG" \
-            --title "$catalog - $version" \
-            --notes "### What's Changed
+          echo $CHANGELOG
+
+          if [[ gh release view $TAG ]]; then
+            gh release edit $TAG \
+              --notes "### What's Changed
           
-          $CHANGELOG"
+            $CHANGELOG"
+          else
+            gh release create "$TAG" \
+              --title "$catalog - $version" \
+              --notes "### What's Changed
+            
+            $CHANGELOG"
+          fi
