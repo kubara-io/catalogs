@@ -8,10 +8,14 @@
   "customManagers": [
     {
       "customType": "regex",
-      "description": "Update Docker image tags in Helm values templates",
-      "managerFilePatterns": ["/values\\.ya?ml\\.tplt$/"],
+      "description": "Update Docker image tags in Helm component values and generated config templates",
+      "managerFilePatterns": [
+        "/(bootstrap|general)/platform-components/helm/[^/]+/values\\.ya?ml$/",
+        "/(bootstrap|general)/platform-configs/helm/[^/]+/values\\.generated\\.ya?ml\\.tplt$/"
+      ],
       "matchStrings": [
-        "repository:\\s*[\"']?(?<depName>[^\"'\\s]+)[\"']?\\s*\\n\\s*tag:\\s*[\"']?(?<currentValue>[^\"'\\s]+)[\"']?"
+        "repository:\\s*[\"']?(?<depName>[^\"'\\s]+)[\"']?\\s*\\n\\s*tag:\\s*[\"']?(?<currentValue>[^\"'\\s]+)[\"']?",
+        "tag:\\s*[\"']?(?<currentValue>[^\"'\\s]+)[\"']?\\s*\\n\\s*repository:\\s*[\"']?(?<depName>[^\"'\\s]+)[\"']?"
       ],
       "datasourceTemplate": "docker",
       "versioningTemplate": "docker"
@@ -19,20 +23,113 @@
   ],
   "packageRules": [
     {
-      "matchFiles": ["**/Chart.{yaml,yml}"],
-      "bumpVersions": [
-        {
-          "filePatterns": ["{{packageFileDir}}/Chart.{yaml,yml}"],
-          "matchStrings": ["version:\\s(?<version>[^\\s]+)"],
-          "bumpType": "{{#if isMajor}}major{{else if isMinor}}minor{{else}}patch{{/if}}"
-        }
+      "matchFileNames": [
+        "bootstrap/**/Chart.yaml",
+        "bootstrap/platform-components/**/values.yaml"
       ],
+      "groupName": "bootstrap catalog",
+      "groupSlug": "bootstrap-catalog",
+      "separateMajorMinor": false,
+      "separateMinorPatch": false,
       "postUpgradeTasks": {
-        "commands": [
-          "./.scripts/renovate_bot_update_helm_changelog.sh \"{{{depName}}}\" \"{{{currentVersion}}}\" \"{{{newVersion}}}\" \"{{{packageFileDir}}}\" \"{{#if isMajor}}major{{/if}}{{#if isMinor}}minor{{/if}}{{#if isPatch}}patch{{/if}}\""
+        "commands": ["./.scripts/renovate_bot_update_versions.sh"],
+        "dataFileTemplate": "{{{toJSON upgrades}}}",
+        "fileFilters": [
+          "**/Chart.yaml",
+          "**/CHANGELOG.md",
+          "bootstrap/Catalog.yaml"
         ],
-        "fileFilters": ["**/CHANGELOG.md"],
-        "executionMode": "update"
+        "executionMode": "branch"
+      }
+    },
+    {
+      "matchFileNames": [
+        "general/**/Chart.yaml",
+        "general/platform-components/**/values.yaml"
+      ],
+      "groupName": "general catalog",
+      "groupSlug": "general-catalog",
+      "separateMajorMinor": false,
+      "separateMinorPatch": false,
+      "postUpgradeTasks": {
+        "commands": ["./.scripts/renovate_bot_update_versions.sh"],
+        "dataFileTemplate": "{{{toJSON upgrades}}}",
+        "fileFilters": [
+          "**/Chart.yaml",
+          "**/CHANGELOG.md",
+          "general/Catalog.yaml"
+        ],
+        "executionMode": "branch"
+      }
+    },
+    {
+      "matchManagers": ["terraform"],
+      "matchFileNames": ["bootstrap/**/*.tf", "bootstrap/**/*.tf.tplt"],
+      "groupName": "bootstrap catalog",
+      "groupSlug": "bootstrap-catalog",
+      "separateMajorMinor": false,
+      "separateMinorPatch": false,
+      "postUpgradeTasks": {
+        "commands": ["./.scripts/renovate_bot_update_versions.sh"],
+        "dataFileTemplate": "{{{toJSON upgrades}}}",
+        "fileFilters": [
+          "**/Chart.yaml",
+          "**/CHANGELOG.md",
+          "bootstrap/Catalog.yaml"
+        ],
+        "executionMode": "branch"
+      }
+    },
+    {
+      "matchManagers": ["terraform"],
+      "matchFileNames": ["general/**/*.tf", "general/**/*.tf.tplt"],
+      "groupName": "general catalog",
+      "groupSlug": "general-catalog",
+      "separateMajorMinor": false,
+      "separateMinorPatch": false,
+      "postUpgradeTasks": {
+        "commands": ["./.scripts/renovate_bot_update_versions.sh"],
+        "dataFileTemplate": "{{{toJSON upgrades}}}",
+        "fileFilters": [
+          "**/Chart.yaml",
+          "**/CHANGELOG.md",
+          "general/Catalog.yaml"
+        ],
+        "executionMode": "branch"
+      }
+    },
+    {
+      "matchFileNames": ["bootstrap/platform-configs/**/values.generated.yaml.tplt"],
+      "groupName": "bootstrap catalog",
+      "groupSlug": "bootstrap-catalog",
+      "separateMajorMinor": false,
+      "separateMinorPatch": false,
+      "postUpgradeTasks": {
+        "commands": ["./.scripts/renovate_bot_update_versions.sh"],
+        "dataFileTemplate": "{{{toJSON upgrades}}}",
+        "fileFilters": [
+          "**/Chart.yaml",
+          "**/CHANGELOG.md",
+          "bootstrap/Catalog.yaml"
+        ],
+        "executionMode": "branch"
+      }
+    },
+    {
+      "matchFileNames": ["general/platform-configs/**/values.generated.yaml.tplt"],
+      "groupName": "general catalog",
+      "groupSlug": "general-catalog",
+      "separateMajorMinor": false,
+      "separateMinorPatch": false,
+      "postUpgradeTasks": {
+        "commands": ["./.scripts/renovate_bot_update_versions.sh"],
+        "dataFileTemplate": "{{{toJSON upgrades}}}",
+        "fileFilters": [
+          "**/Chart.yaml",
+          "**/CHANGELOG.md",
+          "general/Catalog.yaml"
+        ],
+        "executionMode": "branch"
       }
     }
   ]
