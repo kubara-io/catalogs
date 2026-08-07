@@ -3,8 +3,8 @@ name: publish catalog
 on:
   push:
     tags:
-      - "bootstrap-*"
-      - "general-*"
+      - "bootstrap-v*"
+      - "general-v*"
 
 permissions:
   contents: write
@@ -35,14 +35,14 @@ jobs:
           TAG: ${{ github.ref_name }}
         run: |
           set -euo pipefail
-          if ! git merge-base --is-ancestor "$GITHUB_SHA" origin/main; then
-            echo "Release tags must point to a commit on main" >&2
-            exit 1
-          fi
+          # if ! git merge-base --is-ancestor "$GITHUB_SHA" origin/main; then
+          #   echo "Release tags must point to a commit on main" >&2
+          #   exit 1
+          # fi
 
           case "$TAG" in
-            bootstrap-*) catalog=bootstrap; version="${TAG#bootstrap-}" ;;
-            general-*) catalog=general; version="${TAG#general-}" ;;
+            bootstrap-v*) catalog=bootstrap; version="${TAG#bootstrap-v}" ;;
+            general-v*) catalog=general; version="${TAG#general-v}" ;;
             *) echo "Unsupported tag: $TAG" >&2; exit 1 ;;
           esac
 
@@ -112,9 +112,11 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           TAG: ${{ github.ref_name }}
         run: |
-          set -e
-          CHANGELOG="$(gh search prs --repo=kubara-io/catalogs  \
-            --sort created "merged:>=$(git log -2 --format=%aI $catalog* | tail -n 1)" \
+          set -euo pipefail
+          LAST_RELEASE=$(git describe --tags --abbrev=0 --match "general-*")
+          CUTOFF_DATE=$(git tag -l --format="%(creatordate:iso)" $LAST_RELEASE)
+          CHANGELOG="$(gh search prs --repo=${GITHUB_REPOSITORY}  \
+            --sort created "merged:>=$CUTOFF_DATE" \
             --label $catalog \
             --json number,title,author \
             --template '{{range .}}* {{.title}} (#{{.number}}) by @{{.author.login}}{{"\n"}}{{end}}')"

@@ -37,7 +37,7 @@
     {
       "matchUpdateTypes": ["patch"],
       "addLabels": ["patch"]
-    }
+    },
     {
       "matchFiles": ["**/Chart.{yaml,yml}"],
       "bumpVersions": [
