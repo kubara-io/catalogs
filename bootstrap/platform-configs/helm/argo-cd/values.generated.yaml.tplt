@@ -6,6 +6,13 @@
 {{- $kubePrometheusStatus := dig "cluster" "services" "kube-prometheus-stack" "status" "disabled" . -}}
 {{- $traefikStatus := dig "cluster" "services" "traefik" "status" "disabled" . -}}
 {{- $reloaderStatus := dig "cluster" "services" "reloader" "status" "disabled" . -}}
+{{- $gitRepository := dig "cluster" "argocd" "repo" "git" (dict) . -}}
+{{- if not $gitRepository -}}
+{{- $gitRepository = dig "cluster" "argocd" "repo" "https" (dict) . -}}
+{{- end -}}
+{{- if not $gitRepository -}}
+{{- $gitRepository = dig "cluster" "argocd" "repo" "oci" (dict) . -}}
+{{- end -}}
 
 {{- if (eq .cluster.type "hub") }}
 bootstrapValues:
@@ -65,13 +72,13 @@ This is a fixed assumption and needs to be followed for spoke cluster onboarding
     {{ .cluster.name }}-{{ .cluster.stage }}:
       projectName: "{{ .cluster.name }}-{{ .cluster.stage }}"
       platformComponents:
-        repoURL: "{{ .cluster.argocd.repo.https.components.url }}"
-        path: "{{ .cluster.argocd.repo.https.components.path | default "platform-components/helm" }}"
-        targetRevision: "{{ .cluster.argocd.repo.https.components.targetRevision }}"
+        repoURL: "{{ $gitRepository.components.url }}"
+        path: "{{ $gitRepository.components.path | default "platform-components/helm" }}"
+        targetRevision: "{{ $gitRepository.components.targetRevision }}"
       platformConfigs:
-        repoURL: "{{ .cluster.argocd.repo.https.configs.url }}"
-        path: "{{ .cluster.argocd.repo.https.configs.path | default "platform-configs" }}"
-        targetRevision: "{{ .cluster.argocd.repo.https.configs.targetRevision }}"
+        repoURL: "{{ $gitRepository.configs.url }}"
+        path: "{{ $gitRepository.configs.path | default "platform-configs" }}"
+        targetRevision: "{{ $gitRepository.configs.targetRevision }}"
       apps:
 {{- if eq .cluster.argocd.selfManaged "enabled" }}
         argocd:
