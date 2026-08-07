@@ -7,7 +7,7 @@ on:
       - "general-v*"
 
 permissions:
-  contents: read
+  contents: write
   packages: write
 
 concurrency:
@@ -29,7 +29,6 @@ jobs:
           fetch-depth: 0
 
       - name: Resolve catalog and version
-        id: release
         env:
           TAG: ${{ github.ref_name }}
         run: |
@@ -56,7 +55,7 @@ jobs:
             echo "catalog=$catalog"
             echo "version=$version"
             echo "ref=$ref"
-          } >> "$GITHUB_OUTPUT"
+          } >> "$GITHUB_ENV"
 
       - name: Install kubara release
         env:
@@ -87,24 +86,51 @@ jobs:
             --password-stdin \
             ghcr.io
 
-      - name: Ensure version is not published
-        env:
-          CATALOG_REF: ${{ steps.release.outputs.ref }}
-          HOME: ${{ runner.temp }}/kubara-home
-        run: |
-          if "${RUNNER_TEMP}/kubara" catalog pull "$CATALOG_REF" >/dev/null 2>&1; then
-            echo "Catalog version already exists: $CATALOG_REF" >&2
-            exit 1
-          fi
-
       - name: Package and publish catalog
         env:
-          CATALOG: ${{ steps.release.outputs.catalog }}
-          CATALOG_REF: ${{ steps.release.outputs.ref }}
           HOME: ${{ runner.temp }}/kubara-home
         run: |
           set -euo pipefail
-          cd "$CATALOG"
-          "${RUNNER_TEMP}/kubara" catalog package \
+          if "${RUNNER_TEMP}/kubara" catalog pull "$ref" >/dev/null 2>&1; then
+            echo "Catalog version already exists: $ref" >&2
+          else
+            cd "$catalog"
+            "${RUNNER_TEMP}/kubara" catalog package \
             "oci://ghcr.io/${GITHUB_REPOSITORY_OWNER}/catalogs/"
-          "${RUNNER_TEMP}/kubara" catalog push "$CATALOG_REF"
+            "${RUNNER_TEMP}/kubara" catalog push "$ref"
+          fi
+
+      - name: Generate Changelog
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+          LAST_RELEASE=$(git tag -l "$catalog-*" --sort=-v:refname --format='%(refname:short)' | sed -n '2p')
+          CUTOFF_DATE=$(git tag -l --format="%(creatordate:iso)" $LAST_RELEASE)
+          echo "Searching merged prs since version $LAST_RELEASE from $CUTOFF_DATE"
+          CHANGELOG="$(gh search prs --repo=${GITHUB_REPOSITORY} --limit 100 \
+            --sort created "merged:>=$CUTOFF_DATE" \
+            --label $catalog \
+            --json number,title,author \
+            --template '{{range .}}* {{.title}} (#{{.number}}) by @{{.author.login}}{{"\n"}}{{end}}')"
+
+          # Fallback message if no PRs match
+          if [ -z "$CHANGELOG" ]; then
+            CHANGELOG="No specific PR changes found for this release."
+          fi
+
+          echo "$CHANGELOG"
+
+          if gh release view $TAG ; then
+            gh release edit $TAG \
+              --notes "### What's Changed
+          
+            $CHANGELOG"
+          else
+            gh release create "$TAG" \
+              --title "$catalog - $version" \
+              --notes "### What's Changed
+            
+            $CHANGELOG"
+          fi

@@ -19,6 +19,26 @@
   ],
   "packageRules": [
     {
+      "matchFileNames": ["bootstrap/**"],
+      "addLabels": ["bootstrap"]
+    },
+    {
+      "matchFileNames": ["general/**"],
+      "addLabels": ["general"]
+    },
+    {
+      "matchUpdateTypes": ["major"],
+      "addLabels": ["major"]
+    },
+    {
+      "matchUpdateTypes": ["minor"],
+      "addLabels": ["minor"]
+    },
+    {
+      "matchUpdateTypes": ["patch"],
+      "addLabels": ["patch"]
+    },
+    {
       "matchFiles": ["**/Chart.{yaml,yml}"],
       "bumpVersions": [
         {
