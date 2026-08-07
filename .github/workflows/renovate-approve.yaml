@@ -1,0 +1,46 @@
+name: approve renovate pull requests
+
+on:
+  pull_request_target:
+    branches: [main]
+    types: [opened, synchronize, reopened, ready_for_review, labeled]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+concurrency:
+  group: renovate-approval-${{ github.event.pull_request.number }}
+  cancel-in-progress: false
+
+jobs:
+  approve:
+    if: >-
+      github.event.pull_request.user.login == 'kubara-renovate[bot]' &&
+      contains(github.event.pull_request.labels.*.name, 'dependencies') &&
+      github.event.pull_request.draft == false
+    runs-on: ubuntu-latest
+    steps:
+      - name: Approve Renovate pull request
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          set -euo pipefail
+
+          approved_sha="$(
+            gh api \
+              "repos/${GITHUB_REPOSITORY}/pulls/${PR_NUMBER}/reviews" \
+              --jq '[.[] | select(.user.login == "github-actions[bot]" and .state == "APPROVED")] | last | .commit_id // empty'
+          )"
+
+          if [[ "$approved_sha" == "$PR_HEAD_SHA" ]]; then
+            echo "Renovate pull request is already approved at ${PR_HEAD_SHA}."
+            exit 0
+          fi
+
+          gh pr review "$PR_NUMBER" \
+            --repo "$GITHUB_REPOSITORY" \
+            --approve \
+            --body "Automatically approved for the Renovate merge queue."
