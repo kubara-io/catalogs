@@ -29,7 +29,6 @@ jobs:
           fetch-depth: 0
 
       - name: Resolve catalog and version
-        id: release
         env:
           TAG: ${{ github.ref_name }}
         run: |
@@ -87,24 +86,19 @@ jobs:
             --password-stdin \
             ghcr.io
 
-      - name: Ensure version is not published
-        env:
-          HOME: ${{ runner.temp }}/kubara-home
-        run: |
-          if "${RUNNER_TEMP}/kubara" catalog pull "$ref" >/dev/null 2>&1; then
-            echo "Catalog version already exists: $ref" >&2
-            exit 1
-          fi
-
       - name: Package and publish catalog
         env:
           HOME: ${{ runner.temp }}/kubara-home
         run: |
           set -euo pipefail
-          cd "$catalog"
-          "${RUNNER_TEMP}/kubara" catalog package \
-           "oci://ghcr.io/${GITHUB_REPOSITORY_OWNER}/catalogs/"
-          "${RUNNER_TEMP}/kubara" catalog push "$ref"
+          if "${RUNNER_TEMP}/kubara" catalog pull "$ref" >/dev/null 2>&1; then
+            echo "Catalog version already exists: $ref" >&2
+          else
+            cd "$catalog"
+            "${RUNNER_TEMP}/kubara" catalog package \
+            "oci://ghcr.io/${GITHUB_REPOSITORY_OWNER}/catalogs/"
+            "${RUNNER_TEMP}/kubara" catalog push "$ref"
+          fi
 
       - name: Generate Changelog
         env:
