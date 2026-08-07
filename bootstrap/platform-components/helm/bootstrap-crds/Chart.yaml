@@ -7,7 +7,7 @@ version: 1.0.0
 dependencies:
   # Certificate CRDs
   - name: cert-manager
-    version: v1.21.0
+    version: v1.21.1
     repository: https://charts.jetstack.io
   # Observability CRDs
   - name: kube-prometheus-stack
