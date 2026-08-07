@@ -3,7 +3,7 @@
   "extends": ["customManagers:githubActionsVersions"],
   "addLabels": ["dependencies"],
   "automerge": true,
-  "platformAutomerge": true,
+  "platformAutomerge": false,
   "terraform": {
     "fileMatch": ["\\.tf(\\.tplt)?$"]
   },
