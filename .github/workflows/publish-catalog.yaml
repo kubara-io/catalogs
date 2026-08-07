@@ -120,7 +120,7 @@ jobs:
             CHANGELOG="No specific PR changes found for this release."
           fi
 
-          echo $CHANGELOG
+          echo "$CHANGELOG"
 
           if gh release view $TAG ; then
             gh release edit $TAG \
