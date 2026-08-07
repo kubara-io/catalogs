@@ -29,8 +29,8 @@
         "bootstrap/**/Chart.yaml",
         "bootstrap/platform-components/**/values.yaml"
       ],
-      "groupName": "bootstrap helm charts",
-      "groupSlug": "bootstrap-helm-charts",
+      "groupName": "bootstrap catalog",
+      "groupSlug": "bootstrap-catalog",
       "separateMajorMinor": false,
       "separateMinorPatch": false,
       "postUpgradeTasks": {
@@ -49,8 +49,8 @@
         "general/**/Chart.yaml",
         "general/platform-components/**/values.yaml"
       ],
-      "groupName": "general helm charts",
-      "groupSlug": "general-helm-charts",
+      "groupName": "general catalog",
+      "groupSlug": "general-catalog",
       "separateMajorMinor": false,
       "separateMinorPatch": false,
       "postUpgradeTasks": {
@@ -67,35 +67,43 @@
     {
       "matchManagers": ["terraform"],
       "matchFileNames": ["bootstrap/**/*.tf", "bootstrap/**/*.tf.tplt"],
-      "groupName": "bootstrap terraform",
-      "groupSlug": "bootstrap-terraform",
+      "groupName": "bootstrap catalog",
+      "groupSlug": "bootstrap-catalog",
       "separateMajorMinor": false,
       "separateMinorPatch": false,
       "postUpgradeTasks": {
         "commands": ["./.scripts/renovate_bot_update_versions.sh"],
         "dataFileTemplate": "{{{toJSON upgrades}}}",
-        "fileFilters": ["bootstrap/Catalog.yaml"],
+        "fileFilters": [
+          "**/Chart.yaml",
+          "**/CHANGELOG.md",
+          "bootstrap/Catalog.yaml"
+        ],
         "executionMode": "branch"
       }
     },
     {
       "matchManagers": ["terraform"],
       "matchFileNames": ["general/**/*.tf", "general/**/*.tf.tplt"],
-      "groupName": "general terraform",
-      "groupSlug": "general-terraform",
+      "groupName": "general catalog",
+      "groupSlug": "general-catalog",
       "separateMajorMinor": false,
       "separateMinorPatch": false,
       "postUpgradeTasks": {
         "commands": ["./.scripts/renovate_bot_update_versions.sh"],
         "dataFileTemplate": "{{{toJSON upgrades}}}",
-        "fileFilters": ["general/Catalog.yaml"],
+        "fileFilters": [
+          "**/Chart.yaml",
+          "**/CHANGELOG.md",
+          "general/Catalog.yaml"
+        ],
         "executionMode": "branch"
       }
     },
     {
       "matchFileNames": ["bootstrap/platform-configs/**/values.generated.yaml.tplt"],
-      "groupName": "bootstrap helm charts",
-      "groupSlug": "bootstrap-helm-charts",
+      "groupName": "bootstrap catalog",
+      "groupSlug": "bootstrap-catalog",
       "separateMajorMinor": false,
       "separateMinorPatch": false,
       "postUpgradeTasks": {
@@ -111,8 +119,8 @@
     },
     {
       "matchFileNames": ["general/platform-configs/**/values.generated.yaml.tplt"],
-      "groupName": "general helm charts",
-      "groupSlug": "general-helm-charts",
+      "groupName": "general catalog",
+      "groupSlug": "general-catalog",
       "separateMajorMinor": false,
       "separateMinorPatch": false,
       "postUpgradeTasks": {
