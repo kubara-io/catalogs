@@ -112,7 +112,7 @@ jobs:
           TAG: ${{ github.ref_name }}
         run: |
           set -euo pipefail
-          LAST_RELEASE=$(git describe --tags --abbrev=0 --match "general-*")
+          LAST_RELEASE=$(git describe --tags --abbrev=0 --match "$catalog-*")
           CUTOFF_DATE=$(git tag -l --format="%(creatordate:iso)" $LAST_RELEASE)
           echo "Searching merged prs since version $LAST_RELEASE from $CUTOFF_DATE"
           CHANGELOG="$(gh search prs --repo=${GITHUB_REPOSITORY}  \
@@ -128,7 +128,7 @@ jobs:
 
           echo $CHANGELOG
 
-          if [[ gh release view $TAG ]]; then
+          if gh release view $TAG ; then
             gh release edit $TAG \
               --notes "### What's Changed
           
