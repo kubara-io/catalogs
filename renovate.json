@@ -2,8 +2,6 @@
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": ["customManagers:githubActionsVersions"],
   "addLabels": ["dependencies"],
-  "automerge": false,
-  "platformAutomerge": true,
   "terraform": {
     "fileMatch": ["\\.tf(\\.tplt)?$"]
   },

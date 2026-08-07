@@ -1,14 +1,20 @@
 name: catalog checks
 
-# No path filter: these checks are required by branch protection, so they must
-# report a status on every PR to main (a skipped path-filtered workflow would
-# leave the required check pending and block the PR). Generation is cheap and
-# stays green when the catalog is unchanged.
 on:
   push:
     branches: [main]
+    paths:
+      - "bootstrap/**"
+      - "general/**"
+      - ".scripts/**"
+      - ".github/workflows/pr-checks.yaml"
   pull_request:
     branches: [main]
+    paths:
+      - "bootstrap/**"
+      - "general/**"
+      - ".scripts/**"
+      - ".github/workflows/pr-checks.yaml"
   workflow_dispatch:
     inputs:
       kubara_ref:
