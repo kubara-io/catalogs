@@ -5,8 +5,6 @@ name: catalog checks
 # leave the required check pending and block the PR). Generation is cheap and
 # stays green when the catalog is unchanged.
 on:
-  merge_group:
-    types: [checks_requested]
   push:
     branches: [main]
   pull_request:
