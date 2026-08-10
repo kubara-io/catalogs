@@ -36,6 +36,9 @@ metallb:
         limits:
           memory: 100Mi
   prometheus:
+    # kube-prometheus-stack already grants Prometheus cluster-wide discovery
+    # permissions, so MetalLB does not need to create an additional binding.
+    rbacPrometheus: false
     serviceMonitor:
       enabled: true
   frr-k8s:
