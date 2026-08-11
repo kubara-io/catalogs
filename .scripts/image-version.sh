@@ -17,6 +17,10 @@ CONFIGS="${CONFIGS:-platform-configs/${CLUSTER_NAME}/helm}"
 IMAGE_OUTPUT_FILE="${IMAGE_OUTPUT_FILE:-}"
 HELM_CHART_VERSION_FILE="${HELM_CHART_VERSION_FILE:-}"
 
+CATALOG_ROOT="${CATALOG_ROOT:?CATALOG_ROOT must point at the catalog source tree}"
+CATALOG_HELM="$CATALOG_ROOT/platform-components/helm"
+[[ -d "$CATALOG_HELM" ]] || { echo "::error::No charts under $CATALOG_HELM"; exit 1; }
+
 [[ -d "$MANAGED" ]]     || { echo "::error::Missing $MANAGED — run 'kubara generate' first"; exit 1; }
 command -v helm >/dev/null 2>&1 || { echo "::error::helm not found on PATH"; exit 1; }
 command -v yq   >/dev/null 2>&1 || { echo "::error::yq not found on PATH"; exit 1; }
@@ -40,9 +44,15 @@ echo "Rendering charts from $MANAGED (kube-version=$KUBE_VERSION)" >&2
 render_dir="$(mktemp -d)"; trap 'rm -rf "$render_dir"' EXIT
 FAILED=()
 
+kept=()
 for chart_path in "$MANAGED"/*/; do
+
     chart=$(basename "$chart_path")
+    # only look at the relevant catalog
+    [[ -d "$CATALOG_HELM/$chart" ]] || continue
+
     [[ -f "$chart_path/Chart.yaml" ]] || continue
+    kept+=($chart_path)
 
     # Don't render library charts
     [[ "$(yq '.type // "application"' "$chart_path/Chart.yaml")" == library ]] && continue

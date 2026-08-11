@@ -202,6 +202,7 @@ jobs:
         env:
           IMAGE_OUTPUT_FILE: ${{ env.REPORT_DIR }}/images.txt
           HELM_CHART_VERSION_FILE: ${{ env.REPORT_DIR }}/chart.txt
+          CATALOG_ROOT: ${{ github.workspace }}/${{ needs.publish.outputs.catalog }}
         run: |
           mkdir -p "$REPORT_DIR"
           "${GITHUB_WORKSPACE}/.scripts/image-version.sh"
@@ -250,7 +251,6 @@ jobs:
             "${files[@]}"
 
           echo "::notice::Attached image list to $endpoint"
-
 
 
       - name: Upload image list
