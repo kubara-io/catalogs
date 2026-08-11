@@ -17,11 +17,16 @@ concurrency:
 env:
   # renovate: datasource=github-releases depName=kubara-io/kubara
   KUBARA_REF: "v0.13.0"
+  OUTPUT_GENERATED_DIR: ${{ github.workspace }}/output-generated
+  REPORT_DIR: ${{ github.workspace }}/reports
+  ARTIFACT_RETENTION_DAYS: "15"
 
 jobs:
   publish:
     name: Publish catalog
     runs-on: ubuntu-latest
+    outputs:
+      catalog: ${{ steps.catalog.outputs.catalog }}
     steps:
       - name: Checkout catalogs
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -29,6 +34,7 @@ jobs:
           fetch-depth: 0
 
       - name: Resolve catalog and version
+        id: catalog
         env:
           TAG: ${{ github.ref_name }}
         run: |
@@ -56,6 +62,8 @@ jobs:
             echo "version=$version"
             echo "ref=$ref"
           } >> "$GITHUB_ENV"
+
+          echo "catalog=$catalog" >> "$GITHUB_OUTPUT"
 
       - name: Install kubara release
         env:
@@ -106,24 +114,41 @@ jobs:
           TAG: ${{ github.ref_name }}
         run: |
           set -euo pipefail
-          LAST_RELEASE=$(git tag -l "$catalog-*" --sort=-v:refname --format='%(refname:short)' | sed -n '2p')
-          CUTOFF_DATE=$(git tag -l --format="%(creatordate:iso)" $LAST_RELEASE)
-          echo "Searching merged prs since version $LAST_RELEASE from $CUTOFF_DATE"
-          CHANGELOG="$(gh search prs --repo=${GITHUB_REPOSITORY} --limit 100 \
-            --sort created "merged:>=$CUTOFF_DATE" \
-            --label $catalog \
+          # Compare the semantic version independently of the legacy optional
+          # "v" in tags such as bootstrap-1.1.0 and bootstrap-v1.2.0.
+          LAST_RELEASE="$(
+            git tag -l "${catalog}-*" |
+              awk -v prefix="${catalog}-" \
+                '{ version = $0; sub("^" prefix "v?", "", version); print version "\t" $0 }' |
+              sort -t $'\t' -k1,1Vr |
+              awk -F '\t' -v current="$TAG" \
+                '$2 == current { found = 1; next } found { print $2; exit }'
+          )"
+
+          if [[ -n "$LAST_RELEASE" ]]; then
+            CUTOFF_DATE="$(git tag -l --format='%(creatordate:iso8601-strict)' "$LAST_RELEASE")"
+            merged_query="merged:>=$CUTOFF_DATE"
+            echo "Searching merged PRs since $LAST_RELEASE ($CUTOFF_DATE)"
+          else
+            merged_query="is:merged"
+            echo "No previous $catalog release found; including all matching merged PRs"
+          fi
+
+          CHANGELOG="$(gh search prs "$merged_query" --repo="$GITHUB_REPOSITORY" --limit 100 \
+            --sort created \
+            --label "$catalog" \
             --json number,title,author \
             --template '{{range .}}* {{.title}} (#{{.number}}) by @{{.author.login}}{{"\n"}}{{end}}')"
 
           # Fallback message if no PRs match
-          if [ -z "$CHANGELOG" ]; then
+          if [[ -z "$CHANGELOG" ]]; then
             CHANGELOG="No specific PR changes found for this release."
           fi
 
           echo "$CHANGELOG"
 
-          if gh release view $TAG ; then
-            gh release edit $TAG \
+          if gh release view "$TAG"; then
+            gh release edit "$TAG" \
               --notes "### What's Changed
           
             $CHANGELOG"
@@ -134,3 +159,103 @@ jobs:
             
             $CHANGELOG"
           fi
+
+  extract-images:
+    name: Extract container images
+    needs: publish
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Checkout catalogs
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Checkout kubara
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: kubara-io/kubara
+          ref: ${{ env.KUBARA_REF }}
+          path: .ci/kubara
+
+      - name: Install kubara release
+        env:
+          KUBARA_VERSION: ${{ env.KUBARA_REF }}
+        run: |
+          set -euo pipefail
+          version="${KUBARA_VERSION#v}"
+          archive="kubara_${version}_linux_amd64.tar.gz"
+          checksums="kubara_${version}_checksums.txt"
+          base_url="https://github.com/kubara-io/kubara/releases/download/${KUBARA_VERSION}"
+          temp_dir="$(mktemp -d)"
+          trap 'rm -rf "$temp_dir"' EXIT
+          curl -fsSL "$base_url/$archive" -o "$temp_dir/$archive"
+          curl -fsSL "$base_url/$checksums" -o "$temp_dir/$checksums"
+          checksum="$(awk -v file="$archive" '$2 == file {print $1}' "$temp_dir/$checksums")"
+          [[ -n "$checksum" ]]
+          echo "$checksum  $temp_dir/$archive" | sha256sum -c -
+          tar xzf "$temp_dir/$archive" -C "$RUNNER_TEMP" kubara
+          chmod +x "$RUNNER_TEMP/kubara"
+
+      - name: Generate platform
+        uses: ./.github/actions/generate-platform
+        with:
+          kubara: ${{ runner.temp }}/kubara
+          kubara-scripts: ${{ github.workspace }}/.ci/kubara/.scripts
+          work-dir: ${{ env.OUTPUT_GENERATED_DIR }}
+
+      - name: Extract container images
+        working-directory: ${{ env.OUTPUT_GENERATED_DIR }}
+        env:
+          IMAGE_OUTPUT_FILE: ${{ env.REPORT_DIR }}/images.txt
+          HELM_CHART_VERSION_FILE: ${{ env.REPORT_DIR }}/chart.txt
+          CATALOG_ROOT: ${{ github.workspace }}/${{ needs.publish.outputs.catalog }}
+        run: |
+          mkdir -p "$REPORT_DIR"
+          "${GITHUB_WORKSPACE}/.scripts/image-version.sh"
+
+      - name: Write image summary
+        if: always()
+        run: |
+          if [[ -f "$REPORT_DIR/images.txt" ]]; then
+            echo "### Container Images" >> "$GITHUB_STEP_SUMMARY"
+            while read -r img; do
+              echo "- $img" >> "$GITHUB_STEP_SUMMARY"
+            done < "$REPORT_DIR/images.txt"
+          fi
+          if [[ -f "$REPORT_DIR/chart.txt" ]]; then
+            echo "### Helm Chart Versions" >> "$GITHUB_STEP_SUMMARY"
+            while read -r chart; do
+              echo "- $chart" >> "$GITHUB_STEP_SUMMARY"
+            done < "$REPORT_DIR/chart.txt"
+          fi
+
+      - name: Attach reports to catalog release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+          files=()
+          for report in images chart; do
+            if [[ -f "$REPORT_DIR/${report}.txt" ]]; then
+              files+=("$REPORT_DIR/${report}.txt")
+            fi
+          done
+          if ((${#files[@]} == 0)); then
+            echo "::error::No image reports produced; nothing to attach"
+            exit 1
+          fi
+
+          gh release upload "$TAG" "${files[@]}" --clobber
+          echo "::notice::Attached image reports to release $TAG"
+
+      - name: Upload image list
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        if: always()
+        with:
+          name: container-images-${{ github.ref_name }}-${{ github.run_attempt }}
+          retention-days: ${{ env.ARTIFACT_RETENTION_DAYS }}
+          path: ${{ env.REPORT_DIR }}/
