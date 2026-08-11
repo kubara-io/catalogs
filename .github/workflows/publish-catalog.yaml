@@ -143,7 +143,6 @@ jobs:
             
             $CHANGELOG"
           fi
-          "${RUNNER_TEMP}/kubara" catalog push "$CATALOG_REF"
   
   extract-images:
     name: Extract container images

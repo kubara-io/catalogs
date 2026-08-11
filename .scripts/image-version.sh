@@ -89,6 +89,7 @@ if ((${#FAILED[@]})); then
     for err in "${FAILED[@]}"; do
         echo "- $err"
     done
+    exit 1
 fi
 
 
