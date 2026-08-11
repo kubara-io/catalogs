@@ -114,24 +114,49 @@ jobs:
           TAG: ${{ github.ref_name }}
         run: |
           set -euo pipefail
-          LAST_RELEASE=$(git tag -l "$catalog-*" --sort=-v:refname --format='%(refname:short)' | sed -n '2p')
-          CUTOFF_DATE=$(git tag -l --format="%(creatordate:iso)" $LAST_RELEASE)
-          echo "Searching merged prs since version $LAST_RELEASE from $CUTOFF_DATE"
-          CHANGELOG="$(gh search prs --repo=${GITHUB_REPOSITORY} --limit 100 \
-            --sort created "merged:>=$CUTOFF_DATE" \
-            --label $catalog \
+          # Compare the semantic version independently of the legacy optional
+          # "v" in tags such as bootstrap-1.1.0 and bootstrap-v1.2.0.
+          sorted_releases="$(
+            {
+              printf '%s\t0\t%s\n' "$version" "$TAG"
+              while IFS= read -r candidate; do
+                [[ "$candidate" == "$TAG" ]] && continue
+                candidate_version="${candidate#"${catalog}-"}"
+                candidate_version="${candidate_version#v}"
+                printf '%s\t1\t%s\n' "$candidate_version" "$candidate"
+              done < <(git tag -l "${catalog}-*")
+            } | sort -t $'\t' -k1,1Vr -k2,2n
+          )"
+          LAST_RELEASE="$(
+            awk -F '\t' -v current="$TAG" \
+              '$3 == current { found = 1; next } found { print $3; exit }' \
+              <<< "$sorted_releases"
+          )"
+
+          if [[ -n "$LAST_RELEASE" ]]; then
+            CUTOFF_DATE="$(git tag -l --format='%(creatordate:iso8601-strict)' "$LAST_RELEASE")"
+            merged_query="merged:>=$CUTOFF_DATE"
+            echo "Searching merged PRs since $LAST_RELEASE ($CUTOFF_DATE)"
+          else
+            merged_query="is:merged"
+            echo "No previous $catalog release found; including all matching merged PRs"
+          fi
+
+          CHANGELOG="$(gh search prs "$merged_query" --repo="$GITHUB_REPOSITORY" --limit 100 \
+            --sort created \
+            --label "$catalog" \
             --json number,title,author \
             --template '{{range .}}* {{.title}} (#{{.number}}) by @{{.author.login}}{{"\n"}}{{end}}')"
 
           # Fallback message if no PRs match
-          if [ -z "$CHANGELOG" ]; then
+          if [[ -z "$CHANGELOG" ]]; then
             CHANGELOG="No specific PR changes found for this release."
           fi
 
           echo "$CHANGELOG"
 
-          if gh release view $TAG ; then
-            gh release edit $TAG \
+          if gh release view "$TAG"; then
+            gh release edit "$TAG" \
               --notes "### What's Changed
           
             $CHANGELOG"
