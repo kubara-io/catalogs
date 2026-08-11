@@ -316,11 +316,13 @@ jobs:
           path: ${{ env.REPORT_DIR }}/terraform
 
   extract-images:
+    name: Extract catalog images (${{ matrix.catalog }}, ${{ matrix.target }})
     needs: integration-generate
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
+        catalog: [bootstrap, general]
         target: [stackit-ske]
     defaults:
       run:
@@ -332,6 +334,8 @@ jobs:
           sparse-checkout: |
             .scripts
             .github
+            bootstrap
+            general
 
       - name: Download generated kubara artifacts
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
@@ -345,7 +349,7 @@ jobs:
         env:
           IMAGE_OUTPUT_FILE: ${{ github.workspace }}/reports/images.txt
           HELM_CHART_VERSION_FILE: ${{ github.workspace }}/reports/chart.txt
-
+          CATALOG_ROOT: ${{ github.workspace }}/${{ matrix.catalog }}
         run: |
           mkdir -p reports
           .scripts/image-version.sh
@@ -353,22 +357,24 @@ jobs:
       - name: Write image summary
         if: always()
         run: |
-          [[ -f reports/images.txt ]] || exit 0
-          echo "### Container Images" >> "$GITHUB_STEP_SUMMARY"
-          while read -r img; do
-            echo "- $img" >> "$GITHUB_STEP_SUMMARY"
-          done < reports/images.txt
-          [[ -f reports/chart.txt ]] || exit 0 
-          echo "### Helm Chart Image Versions" >> "$GITHUB_STEP_SUMMARY"
-          while read -r img; do
-            echo "- $img" >> "$GITHUB_STEP_SUMMARY"
-          done < reports/chart.txt
+          if [[ -f reports/images.txt ]]; then
+            echo "### Container Images" >> "$GITHUB_STEP_SUMMARY"
+            while read -r img; do
+              echo "- $img" >> "$GITHUB_STEP_SUMMARY"
+            done < reports/images.txt
+          fi
+          if [[ -f reports/chart.txt ]]; then
+            echo "### Helm Chart Versions" >> "$GITHUB_STEP_SUMMARY"
+            while read -r chart; do
+              echo "- $chart" >> "$GITHUB_STEP_SUMMARY"
+            done < reports/chart.txt
+          fi
 
       - name: Upload image list
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         if: always()
         with:
-          name: container-images-${{ matrix.target }}-${{ github.run_attempt }}-${{ github.sha }}-${{ github.run_number }}
+          name: container-images-${{ matrix.catalog }}-${{ matrix.target }}-${{ github.run_attempt }}-${{ github.sha }}-${{ github.run_number }}
           retention-days: ${{ env.ARTIFACT_RETENTION_DAYS }}
           path: reports/
     

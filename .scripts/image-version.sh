@@ -5,7 +5,6 @@
 set -euo pipefail
 
 export PATH="$HOME/.local/bin/:$PATH"
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 MANAGED="${MANAGED:-${PWD}/platform-components/helm}"
 CONFIG_FILE="${CONFIG_FILE:-config.yaml}"
@@ -46,13 +45,12 @@ FAILED=()
 
 kept=()
 for chart_path in "$MANAGED"/*/; do
-
     chart=$(basename "$chart_path")
     # only look at the relevant catalog
     [[ -d "$CATALOG_HELM/$chart" ]] || continue
 
     [[ -f "$chart_path/Chart.yaml" ]] || continue
-    kept+=($chart_path)
+    kept+=("$chart_path")
 
     # Don't render library charts
     [[ "$(yq '.type // "application"' "$chart_path/Chart.yaml")" == library ]] && continue
@@ -65,12 +63,12 @@ for chart_path in "$MANAGED"/*/; do
     fi
 
     values_file="$CONFIGS/$chart/values.generated.yaml"
-    base_values=(); [[ -f "$values_file" ]] && base_values=(-f "$values_file")
+    helm_args=("${HELM_TEMPLATE_ARGS[@]}" "$chart" "$chart_path")
+    [[ ! -f "$values_file" ]] || helm_args+=(-f "$values_file")
 
-    if ! helm template "${HELM_TEMPLATE_ARGS[@]}" \
-            "$chart" "$chart_path" "${base_values[@]}" \
+    if ! helm template "${helm_args[@]}" \
             > "$render_dir/$chart.yaml" 2> "$render_dir/$chart.err"; then
-        echo "::error::helm template for for '$chart':"
+        echo "::error::helm template for '$chart':"
         sed 's/^/    /' "$render_dir/$chart.err" >&2
         FAILED+=("$chart:template"); continue
     fi
@@ -81,21 +79,24 @@ done
 # and images refs passed via environment, this does not represent an exhaustive list of images
 # captured
 IMAGES="$(
-  shopt -s nullglob # prevents failing if nothing's matched
-  cat "$render_dir"/*.yaml |
-    { grep -E '^[[:space:]]*image:' || true; } |
-    sed -E "s/^[[:space:]]*image:[[:space:]]*//; s/[\"']//g" |
-    grep -vE '[*!]' |          # drop kyverno wildcard/negation entries
-    grep -vE '^[[:space:]]*$' |
-    sort -u
+  shopt -s nullglob
+  rendered_files=("$render_dir"/*.yaml)
+  if ((${#rendered_files[@]})); then
+    cat "${rendered_files[@]}" |
+      { grep -E '^[[:space:]]*image:' || true; } |
+      sed -E "s/^[[:space:]]*image:[[:space:]]*//; s/[\"']//g" |
+      { grep -vE '[*!]' || true; } |
+      { grep -vE '^[[:space:]]*$' || true; } |
+      sort -u
+  fi
 )"
 
 echo "Done Rendering!"
 
 
-# errors during templating are listed, but not critical for extraction
+# Incomplete rendering would produce an incomplete inventory, so fail the job.
 if ((${#FAILED[@]})); then
-    echo "::warning:: Errors during templating: "
+    echo "::error::Errors during templating:"
     for err in "${FAILED[@]}"; do
         echo "- $err"
     done
@@ -107,19 +108,24 @@ echo "$IMAGES"
 
 ### Helm dependency part
 echo "Extracting Helm Dependencies"
-HELM_CHART_VERSIONS="$(find "$MANAGED" -name Chart.yaml -exec yq '.dependencies[] | select(.name != "template-library") | .name + ": " + .version' {} \;)"
+HELM_CHART_VERSIONS="$(
+  for chart_path in "${kept[@]}"; do
+    yq '.dependencies[] | select(.name != "template-library") | .name + ": " + .version' \
+      "$chart_path/Chart.yaml"
+  done | sort -u
+)"
 echo "$HELM_CHART_VERSIONS"
 
-# If either no images are found nor chart versions exit
-[[ -n "$IMAGES" ]] || { echo "::warning::No image references found"; exit 0; }
-[[ -n "$HELM_CHART_VERSIONS" ]] || { echo "::warning::No helm image references found"; exit 0; }
-
-if [[ -n "$IMAGE_OUTPUT_FILE" ]]; then
+if [[ -n "$IMAGES" && -n "$IMAGE_OUTPUT_FILE" ]]; then
     echo "$IMAGES" > "$IMAGE_OUTPUT_FILE"
     echo "::notice::Image list written to $IMAGE_OUTPUT_FILE"
+elif [[ -z "$IMAGES" ]]; then
+    echo "::warning::No image references found"
 fi
 
-if [[ -n "$HELM_CHART_VERSION_FILE" ]]; then
+if [[ -n "$HELM_CHART_VERSIONS" && -n "$HELM_CHART_VERSION_FILE" ]]; then
     echo "$HELM_CHART_VERSIONS" > "$HELM_CHART_VERSION_FILE"
-    echo "::notice:: Helm Image list written to $HELM_CHART_VERSION_FILE"
+    echo "::notice::Helm chart version list written to $HELM_CHART_VERSION_FILE"
+elif [[ -z "$HELM_CHART_VERSIONS" ]]; then
+    echo "::warning::No Helm chart dependencies found"
 fi
