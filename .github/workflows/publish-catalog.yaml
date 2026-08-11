@@ -142,7 +142,7 @@ jobs:
             
             $CHANGELOG"
           fi
-  
+
   extract-images:
     name: Extract container images
     needs: publish
@@ -155,7 +155,7 @@ jobs:
     steps:
       - name: Checkout catalogs
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      
+
       - name: Checkout kubara
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -188,7 +188,7 @@ jobs:
           kubara: ${{ runner.temp }}/kubara
           kubara-scripts: ${{ github.workspace }}/.ci/kubara/.scripts
           work-dir: ${{ env.OUTPUT_GENERATED_DIR }}
-      
+
       - name: Extract container images
         working-directory: ${{ env.OUTPUT_GENERATED_DIR }}
         env:

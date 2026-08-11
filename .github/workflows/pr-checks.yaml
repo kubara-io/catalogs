@@ -377,4 +377,3 @@ jobs:
           name: container-images-${{ matrix.catalog }}-${{ matrix.target }}-${{ github.run_attempt }}-${{ github.sha }}-${{ github.run_number }}
           retention-days: ${{ env.ARTIFACT_RETENTION_DAYS }}
           path: reports/
-    

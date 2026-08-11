@@ -61,6 +61,13 @@ spec:
           prune: true
           selfHeal: true
           allowEmpty: true
+        retry:
+          limit: 8
+          refresh: true
+          backoff:
+            duration: 10s
+            factor: 2
+            maxDuration: 2m
         syncOptions:
           - CreateNamespace=false
           - PruneLast=true
