@@ -62,7 +62,7 @@ spec:
           selfHeal: true
           allowEmpty: true
         retry:
-          limit: 5
+          limit: 8
           refresh: true
           backoff:
             duration: 10s
