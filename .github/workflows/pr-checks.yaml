@@ -139,65 +139,17 @@ jobs:
         working-directory: .ci/kubara/src
         run: go build -o "${RUNNER_TEMP}/kubara" .
 
-      - name: Package catalogs from pull request
-        env:
-          HOME: ${{ runner.temp }}/kubara-home
-        run: |
-          set -euo pipefail
-          for catalog in bootstrap general; do
-            echo "::group::Package ${catalog}"
-            (
-              cd "${catalog}"
-              "${RUNNER_TEMP}/kubara" catalog package \
-                oci://ghcr.io/kubara-io/catalogs/
-            )
-            echo "::endgroup::"
-          done
-
-      - name: Create output directory
-        run: mkdir -p "$OUTPUT_GENERATED_DIR"
-
-      - name: Run kubara init prep
-        env:
-          HOME: ${{ runner.temp }}/kubara-home
-        run: |
-          "${RUNNER_TEMP}/kubara" \
-            --work-dir "$OUTPUT_GENERATED_DIR" \
-            init --prep
-
-      - name: Populate environment file
-        run: .ci/kubara/.scripts/kubara-env-update.sh "$OUTPUT_GENERATED_DIR/.env"
-
-      - name: Run kubara init
-        env:
-          HOME: ${{ runner.temp }}/kubara-home
-        run: |
-          "${RUNNER_TEMP}/kubara" \
-            --work-dir "$OUTPUT_GENERATED_DIR" \
-            init
-
-      - name: Populate configuration
-        run: .ci/kubara/.scripts/kubara-config-update.sh "$OUTPUT_GENERATED_DIR/config.yaml"
-
-      - name: Enable all services
-        env:
-          KUBARA_VELERO_S3_URL: ${{ matrix.velero_s3_url }}
-        run: |
-          yq eval '
-            .clusters[0].services[].status = "enabled" |
-            .clusters[0].services.metallb.config.publicLoadBalancerIPs = "192.0.2.10" |
-            .clusters[0].services.metallb.config.loadBalancerAddressPool = ["192.0.2.10-192.0.2.20"] |
-            .clusters[0].services.velero.config.backupStorage.bucketName = "kubara-ci-velero" |
-            .clusters[0].services.velero.config.backupStorage.s3Url = strenv(KUBARA_VELERO_S3_URL)
-          ' -i "$OUTPUT_GENERATED_DIR/config.yaml"
-
-      - name: Generate platform artifacts
-        env:
-          HOME: ${{ runner.temp }}/kubara-home
-        run: |
-          "${RUNNER_TEMP}/kubara" \
-            --work-dir "$OUTPUT_GENERATED_DIR" \
-            generate
+      - name: Generate platform from working-tree catalogs
+        uses: ./.github/actions/generate-platform
+        with:
+          kubara: ${{ runner.temp }}/kubara
+          kubara-scripts: ${{ github.workspace }}/.ci/kubara/.scripts
+          work-dir: ${{ env.OUTPUT_GENERATED_DIR }}
+          provider: ${{ matrix.provider }}
+          kubernetes-type: ${{ matrix.kubernetes_type }}
+          dns-name: ${{ matrix.dns_name }}
+          project-id: ${{ matrix.project_id }}
+          velero-s3-url: ${{ matrix.velero_s3_url }}
 
       - name: Upload generated artifacts
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
