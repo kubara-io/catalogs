@@ -25,13 +25,23 @@ output "vault_user_ro_name_b64" {
 }
 
 output "vault_user_ro_name" {
-  description = "Base64-encoded username of vault-user-ro"
+  description = "Username of vault-user-ro"
   value       = module.secretsmanager.users["vault-user-ro"].username
   sensitive   = true
 }
 
 output "vault_instance_id" {
   description = "ID of the created Secrets Manager instance. Needed or named as path for/in External Secrets"
+  value       = module.secretsmanager.instance_id
+}
+
+output "vault_api_url" {
+  description = "API URL of the STACKIT Secrets Manager instance"
+  value       = "https://prod.sm.eu01.stackit.cloud"
+}
+
+output "vault_path" {
+  description = "KV mount path used by External Secrets"
   value       = module.secretsmanager.instance_id
 }
 
