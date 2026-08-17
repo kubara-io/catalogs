@@ -5,6 +5,7 @@
 {{- $certManagerIssuer := dig "cluster" "services" "cert-manager" "config" "clusterIssuer" "name" "letsencrypt-staging" . }}
 {{- $oauth2ProxyStatus := dig "cluster" "services" "oauth2-proxy" "status" "disabled" . }}
 {{- $traefikStatus := dig "cluster" "services" "traefik" "status" "disabled" . }}
+{{- $lokiStatus := dig "cluster" "services" "loki" "status" "disabled" . }}
 {{- $kubePromIngressAnnotations := dict "cert-manager.io/cluster-issuer" $certManagerIssuer }}
 {{- if (and (eq $oauth2ProxyStatus "enabled") (eq $traefikStatus "enabled")) }}
 {{- $_ := set $kubePromIngressAnnotations "traefik.ingress.kubernetes.io/router.middlewares" "oauth2-proxy-oauth-auth@kubernetescrd" }}
@@ -220,6 +221,7 @@ kube-prometheus-stack:
         allowed_organizations: "[\"{{ .cluster.ssoOrg}}\"]"
         role_attribute_path: contains(groups[*], '@{{ .cluster.ssoOrg}}/{{ .cluster.ssoTeam}}') && 'Admin' || 'Viewer'
        {{- end }}
+{{- if (eq $lokiStatus "enabled") }}
     additionalDataSources:
       - access: proxy
         isDefault: false
@@ -227,6 +229,7 @@ kube-prometheus-stack:
         type: loki
         url: http://loki-headless.loki.svc.cluster.local:3100
         version: 1
+{{- end }}
 prometheus-blackbox-exporter:
   image:
     pullSecrets:
