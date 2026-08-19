@@ -54,6 +54,6 @@ spec:
             - entries:
                 - keys:
                     publicKeys: |-
-  {{ .key | indent 24 }}
+                    {{- .key | nindent 22 }}
           {{- end }}
   {{- end }}
