@@ -13,3 +13,8 @@ helm template . -f tests/traefik/values.yaml \
   --show-only templates/traefik/disallow-default-tlsoptions.yaml \
   --show-only templates/traefik/disallow-default-tlsoptions-in-cel-expressions.yaml \
   > /tmp/kyverno-traefik.yaml
+
+helm template . -f tests/argoCD/values.yaml \
+  --show-only templates/argoCD/application-prevent-updates-project.yaml \
+  --show-only templates/argoCD/application-prevent-default-project.yaml \
+  > /tmp/kyverno-argocd.yaml
