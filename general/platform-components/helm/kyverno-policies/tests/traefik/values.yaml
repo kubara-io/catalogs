@@ -1,0 +1,6 @@
+---
+traefik:
+  disallowDefaultTLSOptions:
+    enabled: true
+  disallowDefaultTLSOptionsCEL:
+    enabled: true
