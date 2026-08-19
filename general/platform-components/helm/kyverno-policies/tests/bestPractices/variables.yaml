@@ -1,0 +1,16 @@
+---
+apiVersion: cli.kyverno.io/v1alpha1
+kind: Values
+metadata:
+  name: values
+policies:
+  - name: require-pod-disruption-budget
+    resources:
+      # no matching PodDisruptionBudget in the namespace
+      - name: pdb-missing-deployment
+        values:
+          pdb_count: "0"
+      # a matching PodDisruptionBudget exists
+      - name: pdb-present-deployment
+        values:
+          pdb_count: "1"
