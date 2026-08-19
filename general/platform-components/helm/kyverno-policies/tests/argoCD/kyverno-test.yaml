@@ -1,0 +1,21 @@
+---
+apiVersion: cli.kyverno.io/v1alpha1
+kind: Test
+metadata:
+  name: prevent-project-update
+policies:
+  - /tmp/kyverno-argocd.yaml
+resources:
+  - resources/application.yaml
+variables: variables.yaml
+results:
+  - policy: application-prevent-updates-project
+    rule: project-updates
+    resources:
+      - argocd/test
+    result: fail
+  - policy: application-prevent-default-project
+    rule: default-project
+    resources:
+      - default-project-test
+    result: fail
