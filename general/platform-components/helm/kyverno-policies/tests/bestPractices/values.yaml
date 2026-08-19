@@ -1,0 +1,18 @@
+---
+bestPractices:
+  enabled: true
+  disallowDefaultNamespace:
+    enabled: true
+    webhookFailurePolicy: Fail
+    enableBackgroundScanning: true
+    actionOverride: Enforce
+  requirePodDisruptionBudget:
+    enabled: true
+    webhookFailurePolicy: Fail
+    enableBackgroundScanning: true
+    actionOverride: Enforce
+  requireReadOnlyRootFilesystem:
+    enabled: true
+    webhookFailurePolicy: Fail
+    enableBackgroundScanning: true
+    actionOverride: Enforce
