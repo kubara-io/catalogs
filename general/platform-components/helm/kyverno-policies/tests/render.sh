@@ -38,7 +38,6 @@ helm template . -f tests/itGrundschutz/values.yaml \
   --show-only templates/itGrundschutz/standard/create-default-networkpolicy-new-ns.yaml \
   > /tmp/kyverno-itGrundschutz-standard.yaml
 
-# only test which requirese internet, see README.md
 helm template . -f tests/verifyImage/values.yaml \
   --show-only templates/bestPractices/verify-image.yaml \
   > /tmp/kyverno-verify-image.yaml
