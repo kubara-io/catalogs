@@ -18,3 +18,9 @@ helm template . -f tests/argoCD/values.yaml \
   --show-only templates/argoCD/application-prevent-updates-project.yaml \
   --show-only templates/argoCD/application-prevent-default-project.yaml \
   > /tmp/kyverno-argocd.yaml
+
+helm template . -f tests/certManager/values.yaml \
+  --show-only templates/certManager/limit-dnsnames.yaml \
+  --show-only templates/certManager/limit-duration.yaml \
+  --show-only templates/certManager/restrict-issuer.yaml \
+  > /tmp/kyverno-certManager.yaml
