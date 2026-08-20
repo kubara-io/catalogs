@@ -1,1 +1,1 @@
-{{ include "templateLibrary.argocd.project" .Values.defaultProject }}
+{{ include "bootstrap.argocd.project" .Values.defaultProject }}

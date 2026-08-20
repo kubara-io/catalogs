@@ -10,4 +10,4 @@ dependencies:
     version: 10.7.0
   - name: template-library
     repository: file://../template-library
-    version: 0.2.1
+    version: 0.3.0

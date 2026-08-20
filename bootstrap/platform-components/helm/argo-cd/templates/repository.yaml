@@ -1,3 +1,55 @@
 {{- range $key, $repo := (.Values.bootstrapValues).repositories }}
-{{- include "templateLibrary.externalSecrets.argocd.repository" $repo }}
+apiVersion: external-secrets.io/v1
+kind: ExternalSecret
+metadata:
+  name: {{ $repo.name }}-es
+spec:
+  refreshInterval: {{ default "5m" $repo.refreshInterval }}
+  secretStoreRef:
+    kind: {{ $repo.secretStoreRef.kind }}
+    name: {{ $repo.secretStoreRef.name }}
+  target:
+    name: {{ $repo.name }}-repo
+    creationPolicy: Owner
+    template:
+      type: Opaque
+      metadata:
+        labels:
+          argocd.argoproj.io/secret-type: repository
+      data:
+        name: {{ $repo.name }}
+        type: {{ $repo.repoType }}
+        url: {{ $repo.url }}
+        username: {{ $repo.username }}
+        password: "{{ "{{" }} .pat }}"
+        {{- if $repo.proxy }}
+        proxy: {{ $repo.proxy }}
+        {{- end }}
+        {{- if $repo.noProxy }}
+        noProxy: {{ $repo.noProxy | quote }}
+        {{- end }}
+        {{- if $repo.projectScope }}
+        project: {{ $repo.projectScope }}
+        {{- end }}
+        {{- if $repo.insecure }}
+        insecure: {{ $repo.insecure | toString }}
+        {{- else }}
+        insecure: "false"
+        {{- end }}
+  data:
+    - secretKey: pat
+      remoteRef:
+        {{- if $repo.remoteRef }}
+        key: {{ $repo.remoteRef.remoteKey }}
+        {{- if $repo.remoteRef.remoteKeyProperty }}
+        property: {{ $repo.remoteRef.remoteKeyProperty }}
+        {{- end }}
+        {{- else }}
+        key: {{ $repo.name }}
+        {{- end }}
+        conversionStrategy: Default
+        decodingStrategy: None
+        metadataPolicy: None
+        nullBytePolicy: Fail
+---
 {{- end }}
