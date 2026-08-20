@@ -1,0 +1,146 @@
+---
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: allowed-daemonset
+  namespace: kyverno-test
+spec:
+  selector:
+    matchLabels:
+      app: allowed-daemonset
+  template:
+    metadata:
+      labels:
+        app: allowed-daemonset
+    spec:
+      containers:
+        - name: test
+          image: nginx:1.27
+---
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: blocked-daemonset
+  namespace: default
+spec:
+  selector:
+    matchLabels:
+      app: blocked-daemonset
+  template:
+    metadata:
+      labels:
+        app: blocked-daemonset
+    spec:
+      containers:
+        - name: test
+          image: nginx:1.27
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: allowed-deployment
+  namespace: kyverno-test
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: allowed-deployment
+  template:
+    metadata:
+      labels:
+        app: allowed-deployment
+    spec:
+      containers:
+        - name: test
+          image: nginx:1.27
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: blocked-deployment
+  namespace: default
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: blocked-deployment
+  template:
+    metadata:
+      labels:
+        app: blocked-deployment
+    spec:
+      containers:
+        - name: test
+          image: nginx:1.27
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: allowed-job
+  namespace: kyverno-test
+spec:
+  template:
+    metadata:
+      labels:
+        app: allowed-job
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: test
+          image: nginx:1.27
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: blocked-job
+  namespace: default
+spec:
+  template:
+    metadata:
+      labels:
+        app: blocked-job
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: test
+          image: nginx:1.27
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: allowed-statefulset
+  namespace: kyverno-test
+spec:
+  serviceName: allowed-statefulset
+  replicas: 1
+  selector:
+    matchLabels:
+      app: allowed-statefulset
+  template:
+    metadata:
+      labels:
+        app: allowed-statefulset
+    spec:
+      containers:
+        - name: test
+          image: nginx:1.27
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: blocked-statefulset
+  namespace: default
+spec:
+  serviceName: blocked-statefulset
+  replicas: 1
+  selector:
+    matchLabels:
+      app: blocked-statefulset
+  template:
+    metadata:
+      labels:
+        app: blocked-statefulset
+    spec:
+      containers:
+        - name: test
+          image: nginx:1.27
