@@ -3,11 +3,11 @@ apiVersion: v2
 name: kube-prometheus-stack
 description: Umbrella Chart for kube-prometheus-stack
 type: application
-version: 3.7.1
+version: 3.7.2
 dependencies:
   - name: template-library
     repository: file://../template-library
-    version: 0.2.1
+    version: 0.3.0
   - name: kube-prometheus-stack
     repository: https://prometheus-community.github.io/helm-charts
     version: 88.6.1

@@ -1,3 +1,78 @@
 {{- range $key, $repo := (.Values.bootstrapValues).repositories }}
-{{- include "templateLibrary.externalSecrets.argocd.repository" $repo }}
+{{- $authMode := default "https" $repo.authMode }}
+{{- $credentialSecretKey := "pat" }}
+{{- $credentialRemoteRef := $repo.remoteRef }}
+{{- if eq $authMode "ssh" }}
+{{- $credentialSecretKey = "sshPrivateKey" }}
+{{- $credentialRemoteRef = default $repo.remoteRef $repo.sshPrivateKeyRemoteRef }}
+{{- else if eq $authMode "github-app" }}
+{{- $credentialSecretKey = "githubAppPrivateKey" }}
+{{- $credentialRemoteRef = default $repo.remoteRef $repo.githubAppPrivateKeyRemoteRef }}
+{{- else if ne $authMode "https" }}
+{{- fail (printf "unsupported Argo CD repository authMode %q for repository %q" $authMode $repo.name) }}
+{{- end }}
+apiVersion: external-secrets.io/v1
+kind: ExternalSecret
+metadata:
+  name: {{ $repo.name }}-es
+spec:
+  refreshInterval: {{ default "5m" $repo.refreshInterval }}
+  secretStoreRef:
+    kind: {{ $repo.secretStoreRef.kind }}
+    name: {{ $repo.secretStoreRef.name }}
+  target:
+    name: {{ $repo.name }}-repo
+    creationPolicy: Owner
+    template:
+      type: Opaque
+      metadata:
+        labels:
+          argocd.argoproj.io/secret-type: repository
+      data:
+        name: {{ $repo.name }}
+        type: {{ default "git" $repo.repoType }}
+        url: {{ $repo.url }}
+        {{- if eq $authMode "https" }}
+        username: {{ $repo.username }}
+        password: "{{ "{{" }} .pat }}"
+        {{- else if eq $authMode "ssh" }}
+        sshPrivateKey: "{{ "{{" }} .sshPrivateKey }}"
+        {{- else if eq $authMode "github-app" }}
+        githubAppID: {{ required (printf "githubAppID is required when authMode is github-app for repository %q" $repo.name) $repo.githubAppID | quote }}
+        githubAppInstallationID: {{ required (printf "githubAppInstallationID is required when authMode is github-app for repository %q" $repo.name) $repo.githubAppInstallationID | quote }}
+        githubAppPrivateKey: "{{ "{{" }} .githubAppPrivateKey }}"
+        {{- if $repo.githubAppEnterpriseBaseUrl }}
+        githubAppEnterpriseBaseUrl: {{ $repo.githubAppEnterpriseBaseUrl | quote }}
+        {{- end }}
+        {{- end }}
+        {{- if $repo.proxy }}
+        proxy: {{ $repo.proxy }}
+        {{- end }}
+        {{- if $repo.noProxy }}
+        noProxy: {{ $repo.noProxy | quote }}
+        {{- end }}
+        {{- if $repo.projectScope }}
+        project: {{ $repo.projectScope }}
+        {{- end }}
+        {{- if $repo.insecure }}
+        insecure: {{ $repo.insecure | toString }}
+        {{- else }}
+        insecure: "false"
+        {{- end }}
+  data:
+    - secretKey: {{ $credentialSecretKey }}
+      remoteRef:
+        {{- if $credentialRemoteRef }}
+        key: {{ $credentialRemoteRef.remoteKey }}
+        {{- if $credentialRemoteRef.remoteKeyProperty }}
+        property: {{ $credentialRemoteRef.remoteKeyProperty }}
+        {{- end }}
+        {{- else }}
+        key: {{ $repo.name }}
+        {{- end }}
+        conversionStrategy: Default
+        decodingStrategy: None
+        metadataPolicy: None
+        nullBytePolicy: Fail
+---
 {{- end }}
