@@ -24,3 +24,14 @@ helm template . -f tests/certManager/values.yaml \
   --show-only templates/certManager/limit-duration.yaml \
   --show-only templates/certManager/restrict-issuer.yaml \
   > /tmp/kyverno-certManager.yaml
+
+helm template . -f tests/itGrundschutz/values.yaml \
+  --show-only templates/itGrundschutz/base/restrict-image-registry.yaml \
+  > /tmp/kyverno-itGrundschutz-base.yaml
+
+helm template . -f tests/itGrundschutz/values.yaml \
+  --show-only templates/itGrundschutz/standard/disallowPrivilegedContainers.yaml \
+  --show-only templates/itGrundschutz/standard/disallowPrivilegeEscalation.yaml \
+  --show-only templates/itGrundschutz/standard/require-pod-probes.yaml \
+  --show-only templates/itGrundschutz/standard/require-requests-limits.yaml \
+  > /tmp/kyverno-itGrundschutz-standard.yaml

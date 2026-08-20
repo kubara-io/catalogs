@@ -1,0 +1,20 @@
+---
+apiVersion: cli.kyverno.io/v1alpha1
+kind: Test
+metadata:
+  name: itGrundschutz-base-test
+policies:
+  - /tmp/kyverno-itGrundschutz-base.yaml
+resources:
+  - resources/pods.yaml
+results:
+  - policy: restrict-image-registries
+    rule: validate-image-registries
+    resources:
+      - passing-registry
+    result: pass
+  - policy: restrict-image-registries
+    rule: validate-image-registries
+    resources:
+      - not-passing-registry
+    result: fail
