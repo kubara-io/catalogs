@@ -6,6 +6,10 @@ itGrundschutz:
       enabled: true
   standard:
     enabled: true
+    createDefaultNetworkPolicyExistingNamespaces:
+      enabled: true
+    createDefaultNetworkPolicyNewNamespaces:
+      enabled: true
     disallowPrivilegedContainers:
       enabled: true
     disallowPrivilegeEscalation:
