@@ -7,6 +7,7 @@ policies:
   - /tmp/kyverno-itGrundschutz-standard.yaml
 resources:
   - resources/pods.yaml
+  - resources/namespaces.yaml
 results:
   - policy: disallow-privileged-containers-itgrundschutz
     rule: privileged-containers
@@ -56,6 +57,21 @@ results:
       - pod-without-limits
     kind: Pod
     result: fail
-## Generating network policy existing ns
 
-## generating network policy new ns
+  ###
+  # create default-deny network
+  ###
+  - policy: create-default-network-policy-new-namespaces
+    rule: create-default-deny-netpol-new-ns
+    resources:
+      - new-namespace
+    kind: Namespace
+    generatedResource: resources/generated-netpol.yaml
+    result: pass
+  - policy: create-default-network-policy-existing-namespaces
+    rule: create-default-deny-netpol-existing-ns
+    resources:
+      - existing-namespace
+    kind: Namespace
+    generatedResource: resources/generated-netpol.yaml
+    result: pass
