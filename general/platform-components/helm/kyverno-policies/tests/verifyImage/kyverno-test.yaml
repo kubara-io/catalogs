@@ -1,0 +1,31 @@
+---
+apiVersion: cli.kyverno.io/v1alpha1
+kind: Test
+metadata:
+  name: verify-image-test
+policies:
+  - /tmp/kyverno-verify-image.yaml
+resources:
+  - resources/pod.yaml
+results:
+  # pass: image signed with the configured public key
+  - policy: verify-image
+    rule: verify-image
+    resources:
+      - verified-pod
+    kind: Pod
+    result: pass
+  # fail: unsigned image
+  - policy: verify-image
+    rule: verify-image
+    resources:
+      - unverified-pod
+    kind: Pod
+    result: fail
+  # skip: excluded namespace
+  - policy: verify-image
+    rule: verify-image
+    resources:
+      - excluded-pod
+    kind: Pod
+    result: skip
