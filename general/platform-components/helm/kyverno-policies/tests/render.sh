@@ -9,14 +9,6 @@ helm template . -f tests/bestPractices/values.yaml \
   --show-only templates/bestPractices/require-ro-rootfs.yaml \
   > /tmp/kyverno-policies.yaml
 
-# verify-image is the one manual, network-dependent suite (Cosign signature check
-# against ghcr.io + Rekor). Rendered separately; run it on demand with `--registry`.
-
-# as specified in the README.md
-helm template . -f tests/verifyImage/values.yaml \
-  --show-only templates/bestPractices/verify-image.yaml \
-  > /tmp/kyverno-verify-image.yaml
-
 helm template . -f tests/traefik/values.yaml \
   --show-only templates/traefik/disallow-default-tlsoptions.yaml \
   --show-only templates/traefik/disallow-default-tlsoptions-in-cel-expressions.yaml \
@@ -45,3 +37,8 @@ helm template . -f tests/itGrundschutz/values.yaml \
   --show-only templates/itGrundschutz/standard/create-default-networkpolicy-existing-ns.yaml \
   --show-only templates/itGrundschutz/standard/create-default-networkpolicy-new-ns.yaml \
   > /tmp/kyverno-itGrundschutz-standard.yaml
+
+# only test which requirese internet, see README.md
+helm template . -f tests/verifyImage/values.yaml \
+  --show-only templates/bestPractices/verify-image.yaml \
+  > /tmp/kyverno-verify-image.yaml
