@@ -42,3 +42,9 @@ helm template . -f tests/itGrundschutz/values.yaml \
 helm template . -f tests/verifyImage/values.yaml \
   --show-only templates/bestPractices/verify-image.yaml \
   > /tmp/kyverno-verify-image.yaml
+
+
+# cel style policies
+helm template . -f tests/bestPractices/values.yaml \
+  --show-only templates/bestPractices-cel/disallow-default-namespace.yaml \
+  > /tmp/kyverno-bestPractices-cel.yaml

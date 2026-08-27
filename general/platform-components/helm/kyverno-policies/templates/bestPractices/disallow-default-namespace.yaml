@@ -2,7 +2,7 @@
 apiVersion: kyverno.io/v1
 kind: ClusterPolicy
 metadata:
-  name: "disallow-default-namespace"
+  name: "disallow-default-namespace-deprecated"
   annotations:
     policies.kyverno.io/title: Disallow Default Namespace
     policies.kyverno.io/category: Best Practices
