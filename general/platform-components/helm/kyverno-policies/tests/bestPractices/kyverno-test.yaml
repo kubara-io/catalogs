@@ -4,7 +4,8 @@ kind: Test
 metadata:
   name: registry-tests
 policies:
-  - /tmp/kyverno-policies.yaml
+  #- /tmp/kyverno-policies.yaml
+  - /tmp/kyverno-bestPractices-cel.yaml
 resources:
   - resources/pod.yaml
   - resources/pod-controller.yaml
@@ -15,13 +16,13 @@ results:
   # disallow default namespace
   ###
   - policy: disallow-default-namespace
-    rule: validate-namespace
+    # rule: validate-namespace
     resources:
       - bad-pod
     kind: Pod
     result: fail
   - policy: disallow-default-namespace
-    rule: validate-namespace
+    # rule: validate-namespace
     resources:
       - good-pod
     kind: Pod
