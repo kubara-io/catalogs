@@ -4,13 +4,13 @@ This directory contains Kyverno tests for the existing Kyverno Policies.
 The purpose of these tests is to verify the behaviour of the policies, without having to spin up a cluster. 
 Furthermore the tests give insight on what behavioure is expected from new CEL-Style policies
 
-The current test suit covers:
+The current test suite covers:
 * bestPractices
 * traefik
 * argoCD
 * certManager
 * itGrundschutz
-* bestPracties/verifyImage
+* verifyImage
 
 ## Prerequisites:
 * helm 
@@ -25,8 +25,8 @@ Render the policies with:
 And execute the tests with:
 `kyverno test kyverno test bestPractices traefik certManager itGrundschutz`
 For Verify Image Policy:
-`kyverno test verifyImage --registyr`
+`kyverno test verifyImage --registry`
 
 ## Verify Image
-This test is special. The other ones are offline test. Verify image requires internet connectivity to run its test, as it pulls an image from the kyverno registry.
+This test is unique, it requires to have an active internet connetivity to run the test. The other tests can be run fully offline and will not cause any traffic. The verify image test pulls image(s) from the kyverno registry.
 This is also ostensibly the most prone to breaking in the future. If kyverno decides to update the image, the respective key also needs to be updated.
