@@ -23,6 +23,7 @@ resource "stackit_ske_cluster" "this" {
 resource "stackit_ske_kubeconfig" "this" {
   project_id   = var.project_id
   cluster_name = stackit_ske_cluster.this.name
+  region       = var.region
   refresh      = var.refresh
   expiration   = var.expiration
 }
