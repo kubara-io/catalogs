@@ -83,4 +83,8 @@ velero:
           s3ForcePathStyle: "true"
     volumeSnapshotLocation: []
 volumeSnapshotClass:
+  {{- if eq (index .cluster.services "velero" "config" "backupMode") "fs-backup" }}
+  k8sProvider: "none"
+  {{- else }}
   k8sProvider: "{{ .cluster.terraform.provider }}"
+  {{- end }}

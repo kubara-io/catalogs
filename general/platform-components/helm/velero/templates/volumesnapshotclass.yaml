@@ -1,4 +1,5 @@
 {{- $volumeSnapshotClass := .Values.volumeSnapshotClass | default dict -}}
+{{- if .Capabilities.APIVersions.Has "snapshot.storage.k8s.io/v1" }}
 {{- if $volumeSnapshotClass.customDefinition }}
 {{ toYaml $volumeSnapshotClass.customDefinition }}
 {{- else }}
@@ -16,5 +17,6 @@ metadata:
   labels:
     velero.io/csi-volumesnapshot-class: "true"
 {{ toYaml $providerConfig }}
+{{- end }}
 {{- end }}
 {{- end }}
