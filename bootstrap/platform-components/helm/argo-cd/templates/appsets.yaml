@@ -61,12 +61,12 @@ spec:
           selfHeal: true
           allowEmpty: true
         retry:
-          limit: 8
+          limit: 5
           refresh: true
           backoff:
             duration: 10s
             factor: 2
-            maxDuration: 2m
+            maxDuration: 5m
         syncOptions:
           - CreateNamespace=false
           - PruneLast=true
