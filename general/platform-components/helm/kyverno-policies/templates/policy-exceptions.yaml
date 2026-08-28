@@ -1,0 +1,50 @@
+{{- range $policyName, $rules := (index .Values "kyverno-policies" "policyExclude" | default dict) }}
+{{- range $i, $rule := $rules.any }}
+---
+apiVersion: policies.kyverno.io/v1
+kind: PolicyException
+metadata:
+  name: {{ printf "%s-exception-%d" $policyName $i | replace "_" "-" | lower }}
+  {{- if $rule.resources.namespaces }}
+  namespace: {{ (first $rule.resources.namespaces) }}
+  {{- else }}
+  namespace: default
+  {{- end }}
+  annotations:
+    policies.kyverno.io/title: {{ printf "Exception for %s" $policyName | quote }}
+    policies.kyverno.io/category: PolicyException
+spec:
+  policyRefs:
+    - name: {{ $policyName }}
+      kind: ValidatingPolicy
+  matchConstraints:
+    resourceRules:
+      - apiGroups:
+          - ""
+          - apps
+          - batch
+          - cert-manager.io
+        apiVersions:
+          - v1
+          - v1alpha1
+        operations:
+          - CREATE
+          - UPDATE
+        resources:
+          {{- range $rule.resources.kinds }}
+          - {{ . | lower }}s
+          {{- end }}
+        {{- if $rule.resources.namespaces }}
+        namespaces:
+          {{- range $rule.resources.namespaces }}
+          - {{ . | quote }}
+          {{- end }}
+        {{- end }}
+  {{- if $rule.resources.names }}
+  matchConditions:
+    - name: match-names
+      expression: >-
+        [{{ range $nIdx, $n := $rule.resources.names }}{{ if $nIdx }}, {{ end }}'^{{ $n | replace "." "\\." | replace "*" ".*" }}$'{{ end }}].exists(pattern, object.metadata.name.matches(pattern))
+  {{- end }}
+{{- end }}
+{{- end }}
