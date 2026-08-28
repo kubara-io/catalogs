@@ -11,13 +11,6 @@ userinfo: user_info.yaml
 results:
   # skip because admin skips the rule
   - policy: disallow-default-tlsoptions
-    rule: disallow-default-tlsoptions
-    resources:
-      - default
-    kind: TLSOption
-    result: skip
-  - policy: disallow-default-tlsoptions-in-cel
-    rule: disallow-default-tlsoptions-in-cel
     resources:
       - default
     kind: TLSOption

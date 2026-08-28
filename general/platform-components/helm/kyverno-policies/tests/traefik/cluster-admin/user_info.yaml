@@ -7,3 +7,5 @@ clusterRoles:
   - cluster-admin
 userInfo:
   username: admin@example.com
+  groups:
+    - system:masters
