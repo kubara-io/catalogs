@@ -4,7 +4,7 @@ ingress:
   path: /
   annotations: {}
 image:
-  tag: v26.08.2
+  tag: v26.08.3
   repository: b4bz/homer
   pullPolicy: IfNotPresent
 container:
