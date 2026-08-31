@@ -4,6 +4,10 @@ apiVersion: external-secrets.io/v1
 kind: ClusterSecretStore
 metadata:
   name: {{ $name }}
+  {{- with $data.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
   {{- with $data.labels }}
   labels:
     {{- toYaml . | nindent 4 }}
