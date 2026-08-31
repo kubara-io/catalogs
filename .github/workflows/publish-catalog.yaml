@@ -16,7 +16,7 @@ concurrency:
 
 env:
   # renovate: datasource=github-releases depName=kubara-io/kubara
-  KUBARA_REF: "v0.13.0"
+  KUBARA_REF: "v0.15.0"
   OUTPUT_GENERATED_DIR: ${{ github.workspace }}/output-generated
   REPORT_DIR: ${{ github.workspace }}/reports
   ARTIFACT_RETENTION_DAYS: "15"

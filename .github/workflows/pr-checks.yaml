@@ -26,7 +26,7 @@ env:
   # PR, or commit SHA); a non-release ref switches CLI acquisition to a source
   # build (see "Determine kubara acquisition mode" below).
   # renovate: datasource=github-releases depName=kubara-io/kubara
-  KUBARA_REF: ${{ inputs.kubara_ref || 'v0.13.0' }}
+  KUBARA_REF: ${{ inputs.kubara_ref || 'v0.15.0' }}
   OUTPUT_GENERATED_DIR: ${{ github.workspace }}/output-generated
   REPORT_DIR: ${{ github.workspace }}/reports
   RENDER_DIR: ${{ github.workspace }}/rendered
