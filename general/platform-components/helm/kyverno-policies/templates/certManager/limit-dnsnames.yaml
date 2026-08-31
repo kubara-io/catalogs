@@ -23,7 +23,7 @@ spec:
     background:
       enabled: {{ dig "certManager" "limitDnsNames" "enableBackgroundScanning" false (merge .Values) }}
   validationActions:
-    - {{ $action := dig "certManager" "limitDnsNames" "actionOverride" "Audit" (merge .Values) }}{{ if eq $action "Enforce" }}Deny{{ else }}{{ $action }}{{ end }}
+    - {{ $action := dig "certManager" "limitDnsNames" "actionOverride" (dig "certManager" "mode" "Audit" (merge .Values)) (merge .Values) }}{{ if eq $action "Enforce" }}Deny{{ else }}{{ $action }}{{ end }}
   matchConstraints:
     resourceRules:
       - apiGroups:

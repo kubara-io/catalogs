@@ -24,7 +24,7 @@ spec:
     background:
       enabled: false
   validationActions:
-    - {{ $action := dig "traefik" "disallowDefaultTLSOptions" "actionOverride" "Audit" (merge .Values) }}{{ if eq $action "Enforce" }}Deny{{ else }}{{ $action }}{{ end }}
+    - {{ $action := dig "traefik" "disallowDefaultTLSOptions" "actionOverride" (dig "traefik" "mode" "Audit" (merge .Values)) (merge .Values) }}{{ if eq $action "Enforce" }}Deny{{ else }}{{ $action }}{{ end }}
   matchConstraints:
     resourceRules:
       - apiGroups:
