@@ -3,11 +3,11 @@ apiVersion: v2
 name: metallb
 description: Umbrella Chart for metalb
 type: application
-version: 0.2.2
+version: 0.2.3
 dependencies:
   - name: template-library
     repository: file://../template-library
-    version: 0.2.1
+    version: 0.3.0
   # https://artifacthub.io/packages/helm/argo/argo-cd
   - name: metallb
     repository: https://metallb.github.io/metallb
