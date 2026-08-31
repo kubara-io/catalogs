@@ -3,6 +3,8 @@
 # To customize values, you can add additional files named values-*.yaml to this directory.
 
 namespace:
+  annotations:
+    argocd.argoproj.io/sync-wave: "-3"
   labels:
     project-name: "{{ .cluster.name }}"
     stage: "{{ .cluster.stage }}"
@@ -13,6 +15,8 @@ namespace:
 {{- if eq .cluster.terraform.provider "t-cloud-public" }}
 namespacedSecretStores:
   {{ .cluster.name }}-{{ .cluster.stage }}:
+    annotations:
+      argocd.argoproj.io/sync-wave: "-2"
     provider:
       vault:
         server: http://openbao.openbao.svc.cluster.local:8200
@@ -43,6 +47,8 @@ externalSecrets:
     velero-credentials:
       # name needs to cloud, as the aws plugin for velero looks at cloud per default
       # other key names need to be specified in the backupStorageLocation
+      annotations:
+        argocd.argoproj.io/sync-wave: "-1"
       data:
         - secretKey: cloud
           remoteKey: {{ .cluster.name }}/{{ .cluster.stage }}/velero/velero_s3_credentials
