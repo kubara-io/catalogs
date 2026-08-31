@@ -107,6 +107,99 @@ argo-cd:
       accounts.wizard: login, apiKey
       accounts.wizard.enabled: true
       admin.enabled: false
+      kustomize.buildOptions: "--enable-helm"
+      repo.server.git.submodule.enabled: "false"
+      resource.compareoptions: |
+        ignoreResourceStatusField: all
+      resource.customizations.ignoreDifferences.admissionregistration.k8s.io_MutatingWebhookConfiguration: |
+        jqPathExpressions:
+          - '.webhooks[].clientConfig.caBundle'
+      resource.customizations.ignoreDifferences.admissionregistration.k8s.io_ValidatingWebhookConfiguration: |
+        jqPathExpressions:
+          - '.webhooks[].clientConfig.caBundle'
+      resource.customizations.ignoreDifferences.apiextensions.k8s.io_CustomResourceDefinition: |
+        jqPathExpressions:
+          - '.spec.conversion.webhook.clientConfig.caBundle'
+      resource.exclusions: |
+        ### Velero Backups and dynamic runtime operations do not need to be managed by ArgoCD
+        - apiGroups:
+            - velero.io
+          kinds:
+            - Backup
+            - Restore
+            - DownloadRequest
+            - DeleteBackupRequest
+            - PodVolumeBackup
+            - PodVolumeRestore
+        ### Added via: helm inspect values argo/argo-cd|yq '.configs.cm."resource.exclusions"'
+        ### Network resources created by the Kubernetes control plane and excluded to reduce the number of watched events and UI clutter
+        - apiGroups:
+            - ''
+            - discovery.k8s.io
+          kinds:
+            - Endpoints
+            - EndpointSlice
+        ### Internal Kubernetes resources excluded reduce the number of watched events
+        - apiGroups:
+            - coordination.k8s.io
+          kinds:
+            - Lease
+        ### Internal Kubernetes Authz/Authn resources excluded reduce the number of watched events
+        - apiGroups:
+            - authentication.k8s.io
+            - authorization.k8s.io
+          kinds:
+            - SelfSubjectReview
+            - TokenReview
+            - LocalSubjectAccessReview
+            - SelfSubjectAccessReview
+            - SelfSubjectRulesReview
+            - SubjectAccessReview
+        ### Intermediate Certificate Request excluded reduce the number of watched events
+        - apiGroups:
+            - certificates.k8s.io
+          kinds:
+            - CertificateSigningRequest
+        - apiGroups:
+            - cert-manager.io
+          kinds:
+            - CertificateRequest
+        ### Cert-Manager ACME issuance transients
+        - apiGroups:
+            - acme.cert-manager.io
+          kinds:
+            - Order
+            - Challenge
+        ### Cilium internal resources excluded reduce the number of watched events and UI Clutter
+        - apiGroups:
+            - cilium.io
+          kinds:
+            - CiliumIdentity
+            - CiliumEndpoint
+            - CiliumEndpointSlice
+        ### Kyverno intermediate and reporting resources excluded reduce the number of watched events and improve performance
+        - apiGroups:
+            - kyverno.io
+            - reports.kyverno.io
+            - wgpolicyk8s.io
+          kinds:
+            - PolicyReport
+            - ClusterPolicyReport
+            - EphemeralReport
+            - ClusterEphemeralReport
+            - AdmissionReport
+            - ClusterAdmissionReport
+            - BackgroundScanReport
+            - ClusterBackgroundScanReport
+            - UpdateRequest
+        ### Longhorn runtime state objects
+        - apiGroups:
+            - longhorn.io
+          kinds:
+            - Snapshot
+            - Engine
+            - Replica
+            - Instance
     rbac:
       create: true
       policy.default: "role:authenticated"
