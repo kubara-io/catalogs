@@ -42,25 +42,27 @@ spec:
           - jobs
           - statefulsets
           - cronjobs
-  {{- if (hasKey (dig "bestPractices" "verifyImage" dict (merge .Values)) "excludeNamespaces") }}
-  matchConditions:
-    - name: exclude-namespaces
-      expression: >-
-        ![{{ range $i, $ns := (dig "bestPractices" "verifyImage" "excludeNamespaces" list (merge .Values)) }}{{ if $i }}, {{ end }}'{{ $ns }}'{{ end }}].exists(ns, ns == object.metadata.?namespace.orValue(''))
-  {{- end }}
+    {{- if (hasKey (dig "bestPractices" "verifyImage" dict (merge .Values)) "excludeNamespaces") }}
+    namespaceSelector:
+      matchExpressions:
+        - key: kubernetes.io/metadata.name
+          operator: NotIn
+          values:
+            {{- range (dig "bestPractices" "verifyImage" "excludeNamespaces" list (merge .Values)) }}
+            - {{ . | quote }}
+            {{- end }}
+    {{- end }}
   matchImageReferences:
     {{- range (dig "bestPractices" "verifyImage" "imagesAndPublicKeyPairs" list (merge .Values)) }}
     - glob: {{ .image | quote }}
     {{- end }}
   attestors:
     {{- range $i, $item := (dig "bestPractices" "verifyImage" "imagesAndPublicKeyPairs" list (merge .Values)) }}
-    - name: attestor-{{ $i }}
+    - name: attestor_{{ $i }}
       cosign:
-        keys:
-          publicKeys:
-            - key:
-                value: |-
-{{ $item.key | indent 18 }}
+        key:
+          data: |-
+{{ $item.key | indent 12 }}
       {{- if $item.pullSecret }}
       credentials:
         secrets:
