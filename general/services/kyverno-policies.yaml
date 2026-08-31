@@ -9,3 +9,51 @@ spec:
   chartPath: kyverno-policies
   status: enabled
   clusterTypes: [hub, spoke]
+  configSchema:
+    type: object
+    properties:
+      argoCD:
+        type: object
+        default: {}
+        properties:
+          mode:
+            type: string
+            enum: [Audit, Enforce]
+            default: Audit
+            description: Policy validation failure mode for ArgoCD policies (Audit or Enforce).
+      bestPractices:
+        type: object
+        default: {}
+        properties:
+          mode:
+            type: string
+            enum: [Audit, Enforce]
+            default: Audit
+            description: Policy validation failure mode for Best Practices policies (Audit or Enforce).
+      certManager:
+        type: object
+        default: {}
+        properties:
+          mode:
+            type: string
+            enum: [Audit, Enforce]
+            default: Audit
+            description: Policy validation failure mode for cert-manager policies (Audit or Enforce).
+      itGrundschutz:
+        type: object
+        default: {}
+        properties:
+          mode:
+            type: string
+            enum: [Audit, Enforce]
+            default: Audit
+            description: Policy validation failure mode for IT-Grundschutz policies (Audit or Enforce).
+      traefik:
+        type: object
+        default: {}
+        properties:
+          mode:
+            type: string
+            enum: [Audit, Enforce]
+            default: Audit
+            description: Policy validation failure mode for Traefik policies (Audit or Enforce).
