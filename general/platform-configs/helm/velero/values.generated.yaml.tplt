@@ -6,6 +6,9 @@ namespace:
   labels:
     project-name: "{{ .cluster.name }}"
     stage: "{{ .cluster.stage }}"
+    pod-security.kubernetes.io/enforce: privileged
+    pod-security.kubernetes.io/audit: privileged
+    pod-security.kubernetes.io/warn: privileged
 
 {{- if eq .cluster.terraform.provider "t-cloud-public" }}
 namespacedSecretStores:
@@ -83,4 +86,8 @@ velero:
           s3ForcePathStyle: "true"
     volumeSnapshotLocation: []
 volumeSnapshotClass:
+  {{- if eq (index .cluster.services "velero" "config" "backupMode") "fs-backup" }}
+  k8sProvider: "none"
+  {{- else }}
   k8sProvider: "{{ .cluster.terraform.provider }}"
+  {{- end }}
