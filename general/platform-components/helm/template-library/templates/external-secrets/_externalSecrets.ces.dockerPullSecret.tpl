@@ -3,6 +3,14 @@ apiVersion: external-secrets.io/v1
 kind: ClusterExternalSecret
 metadata:
   name: {{ .name }}-ces
+  {{- with .annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  {{- with .labels }}
+  labels:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
 spec:
   externalSecretName: {{ .name }}-es
   namespaceSelectors:

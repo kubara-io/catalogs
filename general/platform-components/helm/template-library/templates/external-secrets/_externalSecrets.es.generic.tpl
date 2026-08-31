@@ -8,6 +8,10 @@ kind: ExternalSecret
 metadata:
   name: {{ $item.name | default (printf "%s-es" $name ) }}
   namespace: {{ $.Release.Namespace }}
+  {{- with $item.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
   labels:
     app.kubernetes.io/part-of: {{ $.Release.Name }}
 spec:
