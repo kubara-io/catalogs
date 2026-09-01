@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.7.4] - 2026-09-01
+### Changed
+- Updated chart dependency version: kube-prometheus-stack 88.6.1 → 88.6.2
+
 ## [3.7.3] - 2026-08-31
 ### Changed
 - Updated chart dependency version: template-library 0.3.0 → 0.4.0
