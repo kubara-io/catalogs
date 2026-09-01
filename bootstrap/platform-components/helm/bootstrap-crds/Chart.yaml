@@ -12,7 +12,7 @@ dependencies:
   # Observability CRDs
   - name: kube-prometheus-stack
     repository: https://prometheus-community.github.io/helm-charts
-    version: 88.6.1
+    version: 88.6.2
   # External-Secret CRDs
   - name: external-secrets
     repository: https://charts.external-secrets.io
