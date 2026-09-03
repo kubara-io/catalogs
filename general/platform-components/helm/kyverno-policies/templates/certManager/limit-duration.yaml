@@ -43,7 +43,9 @@ spec:
         (
           string(object.spec.duration).endsWith('h') ? int(string(object.spec.duration).substring(0, size(string(object.spec.duration)) - 1)) :
           string(object.spec.duration).endsWith('d') ? int(string(object.spec.duration).substring(0, size(string(object.spec.duration)) - 1)) * 24 :
-          int(string(object.spec.duration))
+          string(object.spec.duration).matches('^[0-9]+h') ? int(string(object.spec.duration).find('^[0-9]+')) :
+          string(object.spec.duration).matches('^[0-9]+$') ? int(string(object.spec.duration)) :
+          0
         ) <= 2400
       message: "Certificate duration must be <= 2400h (100 days)."
 {{- end }}

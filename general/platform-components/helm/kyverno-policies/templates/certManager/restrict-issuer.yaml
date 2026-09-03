@@ -1,4 +1,4 @@
-{{- if and .Values.certManager.enabled (dig "certManager" "restrictIssuer" "enabled" true (merge .Values)) }}
+{{- if and .Values.certManager.enabled (dig "certManager" "restrictIssuer" "enabled" true (merge .Values)) .Values.global.allowedIssuerDomains }}
 apiVersion: policies.kyverno.io/v1
 kind: ValidatingPolicy
 metadata:
