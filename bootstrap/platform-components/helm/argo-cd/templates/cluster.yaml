@@ -1,5 +1,6 @@
 {{- range $key, $clusterItem := (.Values.bootstrapValues).cluster }}
 {{- $authMethod := default "clientCertificate" $clusterItem.authMethod -}}
+{{- if not $.Values.clusterCredentialRotator.enabled -}}
 apiVersion: external-secrets.io/v1
 kind: ExternalSecret
 metadata:
@@ -56,4 +57,34 @@ spec:
         metadataPolicy: None
         nullBytePolicy: Fail
 ---
+{{- else }}
+{{- /*
+When automatic credential rotation is enabled, GitOps no longer renders an
+ExternalSecret for the runtime Argo CD cluster credential. Instead, this empty
+ConfigMap is the authoritative source of the cluster Secret's labels. The
+credential rotator copies this complete label set onto the runtime Secret using
+full replacement semantics.
+
+Keep this ConfigMap in the Argo CD/rotator release namespace. The --namespace
+flag used by `kubara bootstrap <spoke>` controls the kubara-agent namespace on
+the spoke and is intentionally unrelated to this Hub-side namespace.
+*/ -}}
+{{- $configLabels := dict -}}
+{{- with $clusterItem.additionalLabels }}
+{{- range $labelKey, $labelValue := . }}
+{{- $_ := set $configLabels $labelKey $labelValue -}}
+{{- end }}
+{{- end }}
+{{- $_ := set $configLabels "argocd.argoproj.io/secret-type" "cluster" -}}
+{{- $_ := set $configLabels $.Values.clusterCredentialRotator.secret.labelKey $.Values.clusterCredentialRotator.secret.labelValue -}}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ $clusterItem.name }}{{ default "-config" $.Values.clusterCredentialRotator.secret.configMapSuffix }}
+  namespace: {{ $.Release.Namespace }}
+  labels:
+    {{- $configLabels | toYaml | nindent 4 }}
+data: {}
+---
+{{- end }}
 {{- end }}
