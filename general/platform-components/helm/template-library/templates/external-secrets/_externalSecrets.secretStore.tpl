@@ -5,6 +5,10 @@ kind: SecretStore
 metadata:
   name: {{ $name }}
   namespace: {{ $.Release.Namespace }}
+  {{- with $data.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
   {{- with $data.labels }}
   labels:
     {{- toYaml . | nindent 4 }}

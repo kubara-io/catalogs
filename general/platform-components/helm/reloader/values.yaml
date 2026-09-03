@@ -17,7 +17,7 @@ fullnameOverride: ''
 image:
   name: stakater/reloader
   repository: ghcr.io/stakater/reloader
-  tag: v1.4.19
+  tag: v1.4.21
   # digest: sha256:1234567
   pullPolicy: IfNotPresent
 reloader:
@@ -254,7 +254,7 @@ reloader:
     #   action: replace
     targetLabels: []
   podMonitor:
-    enabled: false
+    enabled: true
     # Set the namespace the podMonitor should be deployed
     # namespace: monitoring
 

@@ -1,146 +1,193 @@
-name: 'pr-checks'
+name: catalog checks
+
+# No path filter: these checks are required by branch protection, so they must
+# report a status on every PR to main (a skipped path-filtered workflow would
+# leave the required check pending and block the PR). Generation is cheap and
+# stays green when the catalog is unchanged.
 on:
   push:
-    branches:
-      - 'main'
-    paths:
-      - 'src/**'
-      - '.github/workflows/pr-checks.yaml'
-      - '.scripts/**'
-      - '.github/helm-profiles/**'
+    branches: [main]
   pull_request:
-    branches:
-      - 'main'
-    paths:
-      - 'src/**'
-      - '.github/workflows/pr-checks.yaml'
-      - '.scripts/**'
-      - '.github/helm-profiles/**'
+    branches: [main]
   workflow_dispatch:
-
-env:
-  CODE_PATH: ${{ github.workspace }}/src
-  REPORT_DIR: ${{ github.workspace }}/reports
-  RENDER_DIR: ${{ github.workspace }}/rendered
-  OUTPUT_GENERATED_DIR: ${{ github.workspace }}/output-generated
-  # renovate: datasource=github-releases depName=yannh/kubeconform
-  KUBECONFORM_VERSION: "v0.8.0"
-  # renovate: datasource=github-releases depName=terraform-linters/tflint
-  TFLINT_VERSION: "v0.63.1"
-  ARTIFACT_RETENTION_DAYS: "15"
+    inputs:
+      kubara_ref:
+        description: Kubara tag, commit SHA, branch, or pull request ref
+        required: false
+        type: string
 
 permissions:
   contents: read
   packages: read
-  security-events: write
-  actions: read
+
+env:
+  # Default to the latest stable kubara release that ships declarative external
+  # catalog support. Manual runs can override this with kubara_ref (a branch,
+  # PR, or commit SHA); a non-release ref switches CLI acquisition to a source
+  # build (see "Determine kubara acquisition mode" below).
+  # renovate: datasource=github-releases depName=kubara-io/kubara
+  KUBARA_REF: ${{ inputs.kubara_ref || 'v0.15.0' }}
+  OUTPUT_GENERATED_DIR: ${{ github.workspace }}/output-generated
+  REPORT_DIR: ${{ github.workspace }}/reports
+  RENDER_DIR: ${{ github.workspace }}/rendered
+  # renovate: datasource=github-releases depName=yannh/kubeconform
+  KUBECONFORM_VERSION: "v0.8.0"
+  # renovate: datasource=github-releases depName=terraform-linters/tflint
+  TFLINT_VERSION: "v0.64.0"
+  ARTIFACT_RETENTION_DAYS: "15"
 
 jobs:
-  run-kubara-init-and-generate:
-    needs: [go-static-analysis, go-unit-tests]
+  integration-generate:
+    name: Generate all services (${{ matrix.target }})
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        shell: bash
-        working-directory: ${{ github.workspace }}
-    outputs:
-      success: ${{ steps.commit.outputs.success }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target: stackit-ske
+            provider: stackit
+            kubernetes_type: ske
+            project_id: 00000000-0000-0000-0000-000000000000
+            dns_name: kubara-tst.stackit.run
+            velero_s3_url: https://object.storage.eu01.onstackit.cloud
+          - target: stackit-edge
+            provider: stackit
+            kubernetes_type: edge
+            project_id: 00000000-0000-0000-0000-000000000000
+            dns_name: kubara-edge-tst.stackit.run
+            velero_s3_url: https://object.storage.eu01.onstackit.cloud
+          - target: t-cloud-public-cce
+            provider: t-cloud-public
+            kubernetes_type: cce
+            project_id: kubara-ci
+            dns_name: kubara-tst.example.com
+            velero_s3_url: https://obs.eu-de.otc.t-systems.com
     env:
-      # .env updates (must match src/internal/envconfig/env)
-      KUBARA_PROJECT_NAME: "kubara"
-      KUBARA_PROJECT_STAGE: "tst"
+      KUBARA_PROJECT_NAME: kubara
+      KUBARA_PROJECT_STAGE: tst
       KUBARA_DOCKERCONFIG_BASE64: "000000"
       KUBARA_ARGOCD_WIZARD_ACCOUNT_PASSWORD: "000000"
-      KUBARA_ARGOCD_HELM_REPO_USERNAME: "git"
+      KUBARA_ARGOCD_HELM_REPO_USERNAME: git
       KUBARA_ARGOCD_HELM_REPO_PASSWORD: "000000"
-      KUBARA_ARGOCD_HELM_REPO_URL: "https://kubara.io/kubara.git"
-      KUBARA_ARGOCD_GIT_HTTPS_URL: "https://kubara.io/kubara.git"
+      KUBARA_ARGOCD_HELM_REPO_URL: https://kubara.io/kubara.git
+      KUBARA_ARGOCD_GIT_HTTPS_URL: https://kubara.io/kubara.git
       KUBARA_ARGOCD_GIT_PAT_OR_PASSWORD: "000000"
-      KUBARA_ARGOCD_GIT_USERNAME: "git"
-
-      # config.yaml updates
-      KUBARA_DNS_NAME: "kubara-tst.stackit.run"
-      KUBARA_STACKIT_PROJECT_ID: "00000000-0000-0000-0000-000000000000"
-      KUBARA_TERRAFORM_PROVIDER: "stackit"
-      KUBARA_CLUSTER_TYPE: "hub"
-      KUBARA_SSO_ORG: "Kubara"
-      KUBARA_SSO_TEAM: "Test"
-      KUBARA_KUBERNETES_TYPE: "ske"
-      KUBARA_KUBERNETES_VERSION: "1.35.0"
-
+      KUBARA_ARGOCD_GIT_USERNAME: git
+      KUBARA_DNS_NAME: ${{ matrix.dns_name }}
+      KUBARA_STACKIT_PROJECT_ID: ${{ matrix.project_id }}
+      KUBARA_TERRAFORM_PROVIDER: ${{ matrix.provider }}
+      KUBARA_CLUSTER_TYPE: hub
+      KUBARA_SSO_ORG: Kubara
+      KUBARA_SSO_TEAM: Test
+      KUBARA_KUBERNETES_TYPE: ${{ matrix.kubernetes_type }}
+      KUBARA_KUBERNETES_VERSION: 1.35.0
     steps:
-      - name: Checkout
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - name: Checkout catalogs
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Checkout kubara
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: kubara-io/kubara
+          ref: ${{ env.KUBARA_REF }}
+          path: .ci/kubara
+
+      # A release tag (vX.Y.Z) provides the CLI from the published binary; any
+      # other ref (branch, PR, or commit SHA supplied via kubara_ref) builds the
+      # CLI from the checked-out source so unreleased kubara changes can still be
+      # validated.
+      - name: Determine kubara acquisition mode
+        id: kubara-mode
+        run: |
+          set -euo pipefail
+          if [[ "${KUBARA_REF}" =~ ^v[0-9] ]]; then
+            mode=release
+          else
+            mode=source
+          fi
+          echo "mode=${mode}" >> "$GITHUB_OUTPUT"
+          echo "Resolved kubara acquisition mode '${mode}' for ref '${KUBARA_REF}'"
+
+      - name: Install kubara release
+        if: steps.kubara-mode.outputs.mode == 'release'
+        env:
+          KUBARA_VERSION: ${{ env.KUBARA_REF }}
+        run: |
+          set -euo pipefail
+          version="${KUBARA_VERSION#v}"
+          archive="kubara_${version}_linux_amd64.tar.gz"
+          checksums="kubara_${version}_checksums.txt"
+          base_url="https://github.com/kubara-io/kubara/releases/download/${KUBARA_VERSION}"
+          temp_dir="$(mktemp -d)"
+          trap 'rm -rf "$temp_dir"' EXIT
+          curl -fsSL "$base_url/$archive" -o "$temp_dir/$archive"
+          curl -fsSL "$base_url/$checksums" -o "$temp_dir/$checksums"
+          checksum="$(awk -v file="$archive" '$2 == file {print $1}' "$temp_dir/$checksums")"
+          [[ -n "$checksum" ]]
+          echo "$checksum  $temp_dir/$archive" | sha256sum -c -
+          tar xzf "$temp_dir/$archive" -C "$RUNNER_TEMP" kubara
+          chmod +x "$RUNNER_TEMP/kubara"
 
       - name: Setup Go
-        uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6.5.0
+        if: steps.kubara-mode.outputs.mode == 'source'
+        uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         with:
-          go-version-file: src/go.mod
-          cache: true
-          cache-dependency-path: src/go.sum
+          go-version-file: .ci/kubara/src/go.mod
+          cache-dependency-path: .ci/kubara/src/go.sum
 
-      - name: Create output directory
-        run: |
-          echo "output dir: ${{ env.OUTPUT_GENERATED_DIR }}"
-          mkdir -p "${{ env.OUTPUT_GENERATED_DIR }}"
+      - name: Build kubara CLI
+        if: steps.kubara-mode.outputs.mode == 'source'
+        working-directory: .ci/kubara/src
+        run: go build -o "${RUNNER_TEMP}/kubara" .
 
-      - name: kubara init --prep
-        run: |
-          set -euo pipefail
-          cd src
-          go run main.go --work-dir "${{ env.OUTPUT_GENERATED_DIR }}" init --prep
+      - name: Generate platform from working-tree catalogs
+        uses: ./.github/actions/generate-platform
+        with:
+          kubara: ${{ runner.temp }}/kubara
+          kubara-scripts: ${{ github.workspace }}/.ci/kubara/.scripts
+          work-dir: ${{ env.OUTPUT_GENERATED_DIR }}
+          provider: ${{ matrix.provider }}
+          kubernetes-type: ${{ matrix.kubernetes_type }}
+          dns-name: ${{ matrix.dns_name }}
+          project-id: ${{ matrix.project_id }}
+          velero-s3-url: ${{ matrix.velero_s3_url }}
 
-      - name: Update .env (strict template mode)
-        run: |
-          set -euo pipefail
-          .scripts/kubara-env-update.sh "${{ env.OUTPUT_GENERATED_DIR }}/.env"
-
-      - name: kubara init
-        run: |
-          set -euo pipefail
-          cd src
-          go run main.go --work-dir "${{ env.OUTPUT_GENERATED_DIR }}" init
-
-      - name: Update config.yaml (strict mode)
-        run: |
-          set -euo pipefail
-          .scripts/kubara-config-update.sh "${{ env.OUTPUT_GENERATED_DIR }}/config.yaml"
-
-      - name: Generate kubara artifacts
-        run: |
-          cd src
-          go run main.go --work-dir "${{ env.OUTPUT_GENERATED_DIR }}" generate
-
-      - name: Upload generated helm and terraform files
+      - name: Upload generated artifacts
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
-          name: kubara-generated-files-${{ github.run_attempt }}-${{ github.sha }}-${{ github.run_number }}
+          name: kubara-generated-${{ matrix.target }}-${{ github.run_attempt }}-${{ github.sha }}-${{ github.run_number }}
           retention-days: ${{ env.ARTIFACT_RETENTION_DAYS }}
           path: ${{ env.OUTPUT_GENERATED_DIR }}
 
-  helm-checks:
-    needs: run-kubara-init-and-generate
+  generated-helm:
+    name: Validate generated Helm output (${{ matrix.target }})
+    needs: integration-generate
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        shell: bash
+    strategy:
+      fail-fast: false
+      matrix:
+        target: [stackit-ske, stackit-edge, t-cloud-public-cce]
     steps:
-      - name: Checkout CI overlay profiles
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - name: Checkout catalog validation scripts
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          sparse-checkout: |
-            .github/helm-profiles
-            .scripts
+          sparse-checkout: .scripts
 
-      - name: Download generated kubara artifacts
+      - name: Checkout kubara Helm profiles
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: kubara-io/kubara
+          ref: ${{ env.KUBARA_REF }}
+          path: .ci/kubara
+          sparse-checkout: .github/helm-profiles
+
+      - name: Download generated artifacts
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
         with:
-          name: kubara-generated-files-${{ github.run_attempt }}-${{ github.sha }}-${{ github.run_number }}
+          name: kubara-generated-${{ matrix.target }}-${{ github.run_attempt }}-${{ github.sha }}-${{ github.run_number }}
 
-      - name: Verify preinstalled Helm
-        run: |
-          set -euo pipefail
-          helm version --short
+      - name: Verify Helm
+        run: helm version --short
 
       - name: Cache kubeconform
         id: cache-kubeconform
@@ -149,74 +196,137 @@ jobs:
           path: ~/.local/bin/kubeconform
           key: tools-kubeconform-${{ env.KUBECONFORM_VERSION }}-${{ runner.os }}-${{ runner.arch }}
 
-      - name: Install kubeconform (if missing)
+      - name: Install kubeconform
         run: |
           set -euo pipefail
           mkdir -p ~/.local/bin
-
-          if ! [ -x "$HOME/.local/bin/kubeconform" ]; then
-            KUBECONFORM_ARCHIVE="kubeconform-linux-amd64.tar.gz"
-            KUBECONFORM_BASE_URL="https://github.com/yannh/kubeconform/releases/download/${{ env.KUBECONFORM_VERSION }}"
-            KUBECONFORM_SHA256="$(curl -fsSL "$KUBECONFORM_BASE_URL/CHECKSUMS" | awk '/  kubeconform-linux-amd64.tar.gz$/ {print $1}')"
-            TMP_ARCHIVE="$(mktemp)"
-
-            curl -fsSL "$KUBECONFORM_BASE_URL/$KUBECONFORM_ARCHIVE" -o "$TMP_ARCHIVE"
-            echo "$KUBECONFORM_SHA256  $TMP_ARCHIVE" | sha256sum -c -
-            tar xzf "$TMP_ARCHIVE" -C "$HOME/.local/bin" kubeconform
-            rm -f "$TMP_ARCHIVE"
+          if [[ ! -x "$HOME/.local/bin/kubeconform" ]]; then
+            archive="kubeconform-linux-amd64.tar.gz"
+            base_url="https://github.com/yannh/kubeconform/releases/download/${KUBECONFORM_VERSION}"
+            checksum="$(curl -fsSL "$base_url/CHECKSUMS" | awk '/  kubeconform-linux-amd64.tar.gz$/ {print $1}')"
+            temp_archive="$(mktemp)"
+            curl -fsSL "$base_url/$archive" -o "$temp_archive"
+            echo "$checksum  $temp_archive" | sha256sum -c -
+            tar xzf "$temp_archive" -C "$HOME/.local/bin" kubeconform
+            rm -f "$temp_archive"
             chmod +x "$HOME/.local/bin/kubeconform"
           fi
-
           kubeconform -v
 
-      - name: Lint, render and validate Helm charts
+      - name: Validate generated Helm output
+        env:
+          PROFILES: ${{ github.workspace }}/.ci/kubara/.github/helm-profiles
         run: .scripts/helm-checks.sh
 
       - name: Upload Helm validation results
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         if: always()
         with:
-          name: helm-validation-${{ github.run_attempt }}-${{ github.sha }}-${{ github.run_number }}
+          name: helm-validation-${{ matrix.target }}-${{ github.run_attempt }}-${{ github.sha }}-${{ github.run_number }}
           retention-days: ${{ env.ARTIFACT_RETENTION_DAYS }}
           path: |
             ${{ env.REPORT_DIR }}/helm/
             ${{ env.RENDER_DIR }}/
 
-  terraform-checks:
-    needs: run-kubara-init-and-generate
+  generated-terraform:
+    name: Validate generated Terraform output (${{ matrix.target }})
+    needs: integration-generate
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        shell: bash
+    strategy:
+      fail-fast: false
+      matrix:
+        target: [stackit-ske, stackit-edge, t-cloud-public-cce]
     steps:
-      - name: Checkout CI scripts
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - name: Checkout catalog validation scripts
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          sparse-checkout: |
-            .scripts
+          sparse-checkout: .scripts
 
-      - name: Download generated kubara artifacts
+      - name: Download generated artifacts
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
         with:
-          name: kubara-generated-files-${{ github.run_attempt }}-${{ github.sha }}-${{ github.run_number }}
+          name: kubara-generated-${{ matrix.target }}-${{ github.run_attempt }}-${{ github.sha }}-${{ github.run_number }}
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@dfe3c3f87815947d99a8997f908cb6525fc44e9e # v4
         with:
-          terraform_version: 1.9.3
+          terraform_version: 1.11.0
 
       - name: Setup TFLint
         uses: terraform-linters/setup-tflint@6e1e0642c0289bd619021bf6b34e3c08ed1e005a # v6
         with:
           tflint_version: ${{ env.TFLINT_VERSION }}
 
-      - name: Validate Terraform modules and environments
+      - name: Validate generated Terraform output
         run: .scripts/terraform-checks.sh
 
       - name: Upload Terraform validation results
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         if: always()
         with:
-          name: terraform-validation-${{ github.run_attempt }}-${{ github.sha }}-${{ github.run_number }}
+          name: terraform-validation-${{ matrix.target }}-${{ github.run_attempt }}-${{ github.sha }}-${{ github.run_number }}
           retention-days: ${{ env.ARTIFACT_RETENTION_DAYS }}
           path: ${{ env.REPORT_DIR }}/terraform
+
+  extract-images:
+    name: Extract catalog images (${{ matrix.catalog }}, ${{ matrix.target }})
+    needs: integration-generate
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        catalog: [bootstrap, general]
+        target: [stackit-ske]
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Checkout CI scripts
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          sparse-checkout: |
+            .scripts
+            .github
+            bootstrap
+            general
+
+      - name: Download generated kubara artifacts
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        with:
+          name: kubara-generated-${{ matrix.target }}-${{ github.run_attempt }}-${{ github.sha }}-${{ github.run_number }}
+
+      - name: Verify Helm
+        run: helm version --short
+
+      - name: Extract container images
+        env:
+          IMAGE_OUTPUT_FILE: ${{ github.workspace }}/reports/images.txt
+          HELM_CHART_VERSION_FILE: ${{ github.workspace }}/reports/chart.txt
+          CATALOG_ROOT: ${{ github.workspace }}/${{ matrix.catalog }}
+        run: |
+          mkdir -p reports
+          .scripts/image-version.sh
+
+      - name: Write image summary
+        if: always()
+        run: |
+          if [[ -f reports/images.txt ]]; then
+            echo "### Container Images" >> "$GITHUB_STEP_SUMMARY"
+            while read -r img; do
+              echo "- $img" >> "$GITHUB_STEP_SUMMARY"
+            done < reports/images.txt
+          fi
+          if [[ -f reports/chart.txt ]]; then
+            echo "### Helm Chart Versions" >> "$GITHUB_STEP_SUMMARY"
+            while read -r chart; do
+              echo "- $chart" >> "$GITHUB_STEP_SUMMARY"
+            done < reports/chart.txt
+          fi
+
+      - name: Upload image list
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        if: always()
+        with:
+          name: container-images-${{ matrix.catalog }}-${{ matrix.target }}-${{ github.run_attempt }}-${{ github.sha }}-${{ github.run_number }}
+          retention-days: ${{ env.ARTIFACT_RETENTION_DAYS }}
+          path: reports/

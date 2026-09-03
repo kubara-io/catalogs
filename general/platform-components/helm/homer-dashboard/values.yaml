@@ -1,12 +1,10 @@
 ---
-serviceMonitor:
-  enabled: false
 ingress:
   enabled: false
   path: /
   annotations: {}
 image:
-  tag: v26.4.2
+  tag: v26.08.3
   repository: b4bz/homer
   pullPolicy: IfNotPresent
 container:

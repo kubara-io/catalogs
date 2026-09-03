@@ -4,6 +4,43 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.9.3] - 2026-08-31
+### Changed
+- Updated chart dependency version: template-library 0.3.0 → 0.4.0
+
+## [1.9.2] - 2026-08-31
+### Changed
+- Updated chart dependency version: template-library 0.2.1 → 0.3.0
+
+## [1.9.1] - 2026-08-27
+### Changed
+- Updated chart dependency version: alloy 1.12.0 → 1.12.1
+
+## [1.9.0] - 2026-08-24
+### Changed
+- Updated chart dependency version: alloy 1.11.1 → 1.12.0
+
+## [1.8.1] - 2026-08-11
+### Changed
+- Updated chart dependency version: template-library 0.2.0 → 0.2.1
+
+## [1.8.0] - 2026-08-10
+### Changed
+- Updated chart dependency version: loki 7.2.0 → 7.3.0
+
+## [1.7.1] - 2026-08-07
+### Changed
+- Updated chart dependency version: alloy 1.11.0 → 1.11.1
+
+## [1.7.0] - 2026-08-03
+### Changed
+- Updated chart dependency version: loki 7.1.0 → 7.2.0
+
+## [1.6.0] - 2026-07-23
+### Changed
+- Updated chart dependency version: alloy 1.10.1 → 1.11.0
+- Updated chart dependency version: loki 7.0.0 → 7.1.0
+
 ## [1.5.1] - 2026-07-13
 ### Changed
 - Updated chart dependency version: alloy 1.10.0 → 1.10.1

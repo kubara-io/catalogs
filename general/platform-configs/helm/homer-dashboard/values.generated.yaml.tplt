@@ -35,12 +35,6 @@ namespace:
     stage: "{{ .cluster.stage }}"
 imagePullSecrets:
   - name: image-pull-secret
-serviceMonitor:
-  {{- if (eq $kubePrometheusStatus "enabled") }}
-  enabled: true
-  {{- end }}
-  additionalLabels:
-    monitoring.instance: "{{ .cluster.name }}-{{ .cluster.stage }}"
 dashboardConfig:
   title: "kubara Developer Portal"
   subtitle: "{{ .cluster.stage }}"

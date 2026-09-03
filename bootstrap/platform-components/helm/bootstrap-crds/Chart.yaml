@@ -7,13 +7,13 @@ version: 1.0.0
 dependencies:
   # Certificate CRDs
   - name: cert-manager
-    version: v1.21.0
+    version: v1.21.1
     repository: https://charts.jetstack.io
   # Observability CRDs
   - name: kube-prometheus-stack
     repository: https://prometheus-community.github.io/helm-charts
-    version: 87.15.1
+    version: 88.6.3
   # External-Secret CRDs
   - name: external-secrets
     repository: https://charts.external-secrets.io
-    version: 2.7.0  # https://artifacthub.io/packages/helm/external-secrets-operator/external-secrets
+    version: 2.10.0  # https://artifacthub.io/packages/helm/external-secrets-operator/external-secrets

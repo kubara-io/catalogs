@@ -45,5 +45,5 @@ variable "operating_system_distro" {
 variable "operating_system_version" {
   type        = string
   description = "Operating system version metadata of the uploaded image. Keep this aligned with the EdgeImage Talos version used to build the artifact."
-  default     = "v1.12.5-stackit.v1.7.1"
+  default     = "v1.13.5-stackit.v1.7.16"
 }

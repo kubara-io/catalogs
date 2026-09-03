@@ -1,4 +1,4 @@
-{{- define "templateLibrary.argocd.project" }}
+{{- define "bootstrap.argocd.project" }}
 apiVersion: argoproj.io/v1alpha1
 kind: AppProject
 metadata:

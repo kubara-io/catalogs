@@ -133,8 +133,13 @@ for chart in $CHARTS; do
   [[ -f $values_file ]] && base_values=(-f "$values_file")
 
   echo "📄 rendering base → $out_dir/render.yaml"
-  helm template "${HELM_TEMPLATE_ARGS[@]}" "$chart" "$chart_path" "${base_values[@]}" \
-    > "$out_dir/render.yaml"
+  if [[ ${#base_values[@]} -gt 0 ]]; then
+    helm template "${HELM_TEMPLATE_ARGS[@]}" "$chart" "$chart_path" "${base_values[@]}" \
+      > "$out_dir/render.yaml"
+  else
+    helm template "${HELM_TEMPLATE_ARGS[@]}" "$chart" "$chart_path" \
+      > "$out_dir/render.yaml"
+  fi
 
   if [[ ${#base_values[@]} -gt 0 && -d $PROFILES/$chart ]]; then
     for profile in "$PROFILES/$chart"/*.yaml; do
@@ -156,6 +161,18 @@ for chart in $CHARTS; do
     # uses to split a line into fields. Default is whitespace, we override
     # it to a single tab so the base64 schema (which may contain spaces)
     # stays in one piece.
+    # kubeconform lowercases ResourceKind when expanding the schema path, so
+    # write CRD kinds in lowercase as well (important on Linux filesystems).
+    schema_rows=$(mktemp)
+    yq -r '
+      select(.kind == "CustomResourceDefinition")
+      | .spec as $s
+      | $s.versions[]
+      | select(.schema.openAPIV3Schema != null)
+      | [$s.group, ($s.names.kind | downcase), .name, (.schema.openAPIV3Schema | tojson | @base64)]
+      | @tsv
+    ' "$render_file" > "$schema_rows"
+
     while IFS=$'\t' read -r group kind version schema_b64; do
       [[ -n $group && -n $kind && -n $version && -n $schema_b64 ]] || continue
       schema_file="$SCHEMA_POOL/$group/${kind}_${version}.json"
@@ -171,20 +188,8 @@ for chart in $CHARTS; do
       else
         mv "$tmp" "$schema_file"
       fi
-    done < <(
-      # Kind is lowercased here because kubeconform lowercases {{.ResourceKind}}
-      # when it expands the -schema-location template. On macOS's case-
-      # insensitive filesystem this does not matter, but on Linux (CI) the
-      # lookup would miss a schema file written with the capitalised kind.
-      yq -r '
-        select(.kind == "CustomResourceDefinition")
-        | .spec as $s
-        | $s.versions[]
-        | select(.schema.openAPIV3Schema != null)
-        | [$s.group, ($s.names.kind | downcase), .name, (.schema.openAPIV3Schema | tojson | @base64)]
-        | @tsv
-      ' "$render_file"
-    )
+    done < "$schema_rows"
+    rm -f "$schema_rows"
   done
 
   echo "::endgroup::"
@@ -218,7 +223,13 @@ for chart in $CHARTS; do
   fi
 
   echo "🧪 linting base"
-  if ! helm lint --quiet --kube-version "$KUBE_VERSION" "$chart_path" "${base_values[@]}" \
+  if [[ ${#base_values[@]} -gt 0 ]]; then
+    if ! helm lint --quiet --kube-version "$KUBE_VERSION" "$chart_path" "${base_values[@]}" \
+        | tee "$REPORT_DIR/helm/$chart-lint.log"; then
+      echo "::error file=$lint_ref::helm lint failed"
+      FAILED+=("$chart:lint")
+    fi
+  elif ! helm lint --quiet --kube-version "$KUBE_VERSION" "$chart_path" \
       | tee "$REPORT_DIR/helm/$chart-lint.log"; then
     echo "::error file=$lint_ref::helm lint failed"
     FAILED+=("$chart:lint")
@@ -260,6 +271,8 @@ while read -r render_file; do
   # so strict validation doesn't choke on nulls.
   yq eval -i 'select(.kind == "CustomResourceDefinition") |= del(.status)' "$render_file"
 
+  # VolumeSnapshotClass is not part of the baseline Kubernetes schemas.
+  # See https://github.com/yannh/kubernetes-json-schema/issues/44.
   if ! kubeconform \
       -output pretty \
       -strict \
@@ -267,8 +280,6 @@ while read -r render_file; do
       -schema-location "$SCHEMA_POOL/{{.Group}}/{{.ResourceKind}}_{{.ResourceAPIVersion}}.json" \
       -schema-location default \
       -schema-location "https://raw.githubusercontent.com/yannh/kubernetes-json-schema/master/{{.NormalizedKubernetesVersion}}/{{.ResourceKind}}.json" \
-      # ignored because not part of baseline k8s schemas
-      # https://github.com/yannh/kubernetes-json-schema/issues/44
       -skip snapshot.storage.k8s.io/v1/VolumeSnapshotClass \
       "$render_file" \
       | tee "$REPORT_DIR/helm/$chart-$name-kubeconform.log"; then

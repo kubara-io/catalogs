@@ -4,6 +4,62 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.8.1] - 2026-09-03
+### Changed
+- Updated chart dependency version: argo-cd 10.7.0 → 10.7.1
+
+## [1.8.0] - 2026-09-02
+### Changed
+- Updated chart dependency version: argo-cd 10.6.4 → 10.7.0
+
+## [1.7.2] - 2026-09-02
+### Changed
+- Updated chart dependency version: argo-cd 10.6.3 → 10.6.4
+
+## [1.7.1] - 2026-09-02
+### Changed
+- Updated chart dependency version: argo-cd 10.6.0 → 10.6.3
+
+## [1.7.0] - 2026-09-01
+### Changed
+- Updated chart dependency version: argo-cd 10.4.2 → 10.6.0
+
+## [1.6.0] - 2026-08-31
+### Changed
+- Removed the template-library dependency and made Argo CD templates local to this chart.
+
+## [1.5.2] - 2026-08-29
+### Changed
+- Updated chart dependency version: argo-cd 10.4.1 → 10.4.2
+
+## [1.5.1] - 2026-08-28
+### Changed
+- Updated chart dependency version: argo-cd 10.4.0 → 10.4.1
+
+## [1.5.0] - 2026-08-17
+### Changed
+- Updated chart dependency version: argo-cd 10.3.3 → 10.4.0
+
+## [1.4.3] - 2026-08-13
+### Changed
+- Updated chart dependency version: argo-cd 10.3.2 → 10.3.3
+
+## [1.4.2] - 2026-08-11
+### Changed
+- Updated chart dependency version: template-library 0.2.0 → 0.2.1
+
+## [1.4.1] - 2026-08-10
+### Changed
+- Updated chart dependency version: argo-cd 10.3.0 → 10.3.2
+
+## [1.4.0] - 2026-08-07
+### Changed
+- Updated chart dependency version: argo-cd 10.2.1 → 10.3.0
+
+## [1.3.0] - 2026-07-27
+### Changed
+- Updated chart dependency version: argo-cd 10.1.3 → 10.2.1
+
 ## [1.2.0] - 2026-07-10
 ### Changed
 - Bump template-library dependency to 0.2.0 for bearerToken authentication support

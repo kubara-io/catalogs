@@ -8,7 +8,7 @@ external-dns:
   sources: [ingress]
   policy: sync
   serviceMonitor:
-    enabled: false
+    enabled: true
   resources:
     requests:
       cpu: 10m

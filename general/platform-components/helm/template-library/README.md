@@ -1,6 +1,3 @@
-# Ignore me
-Just to test pipeline trigger#2
-
 # Introduction
 This library chart provides templates for creating k8s resources. This library-chart is meant to be added as a
 dependency to your parent-chart. Once added you can use the library-templates within your parent-chart.  
