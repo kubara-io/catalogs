@@ -17,29 +17,6 @@ spec:
   policyRefs:
     - name: {{ $policyName }}
       kind: ValidatingPolicy
-  matchConstraints:
-    resourceRules:
-      - apiGroups:
-          - ""
-          - apps
-          - batch
-          - cert-manager.io
-        apiVersions:
-          - v1
-          - v1alpha1
-        operations:
-          - CREATE
-          - UPDATE
-        resources:
-          {{- range $rule.resources.kinds }}
-          - {{ . | lower }}s
-          {{- end }}
-        {{- if $rule.resources.namespaces }}
-        namespaces:
-          {{- range $rule.resources.namespaces }}
-          - {{ . | quote }}
-          {{- end }}
-        {{- end }}
   {{- if $rule.resources.names }}
   matchConditions:
     - name: match-names
