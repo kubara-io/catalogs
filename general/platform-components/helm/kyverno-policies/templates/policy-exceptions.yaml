@@ -5,11 +5,7 @@ apiVersion: policies.kyverno.io/v1
 kind: PolicyException
 metadata:
   name: {{ printf "%s-exception-%d" $policyName $i | replace "_" "-" | lower }}
-  {{- if $rule.resources.namespaces }}
-  namespace: {{ (first $rule.resources.namespaces) }}
-  {{- else }}
-  namespace: default
-  {{- end }}
+  namespace: {{ $.Release.Namespace }}
   annotations:
     policies.kyverno.io/title: {{ printf "Exception for %s" $policyName | quote }}
     policies.kyverno.io/category: PolicyException
@@ -17,11 +13,18 @@ spec:
   policyRefs:
     - name: {{ $policyName }}
       kind: ValidatingPolicy
-  {{- if $rule.resources.names }}
+  {{- if or $rule.resources.namespaces $rule.resources.names }}
   matchConditions:
+    {{- if $rule.resources.namespaces }}
+    - name: match-namespaces
+      expression: >-
+        request.namespace in [{{ range $nsIdx, $ns := $rule.resources.namespaces }}{{ if $nsIdx }}, {{ end }}'{{ $ns }}'{{ end }}]
+    {{- end }}
+    {{- if $rule.resources.names }}
     - name: match-names
       expression: >-
         [{{ range $nIdx, $n := $rule.resources.names }}{{ if $nIdx }}, {{ end }}'^{{ $n | replace "." "\\." | replace "*" ".*" }}$'{{ end }}].exists(pattern, object.metadata.name.matches(pattern))
+    {{- end }}
   {{- end }}
 {{- end }}
 {{- end }}
