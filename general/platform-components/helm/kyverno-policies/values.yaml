@@ -214,24 +214,23 @@ global:
 # Kyverno Policies:
 argoCD:
   enabled: true
+  mode: Audit
   preventDefaultProject:
     enabled: true
     webhookFailurePolicy: Fail
-    actionOverride: Audit
     enableBackgroundScanning: true
   preventUpdatesToProject:
     enabled: true
     webhookFailurePolicy: Fail
-    actionOverride: Audit
     enableBackgroundScanning: true
 itGrundschutz:
+  mode: Audit
   base:
     enabled: true
     restrictImageRegistries:
       enabled: false
       webhookFailurePolicy: Fail
       enableBackgroundScanning: true
-      actionOverride: Audit
       allowedRegistries: [docker.io/*, quay.io/*, ghcr.io/*]
       excludeNamespaces: [kube-system]
   standard:
@@ -241,58 +240,48 @@ itGrundschutz:
       enabled: false
       webhookFailurePolicy: Fail
       enableBackgroundScanning: true
-      actionOverride: Audit
     createDefaultNetworkPolicyNewNamespaces:
       # -- if set to true a default-deny network policy will be created in every new namespace
       enabled: false
       webhookFailurePolicy: Fail
       enableBackgroundScanning: true
-      actionOverride: Audit
     disallowPrivilegedContainers:
       enabled: true
       webhookFailurePolicy: Fail
       enableBackgroundScanning: true
-      actionOverride: Audit
     disallowPrivilegeEscalation:
       enabled: true
       webhookFailurePolicy: Fail
       enableBackgroundScanning: true
-      actionOverride: Audit
     requirePodProbes:
       enabled: true
       webhookFailurePolicy: Fail
       enableBackgroundScanning: true
-      actionOverride: Audit
     requireRequestsAndLimits:
       enabled: true
       webhookFailurePolicy: Fail
       enableBackgroundScanning: true
-      actionOverride: Audit
 bestPractices:
   enabled: true
+  mode: Audit
   disallowDefaultNamespace:
     enabled: true
     webhookFailurePolicy: Fail
     enableBackgroundScanning: true
-    actionOverride: Audit
   disallowLatestTag:
     enabled: true
     webhookFailurePolicy: Fail
     enableBackgroundScanning: true
-    actionOverride: Audit
   requirePodDisruptionBudget:
     enabled: true
     webhookFailurePolicy: Fail
     enableBackgroundScanning: true
-    actionOverride: Audit
   requireReadOnlyRootFilesystem:
     enabled: true
     webhookFailurePolicy: Fail
     enableBackgroundScanning: true
-    actionOverride: Audit
   verifyImage:
     enabled: false
-    actionOverride: Audit
     enableBackgroundScanning: true
     webhookFailurePolicy: Ignore
     mutateDigest: true
@@ -315,21 +304,26 @@ bestPractices:
         verifyDigest: true  # Optional override
 certManager:
   enabled: true
+  mode: Audit
   limitDnsNames:
     enabled: true
     webhookFailurePolicy: Fail
     enableBackgroundScanning: true
-    actionOverride: Audit
   limitDuration:
     enabled: true
     webhookFailurePolicy: Fail
     enableBackgroundScanning: true
-    actionOverride: Audit
   restrictIssuer:
     enabled: true
     webhookFailurePolicy: Fail
     enableBackgroundScanning: true
-    actionOverride: Audit
+traefik:
+  enabled: true
+  mode: Audit
+  disallowDefaultTLSOptions:
+    enabled: true
+    webhookFailurePolicy: Fail
+    enableBackgroundScanning: true
 nginxIngress:
   enabled: true
   disallowIngressSnippets:
