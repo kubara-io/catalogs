@@ -10,14 +10,12 @@ resources:
 results:
   # pass: image signed with the configured public key
   - policy: verify-image
-    rule: verify-image
     resources:
       - verified-pod
     kind: Pod
     result: pass
   # fail: unsigned image
   - policy: verify-image
-    rule: verify-image
     resources:
       - unverified-pod
     kind: Pod

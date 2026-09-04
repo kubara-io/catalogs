@@ -2,6 +2,8 @@ set -e
 # chart root
 cd "$(dirname "$0")/.."
 
+echo "Testing Helm template rendering for all policy suites..."
+
 helm template . -f tests/bestPractices/values.yaml \
   --show-only templates/bestPractices/disallow-default-namespace.yaml \
   --show-only templates/bestPractices/disallow-latest-tag.yaml \
@@ -11,7 +13,6 @@ helm template . -f tests/bestPractices/values.yaml \
 
 helm template . -f tests/traefik/values.yaml \
   --show-only templates/traefik/disallow-default-tlsoptions.yaml \
-  --show-only templates/traefik/disallow-default-tlsoptions-in-cel-expressions.yaml \
   > /tmp/kyverno-traefik.yaml
 
 helm template . -f tests/argoCD/values.yaml \
@@ -38,7 +39,13 @@ helm template . -f tests/itGrundschutz/values.yaml \
   --show-only templates/itGrundschutz/standard/create-default-networkpolicy-new-ns.yaml \
   > /tmp/kyverno-itGrundschutz-standard.yaml
 
-# only test which requirese internet, see README.md
 helm template . -f tests/verifyImage/values.yaml \
   --show-only templates/bestPractices/verify-image.yaml \
   > /tmp/kyverno-verify-image.yaml
+
+# test policy exceptions template
+helm template . -f values.yaml \
+  --show-only templates/policy-exceptions.yaml \
+  > /tmp/kyverno-policy-exceptions.yaml
+
+echo "All Helm templates rendered successfully!"

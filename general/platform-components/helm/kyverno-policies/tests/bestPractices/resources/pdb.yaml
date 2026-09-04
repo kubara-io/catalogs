@@ -36,7 +36,10 @@ metadata:
 spec:
   replicas: 3
   template:
+    metadata:
+      labels:
+        app: test
     spec:
       containers:
         - name: test
-          image: nginx
+          image: nginx:1.20

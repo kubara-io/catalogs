@@ -10,12 +10,12 @@ resources:
 variables: variables.yaml
 results:
   - policy: application-prevent-updates-project
-    rule: project-updates
     resources:
       - argocd/test
+    kind: Application
     result: fail
   - policy: application-prevent-default-project
-    rule: default-project
     resources:
       - default-project-test
+    kind: Application
     result: fail

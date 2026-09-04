@@ -1,14 +1,13 @@
 {{- if and .Values.bestPractices.enabled (dig "bestPractices" "disallowLatestTag" "enabled" true (merge .Values)) }}
-apiVersion: kyverno.io/v1
-kind: ClusterPolicy
+apiVersion: policies.kyverno.io/v1
+kind: ValidatingPolicy
 metadata:
   name: disallow-latest-tag
   annotations:
-    pod-policies.kyverno.io/autogen-controllers: none
     policies.kyverno.io/title: Disallow Latest Tag
     policies.kyverno.io/category: Best Practices
     policies.kyverno.io/severity: medium
-    policies.kyverno.io/minversion: "1.6.0"
+    policies.kyverno.io/minversion: "1.17.0"
     kyverno.io/kyverno-version: {{ .Values.global.kyvernoVersion | quote }}
     kyverno.io/kubernetes-version: {{ .Values.global.k8sVersion | quote }}
     policies.kyverno.io/subject: Pod
@@ -18,50 +17,50 @@ metadata:
       a specific version of an application Pod. This policy validates that the image
       specifies a tag and that it is not called `latest`.
 spec:
+  failurePolicy: {{ dig "bestPractices" "disallowLatestTag" "webhookFailurePolicy" "Fail" (merge .Values) }}
   webhookConfiguration:
-    failurePolicy: {{ dig "bestPractices" "disallowLatestTag" "webhookFailurePolicy" "Fail" (merge .Values) }}
     timeoutSeconds: 30
-  background: {{ dig "bestPractices" "disallowLatestTag" "enableBackgroundScanning" true (merge .Values) }}
-  rules:
-  - name: require-image-tag
-    match:
-      any:
-      - resources:
-          kinds:
-            - Pod
-    skipBackgroundRequests: false
-    validate:
-      allowExistingViolations: false
-      failureAction: {{ dig "bestPractices" "disallowLatestTag" "actionOverride" "Audit" (merge .Values)}}
-      message: "An image tag is required."
-      foreach:
-        - list: "request.object.spec.containers"
-          pattern:
-            image: "*:*"
-        - list: "request.object.spec.initContainers"
-          pattern:
-            image: "*:*"
-        - list: "request.object.spec.ephemeralContainers"
-          pattern:
-            image: "*:*"
-  - name: validate-image-tag
-    match:
-      resources:
-        kinds:
-          - Pod
-    skipBackgroundRequests: false
-    validate:
-      allowExistingViolations: false
-      failureAction: {{ dig "bestPractices" "disallowLatestTag" "actionOverride" "Audit" (merge .Values)}}
-      message: "Using a mutable image tag e.g. 'latest' is not allowed."
-      foreach:
-        - list: "request.object.spec.containers"
-          pattern:
-            image: "!*:latest"
-        - list: "request.object.spec.initContainers"
-          pattern:
-            image: "!*:latest"
-        - list: "request.object.spec.ephemeralContainers"
-          pattern:
-            image: "!*:latest"
+  evaluation:
+    background:
+      enabled: {{ dig "bestPractices" "disallowLatestTag" "enableBackgroundScanning" true (merge .Values) }}
+  validationActions:
+    - {{ $action := dig "bestPractices" "disallowLatestTag" "actionOverride" "Audit" (merge .Values) }}{{ if eq $action "Enforce" }}Deny{{ else }}{{ $action }}{{ end }}
+  matchConstraints:
+    resourceRules:
+      - apiGroups:
+          - ""
+          - apps
+          - batch
+        apiVersions:
+          - v1
+        operations:
+          - CREATE
+          - UPDATE
+        resources:
+          - pods
+          - daemonsets
+          - deployments
+          - jobs
+          - statefulsets
+          - cronjobs
+  variables:
+    - name: podSpec
+      expression: >-
+        object.kind == 'Pod' ? object.spec :
+        object.kind == 'CronJob' ? object.spec.jobTemplate.spec.template.spec :
+        object.spec.template.spec
+    - name: containers
+      expression: >-
+        variables.podSpec.?containers.orValue([])
+        + variables.podSpec.?initContainers.orValue([])
+        + variables.podSpec.?ephemeralContainers.orValue([])
+  validations:
+    - expression: >-
+        variables.containers.all(c,
+          c.image.contains(':') &&
+          !c.image.endsWith(':latest') &&
+          !c.image.matches('^.*@[a-zA-Z0-9_+-]+:[a-fA-F0-9]+$') ? true :
+          (c.image.contains(':') && !c.image.endsWith(':latest'))
+        )
+      message: "An image tag is required and using a mutable image tag e.g. 'latest' is not allowed."
 {{- end }}
