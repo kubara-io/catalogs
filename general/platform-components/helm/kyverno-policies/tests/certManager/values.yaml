@@ -1,0 +1,5 @@
+---
+bestPractices:
+  enabled: true
+global:
+  allowedIssuerDomains: example.com

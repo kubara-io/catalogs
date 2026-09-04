@@ -1,0 +1,73 @@
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: unprivileged-pod
+spec:
+  containers:
+    - securityContext:
+        privileged: false
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: privileged-pod
+spec:
+  containers:
+    - securityContext:
+        privileged: true
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: no-escalation-pod
+spec:
+  containers:
+    - securityContext:
+        allowPrivilegeEscalation: false
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: escalation-pod
+spec:
+  containers:
+    - securityContext:
+        allowPrivilegeEscalation: true
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pod-with-probe
+spec:
+  containers:
+    - livenessProbe: {}
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pod-without-probe
+spec:
+  containers:
+    - {}
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pod-with-limits
+spec:
+  containers:
+    - resources:
+        requests:
+          memory: 64Mi
+          cpu: 100m
+        limits:
+          memory: 128Mi
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pod-without-limits
+spec:
+  containers:
+    - {}
