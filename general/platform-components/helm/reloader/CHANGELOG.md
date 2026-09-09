@@ -4,6 +4,10 @@ All notable changes to this chart will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this chart adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.6] - 2026-09-09
+### Changed
+- Updated chart dependency version: reloader 2.2.16 → 2.2.17
+
 ## [1.0.5] - 2026-08-31
 ### Changed
 - Updated chart dependency version: template-library 0.3.0 → 0.4.0
