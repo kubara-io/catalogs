@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.0] - 2026-08-28
+### Changed
+- Migrated all policies from legacy `ClusterPolicy` (`kyverno.io/v1`) to Kyverno 1.17 CEL-based CRDs (`policies.kyverno.io/v1`):
+  - `ValidatingPolicy` for bestPractices, traefik, certManager, argoCD, and itGrundschutz validation rules
+  - `GeneratingPolicy` for itGrundschutz network policy generation rules
+  - `ImageValidatingPolicy` for verifyImage Cosign supply-chain rules
+  - `PolicyException` (`policies.kyverno.io/v1`) for policy exclusions
+
 ## [0.5.0] - 2026-08-20
 ### Changed
 - Updated chart dependency version: kyverno-policies 3.8.2 → 3.9.0

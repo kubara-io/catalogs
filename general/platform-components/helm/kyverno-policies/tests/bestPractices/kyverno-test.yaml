@@ -1,8 +1,9 @@
 ---
 apiVersion: cli.kyverno.io/v1alpha1
 kind: Test
+context: context.yaml
 metadata:
-  name: registry-tests
+  name: best-practices-tests
 policies:
   - /tmp/kyverno-policies.yaml
 resources:
@@ -15,61 +16,51 @@ results:
   # disallow default namespace
   ###
   - policy: disallow-default-namespace
-    rule: validate-namespace
     resources:
       - bad-pod
     kind: Pod
     result: fail
   - policy: disallow-default-namespace
-    rule: validate-namespace
     resources:
       - good-pod
     kind: Pod
     result: pass
   - policy: disallow-default-namespace
-    rule: validate-podcontroller-namespace
     resources:
       - allowed-daemonset
     kind: DaemonSet
     result: pass
   - policy: disallow-default-namespace
-    rule: validate-podcontroller-namespace
     resources:
       - blocked-daemonset
     kind: DaemonSet
     result: fail
   - policy: disallow-default-namespace
-    rule: validate-podcontroller-namespace
     resources:
       - allowed-deployment
     kind: Deployment
     result: pass
   - policy: disallow-default-namespace
-    rule: validate-podcontroller-namespace
     resources:
       - blocked-deployment
     kind: Deployment
     result: fail
   - policy: disallow-default-namespace
-    rule: validate-podcontroller-namespace
     resources:
       - allowed-job
     kind: Job
     result: pass
   - policy: disallow-default-namespace
-    rule: validate-podcontroller-namespace
     resources:
       - blocked-job
     kind: Job
     result: fail
   - policy: disallow-default-namespace
-    rule: validate-podcontroller-namespace
     resources:
       - allowed-statefulset
     kind: StatefulSet
     result: pass
   - policy: disallow-default-namespace
-    rule: validate-podcontroller-namespace
     resources:
       - blocked-statefulset
     kind: StatefulSet
@@ -79,68 +70,49 @@ results:
   # disallow latest tag
   ####
   - policy: disallow-latest-tag
-    rule: validate-image-tag
     resources:
       - latest-pod
     kind: Pod
     result: fail
   - policy: disallow-latest-tag
-    rule: validate-image-tag
     resources:
       - tagged-pod
     kind: Pod
     result: pass
   - policy: disallow-latest-tag
-    rule: require-image-tag
     resources:
       - no-tag-pod
     kind: Pod
     result: fail
-  - policy: disallow-latest-tag
-    rule: require-image-tag
-    resources:
-      - tagged-pod
-    kind: Pod
-    result: pass
-####
-# pod disruption budget
-####
 
-  # skipped: fewer than three replicas, precondition not met
+  ####
+  # pod disruption budget
+  ####
   - policy: require-pod-disruption-budget
-    rule: require-pod-disruption-budget
     resources:
       - pdb-skip-deployment
     kind: Deployment
     result: skip
-
-  # fail: three or more replicas, no matching PodDisruptionBudget
   - policy: require-pod-disruption-budget
-    rule: require-pod-disruption-budget
     resources:
       - pdb-missing-deployment
     kind: Deployment
     result: fail
-
-  # pass: three or more replicas, matching PodDisruptionBudget exists
   - policy: require-pod-disruption-budget
-    rule: require-pod-disruption-budget
     resources:
       - pdb-present-deployment
     kind: Deployment
     result: pass
 
-####
-# pod root fs read only
-####
+  ####
+  # pod root fs read only
+  ####
   - policy: require-readonly-root-filesystem
-    rule: validate-readOnlyRootFilesystem
     resources:
       - writable-rootfs
     kind: Pod
     result: fail
   - policy: require-readonly-root-filesystem
-    rule: validate-readOnlyRootFilesystem
     resources:
       - readonly-rootfs
     kind: Pod

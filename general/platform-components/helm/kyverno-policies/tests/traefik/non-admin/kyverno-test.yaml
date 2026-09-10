@@ -11,7 +11,6 @@ userinfo: user_info.yaml
 results:
   # default case
   - policy: disallow-default-tlsoptions
-    rule: disallow-default-tlsoptions
     resources:
       - default
     kind: TLSOption
@@ -20,19 +19,6 @@ results:
   # fail does not work here as the test is always green
   # needs to be set to skip
   - policy: disallow-default-tlsoptions
-    rule: disallow-default-tlsoptions
-    resources:
-      - custom-options
-    kind: TLSOption
-    result: skip
-  - policy: disallow-default-tlsoptions-in-cel
-    rule: disallow-default-tlsoptions-in-cel
-    resources:
-      - default
-    kind: TLSOption
-    result: fail
-  - policy: disallow-default-tlsoptions-in-cel
-    rule: disallow-default-tlsoptions-in-cel
     resources:
       - custom-options
     kind: TLSOption

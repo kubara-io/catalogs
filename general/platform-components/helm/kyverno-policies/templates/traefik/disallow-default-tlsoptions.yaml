@@ -1,6 +1,6 @@
 {{- if and .Values.bestPractices.enabled (dig "traefik" "disallowDefaultTLSOptions" "enabled" true (merge .Values)) }}
-apiVersion: kyverno.io/v1
-kind: ClusterPolicy
+apiVersion: policies.kyverno.io/v1
+kind: ValidatingPolicy
 metadata:
   name: disallow-default-tlsoptions
   annotations:
@@ -8,27 +8,41 @@ metadata:
     policies.kyverno.io/category: Traefik
     policies.kyverno.io/severity: medium
     policies.kyverno.io/subject: TLSOption
-    kyverno.io/kyverno-version: 1.6.0
-    kyverno.io/kubernetes-version: "1.21"
-    policies.kyverno.io/description: The TLSOption CustomResource sets cluster-wide TLS configuration options for Traefik when  none are specified in a TLS router. Since this can take effect for all Ingress resources, creating the `default` TLSOption is a restricted operation. This policy ensures that only a cluster-admin can create the `default` TLSOption resource.
+    policies.kyverno.io/minversion: "1.17.0"
+    kyverno.io/kyverno-version: {{ .Values.global.kyvernoVersion | quote }}
+    kyverno.io/kubernetes-version: {{ .Values.global.k8sVersion | quote }}
+    policies.kyverno.io/description: >-
+      The TLSOption CustomResource sets cluster-wide TLS configuration options for Traefik when
+      none are specified in a TLS router. Since this can take effect for all Ingress resources,
+      creating the `default` TLSOption is a restricted operation. This policy ensures that only
+      a cluster-admin can create or update the `default` TLSOption resource.
 spec:
-  validationFailureAction: Audit
-  background: false
-  rules:
-    - name: disallow-default-tlsoptions
-      match:
-        any:
-          - resources:
-              names:
-                - default
-              kinds:
-                - TLSOption
-      exclude:
-        clusterRoles:
-          - cluster-admin
-      skipBackgroundRequests: false
-      validate:
-        allowExistingViolations: false
-        message: Only cluster administrators are allowed to set default TLSOptions.
-        deny: {}
+  failurePolicy: Fail
+  webhookConfiguration:
+    timeoutSeconds: 30
+  evaluation:
+    background:
+      enabled: false
+  validationActions:
+    - {{ $action := dig "traefik" "disallowDefaultTLSOptions" "actionOverride" "Audit" (merge .Values) }}{{ if eq $action "Enforce" }}Deny{{ else }}{{ $action }}{{ end }}
+  matchConstraints:
+    resourceRules:
+      - apiGroups:
+          - traefik.containo.us
+          - traefik.io
+        apiVersions:
+          - v1alpha1
+        operations:
+          - CREATE
+          - UPDATE
+        resources:
+          - tlsoptions
+  matchConditions:
+    - name: is-default-tlsoption
+      expression: "object.metadata.name == 'default'"
+    - name: exclude-cluster-admin
+      expression: "!(has(request.userInfo.groups) && ('system:masters' in request.userInfo.groups || 'cluster-admin' in request.userInfo.groups))"
+  validations:
+    - expression: "false"
+      message: "Only cluster administrators are allowed to create or modify default TLSOptions."
 {{- end }}
