@@ -1,0 +1,42 @@
+---
+# SKIP: replicas < 3
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pdb-skip-deployment
+  namespace: kyverno-test
+spec:
+  replicas: 2
+  template:
+    spec:
+      containers:
+        - name: test
+          image: nginx
+---
+# FAIL: replicas >= 3, pdb_count mocked to "0"
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pdb-missing-deployment
+  namespace: kyverno-test
+spec:
+  replicas: 3
+  template:
+    spec:
+      containers:
+        - name: test
+          image: nginx
+---
+# PASS: replicas >= 3, pdb_count mocked to "1"
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pdb-present-deployment
+  namespace: kyverno-test
+spec:
+  replicas: 3
+  template:
+    spec:
+      containers:
+        - name: test
+          image: nginx

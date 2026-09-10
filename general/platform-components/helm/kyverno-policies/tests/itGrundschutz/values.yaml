@@ -1,0 +1,25 @@
+---
+itGrundschutz:
+  base:
+    enabled: true
+    restrictImageRegistries:
+      enabled: true
+  standard:
+    enabled: true
+    createDefaultNetworkPolicyExistingNamespaces:
+      enabled: true
+    createDefaultNetworkPolicyNewNamespaces:
+      enabled: true
+    disallowPrivilegedContainers:
+      enabled: true
+    disallowPrivilegeEscalation:
+      enabled: true
+    requirePodProbes:
+      enabled: true
+    requireRequestsAndLimits:
+      enabled: true
+bestPractices:
+  enabled: true
+  restrictImageRegistries:
+    allowedRegistries:
+      - "example.com/*"
