@@ -1,0 +1,72 @@
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: good-pod
+  namespace: new-namespace
+spec:
+  containers:
+    - name: test
+      image: nginx
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: bad-pod
+  namespace: default
+spec:
+  containers:
+    - name: test
+      image: nginx
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: latest-pod
+  namespace: default
+spec:
+  containers:
+    - name: test
+      image: nginx:latest
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: tagged-pod
+  namespace: default
+spec:
+  containers:
+    - name: test
+      image: nginx:1.31.0
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: no-tag-pod
+  namespace: default
+spec:
+  containers:
+    - name: test
+      image: nginx
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: readonly-rootfs
+  namespace: default
+spec:
+  containers:
+    - name: test
+      image: nginx
+      securityContext:
+        readOnlyRootFilesystem: true
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: writable-rootfs
+  namespace: default
+spec:
+  containers:
+    - name: test
+      image: nginx

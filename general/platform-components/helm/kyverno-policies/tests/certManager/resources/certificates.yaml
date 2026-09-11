@@ -1,0 +1,65 @@
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: too-many-dnsnames
+spec:
+  dnsNames:
+    - example.com
+    - kubara.io
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: one-dnsname
+spec:
+  dnsNames:
+    - example.com
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: exact-long
+spec:
+  issuerRef:
+    name: my-issuer
+  duration: 2400h
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: too-long
+spec:
+  issuerRef:
+    name: my-issuer
+  duration: 2401
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: no-specified-duration
+spec:
+  issuerRef:
+    name: my-issuer
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: wrong-issuer
+spec:
+  dnsNames:
+    - example.com
+  issuerRef:
+    name: my-issuer
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: corp-issuer
+spec:
+  dnsNames:
+    - example.com
+  issuerRef:
+    name: our-corp-issuer
+    kind: ClusterIssuer
+    group: cert-manager.io
