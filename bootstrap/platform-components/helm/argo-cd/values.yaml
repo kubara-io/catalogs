@@ -9,6 +9,40 @@ dexRestarter:
   maxAttempts: "30"
   interval: "10"  # in seconds
   secretName: "oauth2-credentials"
+clusterCredentialRotator:
+  enabled: true
+  schedule: "* * * * *"
+  suspend: false
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  startingDeadlineSeconds: 300
+  activeDeadlineSeconds: 300
+  backoffLimit: 1
+  image:
+    repository: "alpine/kubectl"
+    tag: "1.36.4"
+    pullPolicy: IfNotPresent
+  serviceAccount:
+    create: true
+    name: "cluster-credential-rotator"
+  resources: {}
+  secret:
+    labelKey: "kubara.io/cluster-credential-rotator"
+    labelValue: "true"
+    requiredType: "kubara.io/argocd-cluster-bootstrap"
+    bootstrapKubeconfigKey: "bootstrapKubeconfig"
+    generatedConfigKey: "config"
+    configMapSuffix: "-config"
+  agent:
+    namespaceAnnotation: "kubara.io/agent-namespace"
+    defaultNamespace: "kubara"
+    serviceAccountName: "kubara-agent"
+    clusterRoleBindingName: "kubara-agent"
+    clusterRoleName: "cluster-admin"
+  token:
+    duration: "10m"
+    refreshBefore: "5m"
 defaultProject:
   name: default
   description: |-
