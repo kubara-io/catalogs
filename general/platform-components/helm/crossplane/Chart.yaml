@@ -1,0 +1,14 @@
+---
+apiVersion: v2
+name: crossplane
+description: Umbrella Chart for Crossplane
+type: application
+version: 0.1.0
+dependencies:
+  - name: template-library
+    repository: file://../template-library
+    version: 0.4.0
+  # https://docs.crossplane.io/latest/get-started/install/
+  - name: crossplane
+    repository: https://charts.crossplane.io/stable
+    version: 2.4.0
