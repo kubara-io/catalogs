@@ -9,6 +9,7 @@ on:
 permissions:
   contents: write
   packages: write
+  pull-requests: read
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -114,8 +115,7 @@ jobs:
           TAG: ${{ github.ref_name }}
         run: |
           set -euo pipefail
-          # Compare the semantic version independently of the legacy optional
-          # "v" in tags such as bootstrap-1.1.0 and bootstrap-v1.2.0.
+
           LAST_RELEASE="$(
             git tag -l "${catalog}-*" |
               awk -v prefix="${catalog}-" \
@@ -126,38 +126,40 @@ jobs:
           )"
 
           if [[ -n "$LAST_RELEASE" ]]; then
-            CUTOFF_DATE="$(git tag -l --format='%(creatordate:iso8601-strict)' "$LAST_RELEASE")"
-            merged_query="merged:>=$CUTOFF_DATE"
-            echo "Searching merged PRs since $LAST_RELEASE ($CUTOFF_DATE)"
+            echo "Generating $catalog changelog from $LAST_RELEASE to $TAG"
           else
-            merged_query="is:merged"
-            echo "No previous $catalog release found; including all matching merged PRs"
+            echo "No previous $catalog release found; including all catalog commits"
           fi
 
-          CHANGELOG="$(gh search prs "$merged_query" --repo="$GITHUB_REPOSITORY" --limit 100 \
-            --sort created \
-            --label "$catalog" \
-            --json number,title,author \
-            --template '{{range .}}* {{.title}} (#{{.number}}) by @{{.author.login}}{{"\n"}}{{end}}')"
+          CHANGELOG="$(
+            .scripts/catalog-release-changelog.sh \
+              "$catalog" \
+              "$TAG" \
+              "$LAST_RELEASE"
+          )"
 
-          # Fallback message if no PRs match
           if [[ -z "$CHANGELOG" ]]; then
-            CHANGELOG="No specific PR changes found for this release."
+            CHANGELOG="No catalog changes found for this release."
           fi
 
           echo "$CHANGELOG"
 
-          if gh release view "$TAG"; then
+          NOTES_FILE="$(mktemp)"
+          trap 'rm -f "$NOTES_FILE"' EXIT
+
+          {
+            echo "### What's Changed"
+            echo
+            printf '%s\n' "$CHANGELOG"
+          } > "$NOTES_FILE"
+
+          if gh release view "$TAG" >/dev/null 2>&1; then
             gh release edit "$TAG" \
-              --notes "### What's Changed
-          
-            $CHANGELOG"
+              --notes-file "$NOTES_FILE"
           else
             gh release create "$TAG" \
               --title "$catalog - $version" \
-              --notes "### What's Changed
-            
-            $CHANGELOG"
+              --notes-file "$NOTES_FILE"
           fi
 
   extract-images:
