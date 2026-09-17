@@ -16,7 +16,7 @@ kube-prometheus-stack:
   global:
     imagePullSecrets:
       - name: image-pull-secret
-    imageRegistry: "{{ .cluster.globalHelmChartRepo | default "" }}"
+    imageRegistry: ""
   prometheusOperator:
     serviceMonitor:
       additionalLabels:
@@ -235,7 +235,7 @@ prometheus-blackbox-exporter:
     pullSecrets:
       - image-pull-secret
   global:
-    imageRegistry: {{ .cluster.globalHelmChartRepo | default "quay.io" }}
+    imageRegistry: "quay.io"
 
 {{- if eq .cluster.terraform.provider "t-cloud-public" }}
 namespacedSecretStores:
