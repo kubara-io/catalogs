@@ -1,0 +1,37 @@
+---
+name: "🐛 Bug report"
+description: Report a problem with an official Kubara catalog
+title: "[Bug]: "
+labels: ["bug", "triage"]
+assignees: []
+body:
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: Describe what happened and what you expected instead.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps to reproduce
+      description: Include the catalog version, provider, Kubernetes type, and relevant configuration.
+      placeholder: |
+        1. Use catalog `general` version `...`
+        2. Run `kubara generate`
+        3. Observe `...`
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs or generated output
+      description: Paste relevant logs, generated manifests, or screenshots. Remove secrets.
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Before submitting
+      options:
+        - label: I searched existing issues.
+          required: true

@@ -1,0 +1,6 @@
+---
+blank_issues_enabled: false
+contact_links:
+  - name: Report a security vulnerability
+    url: https://github.com/kubara-io/kubara/security/policy
+    about: Follow the Kubara security policy. Do not report vulnerabilities in a public issue.

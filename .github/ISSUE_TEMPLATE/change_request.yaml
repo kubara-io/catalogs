@@ -1,0 +1,39 @@
+---
+name: "☂️ Change proposal"
+description: Propose a substantial catalog change
+title: "[RFC]: "
+labels: ["architecture", "triage"]
+assignees: []
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What does the current catalog behaviour prevent or make difficult?
+    validations:
+      required: true
+  - type: textarea
+    id: scope
+    attributes:
+      label: Scope
+      description: State what this proposal includes and what it leaves out.
+      value: |
+        Includes:
+
+        Excludes:
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed change
+      description: Describe the affected catalog, design, compatibility impact, and alternatives you rejected.
+    validations:
+      required: true
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Before submitting
+      options:
+        - label: I searched existing issues.
+          required: true

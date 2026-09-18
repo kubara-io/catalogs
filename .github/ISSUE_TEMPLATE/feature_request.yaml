@@ -1,0 +1,33 @@
+---
+name: "✨ Feature request"
+description: Suggest a catalog capability or service
+title: "[Feature]: "
+labels: ["feature request", "triage"]
+assignees: []
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: Describe the platform need before proposing a solution.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+      description: Describe the service, configuration, or catalog behaviour you need.
+    validations:
+      required: true
+  - type: textarea
+    id: context
+    attributes:
+      label: Other context
+      description: Add provider constraints, related issues, examples, or prior art.
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Before submitting
+      options:
+        - label: I searched existing issues.
+          required: true

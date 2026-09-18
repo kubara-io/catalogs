@@ -1,0 +1,24 @@
+---
+name: "❓ Question or support"
+description: Ask about using or contributing to a Kubara catalog
+title: "[Question]: "
+labels: ["question", "triage"]
+assignees: []
+body:
+  - type: textarea
+    id: question
+    attributes:
+      label: Question
+      description: Say what you are trying to do and where you got stuck.
+    validations:
+      required: true
+  - type: textarea
+    id: tried
+    attributes:
+      label: What you tried
+      description: Include the catalog version, provider, commands, and docs you checked.
+  - type: textarea
+    id: context
+    attributes:
+      label: Logs or other context
+      description: Paste relevant logs, generated output, or links. Remove secrets.
