@@ -14,6 +14,8 @@ repository="${GITHUB_REPOSITORY:-kubara-io/catalogs}"
 }
 
 [[ -d "$catalog" ]] || die "catalog directory not found: $catalog"
+command -v gh >/dev/null 2>&1 || die "Missing command: gh"
+[[ -n "${GH_TOKEN:-}" ]] || die "GH_TOKEN is required"
 
 git rev-parse -q --verify "${current_ref}^{commit}" >/dev/null ||
   die "current ref not found: $current_ref"
@@ -35,52 +37,44 @@ documentation=""
 ci_build=""
 other=""
 
-breaking_re='^[a-z]+(\([^)]+\))?!:'
-feature_re='^feat(\([^)]+\))?:'
-fix_re='^fix(\([^)]+\))?:'
-dependency_re='^[a-z]+\(deps[^)]*\)!?:|^deps(\([^)]+\))?!?:|^bump[[:space:]]'
-docs_re='^docs(\([^)]+\))?!?:'
-ci_build_re='^(build|ci)(\([^)]+\))?!?:'
+breaking_re='^[a-z]+(\([^)]+\))?!:.+$'
+feature_re='^feat(\([^)]+\))?:.+$'
+fix_re='^fix(\([^)]+\))?:.+$'
+dependency_re='^[a-z]+\(deps[^)]*\)!?:.+$|^deps(\([^)]+\))?!?:.+$|^bump .+$'
+docs_re='^docs(\([^)]+\))?!?:.+$'
+ci_build_re='^(build|ci)(\([^)]+\))?!?:.+$'
 
 format_entry() {
   local subject="$1"
   local pr_number="" author=""
 
-  if [[ "$subject" =~ \(\#([0-9]+)\)$ ]]; then
+  if [[ "$subject" =~ \(#([0-9]+)\)$ ]]; then
     pr_number="${BASH_REMATCH[1]}"
   fi
 
-  if [[ -n "$pr_number" && -n "${GH_TOKEN:-}" ]] &&
-    command -v gh >/dev/null 2>&1; then
-    if author="$(
+  if [[ -n "$pr_number" ]]; then
+    author="$(
       gh pr view "$pr_number" \
         --repo "$repository" \
         --json author \
-        --jq '.author.login // empty' \
-        2>/dev/null
-    )" && [[ -n "$author" ]]; then
-      printf '* %s by @%s\n' "$subject" "$author"
-      return
-    fi
+        --jq '.author.login // empty'
+    )" || die "failed to retrieve PR #${pr_number}"
+
+    [[ -n "$author" ]] || die "PR #${pr_number} has no author"
+
+    printf '* %s by @%s\n' "$subject" "$author"
+    return
   fi
 
   printf '* %s\n' "$subject"
 }
 
-while IFS=$'\t' read -r commit subject; do
-  [[ -n "$commit" ]] || continue
+while IFS= read -r subject; do
+  [[ -n "$subject" ]] || continue
 
-  # Release automation creates this commit and points the catalog tags at it.
-  # It is release bookkeeping rather than a user-facing catalog change.
-  if [[ "$subject" =~ ^chore\(release\): ]]; then
-    continue
-  fi
-
-  body="$(git show -s --format=%B "$commit")"
   entry="$(format_entry "$subject")"
 
-  if [[ "$subject" =~ $breaking_re ]] ||
-    grep -Eq '^BREAKING([ -])CHANGE:' <<< "$body"; then
+  if [[ "$subject" =~ $breaking_re ]]; then
     breaking+="${entry}"$'\n'
   elif [[ "$subject" =~ $feature_re ]]; then
     features+="${entry}"$'\n'
@@ -99,7 +93,7 @@ done < <(
   git log \
     --no-merges \
     --reverse \
-    --format='%H%x09%s' \
+    --format='%s' \
     "$range" \
     -- "$catalog/"
 )
@@ -117,8 +111,8 @@ print_section() {
 
 print_section "Breaking changes" "$breaking"
 print_section "Features" "$features"
-print_section "Fixes" "$fixes"
-print_section "Dependencies" "$dependencies"
+print_section "Bug fixes" "$fixes"
+print_section "Dependency updates" "$dependencies"
 print_section "Documentation" "$documentation"
 print_section "CI / Build" "$ci_build"
 print_section "Other changes" "$other"

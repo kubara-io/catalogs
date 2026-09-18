@@ -116,6 +116,8 @@ jobs:
         run: |
           set -euo pipefail
 
+          # Compare the semantic version independently of the legacy optional
+          # "v" in tags such as bootstrap-1.1.0 and bootstrap-v1.2.0.
           LAST_RELEASE="$(
             git tag -l "${catalog}-*" |
               awk -v prefix="${catalog}-" \
@@ -138,9 +140,10 @@ jobs:
               "$LAST_RELEASE"
           )"
 
-          if [[ -z "$CHANGELOG" ]]; then
-            CHANGELOG="No catalog changes found for this release."
-          fi
+          [[ -n "$CHANGELOG" ]] || {
+            echo "No catalog changes found for release $TAG" >&2
+            exit 1
+          }
 
           echo "$CHANGELOG"
 
@@ -153,14 +156,9 @@ jobs:
             printf '%s\n' "$CHANGELOG"
           } > "$NOTES_FILE"
 
-          if gh release view "$TAG" >/dev/null 2>&1; then
-            gh release edit "$TAG" \
-              --notes-file "$NOTES_FILE"
-          else
-            gh release create "$TAG" \
-              --title "$catalog - $version" \
-              --notes-file "$NOTES_FILE"
-          fi
+          gh release create "$TAG" \
+            --title "$catalog - $version" \
+            --notes-file "$NOTES_FILE"
 
   extract-images:
     name: Extract container images
