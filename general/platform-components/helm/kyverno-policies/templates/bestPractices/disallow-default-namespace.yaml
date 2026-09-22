@@ -30,8 +30,6 @@ spec:
     resourceRules:
       - apiGroups:
           - ""
-          - apps
-          - batch
         apiVersions:
           - v1
         operations:
@@ -39,10 +37,26 @@ spec:
           - UPDATE
         resources:
           - pods
+      - apiGroups:
+          - apps
+        apiVersions:
+          - v1
+        operations:
+          - CREATE
+          - UPDATE
+        resources:
           - daemonsets
           - deployments
-          - jobs
           - statefulsets
+      - apiGroups:
+          - batch
+        apiVersions:
+          - v1
+        operations:
+          - CREATE
+          - UPDATE
+        resources:
+          - jobs
   validations:
     - expression: "object.metadata.?namespace.orValue('') != 'default'"
       message: "Using 'default' namespace is not allowed."
