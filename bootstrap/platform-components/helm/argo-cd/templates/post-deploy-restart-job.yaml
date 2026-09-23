@@ -51,13 +51,25 @@ metadata:
   namespace: {{ .Release.Namespace }}
   annotations:
     "helm.sh/hook": post-install
+    "helm.sh/hook-delete-policy": hook-succeeded
 spec:
+  ttlSecondsAfterFinished: 60
   template:
     spec:
       containers:
       - name: restart
         image: "{{ .Values.dexRestarter.image.repository }}:{{ .Values.dexRestarter.image.tag}}"
         command: ["sh", "-c", "/script/restart-dex.sh"]
+        {{- with .Values.dexRestarter.resources }}
+        resources:
+          {{- toYaml . | nindent 10 }}
+        {{- end }}
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          capabilities:
+            drop:
+              - ALL
         volumeMounts:
         - name: config-volume
           mountPath: "/script"

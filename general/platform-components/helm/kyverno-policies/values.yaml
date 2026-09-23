@@ -201,6 +201,12 @@ kyverno-policies:
             kinds: [Pod]
             names: [node-agent-*]
             namespaces: [velero]
+        - resources:
+            kinds: [Pod]
+            names:
+              - dex-restarter-*
+              - argocd-redis-secret-init-*
+            namespaces: [argocd]
 global:
   k8sVersion: ''
   kyvernoVersion: autodetect

@@ -1,9 +1,9 @@
 {{- range $policyName, $rules := (index .Values "kyverno-policies" "policyExclude" | default dict) }}
-{{- $resolvedPolicyName := $policyName }}
-{{- if eq $policyName "certificate-duration-max-100days" }}{{ $resolvedPolicyName = "cert-manager-limit-duration" }}{{ end }}
-{{- if eq $policyName "limit-dnsnames" }}{{ $resolvedPolicyName = "cert-manager-limit-dnsnames" }}{{ end }}
-{{- if eq $policyName "disallow-privilege-escalation" }}{{ $resolvedPolicyName = "disallow-privilege-escalation-itgrundschutz" }}{{ end }}
-{{- if eq $policyName "disallow-privileged-containers" }}{{ $resolvedPolicyName = "disallow-privileged-containers-itgrundschutz" }}{{ end }}
+{{- $resolvedPolicyNames := list $policyName }}
+{{- if eq $policyName "certificate-duration-max-100days" }}{{ $resolvedPolicyNames = list "cert-manager-limit-duration" }}{{ end }}
+{{- if eq $policyName "limit-dnsnames" }}{{ $resolvedPolicyNames = list "cert-manager-limit-dnsnames" }}{{ end }}
+{{- if eq $policyName "disallow-privilege-escalation" }}{{ $resolvedPolicyNames = list "disallow-privilege-escalation-itgrundschutz" }}{{ end }}
+{{- if eq $policyName "disallow-privileged-containers" }}{{ $resolvedPolicyNames = list "disallow-privileged-containers-itgrundschutz" "disallow-privileged-containers" }}{{ end }}
 {{- range $i, $rule := $rules.any }}
 ---
 apiVersion: policies.kyverno.io/v1
@@ -16,8 +16,10 @@ metadata:
     policies.kyverno.io/category: PolicyException
 spec:
   policyRefs:
-    - name: {{ $resolvedPolicyName }}
+    {{- range $pol := $resolvedPolicyNames }}
+    - name: {{ $pol }}
       kind: ValidatingPolicy
+    {{- end }}
   {{- if or $rule.resources.namespaces $rule.resources.names }}
   matchConditions:
     {{- if $rule.resources.namespaces }}

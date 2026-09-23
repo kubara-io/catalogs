@@ -9,6 +9,13 @@ dexRestarter:
   maxAttempts: "30"
   interval: "10"  # in seconds
   secretName: "oauth2-credentials"
+  resources:
+    limits:
+      cpu: 100m
+      memory: 128Mi
+    requests:
+      cpu: 10m
+      memory: 64Mi
 defaultProject:
   name: default
   description: |-
@@ -60,6 +67,14 @@ argo-cd:
       enabled: true
     readinessProbe:
       enabled: true
+  redisSecretInit:
+    resources:
+      limits:
+        cpu: 100m
+        memory: 128Mi
+      requests:
+        cpu: 10m
+        memory: 64Mi
   applicationSet:
     pdb:
       enabled: false
