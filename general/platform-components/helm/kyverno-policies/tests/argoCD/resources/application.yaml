@@ -1,0 +1,16 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: test
+  namespace: argocd
+spec:
+  project: other
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: default-project-test
+  namespace: argocd
+spec:
+  project: default

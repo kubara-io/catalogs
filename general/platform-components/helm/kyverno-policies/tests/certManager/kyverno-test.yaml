@@ -1,0 +1,54 @@
+---
+apiVersion: cli.kyverno.io/v1alpha1
+kind: Test
+metadata:
+  name: cert-manager-test
+policies:
+  - /tmp/kyverno-certManager.yaml
+resources:
+  - resources/certificates.yaml
+results:
+  - policy: cert-manager-limit-dnsnames
+    rule: limit-dnsnames
+    resources:
+      - one-dnsname
+    kind: Certificate
+    result: pass
+  - policy: cert-manager-limit-dnsnames
+    rule: limit-dnsnames
+    resources:
+      - too-many-dnsnames
+    kind: Certificate
+    result: fail
+  - policy: cert-manager-limit-duration
+    rule: certificate-duration-max-100days
+    resources:
+      - exact-long
+    kind: Certificate
+    result: pass
+  - policy: cert-manager-limit-duration
+    rule: certificate-duration-max-100days
+    resources:
+      - too-long
+    kind: Certificate
+    result: fail
+
+  # if duration has no specified field, the test will be skipped
+  - policy: cert-manager-limit-duration
+    rule: certificate-duration-max-100days
+    resources:
+      - no-specified-duration
+    kind: Certificate
+    result: skip
+  - policy: cert-manager-restrict-issuer
+    rule: restrict-corp-cert-issuer
+    resources:
+      - wrong-issuer
+    kind: Certificate
+    result: fail
+  - policy: cert-manager-restrict-issuer
+    rule: restrict-corp-cert-issuer
+    resources:
+      - corp-issuer
+    kind: Certificate
+    result: pass
