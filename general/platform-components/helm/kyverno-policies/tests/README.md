@@ -14,7 +14,14 @@ The current test suite covers:
 
 ## Prerequisites:
 * helm 
-* kyverno
+* kyverno (>= v1.18.0)
+
+Example CLI installation:
+```bash
+curl -LO https://github.com/kyverno/kyverno/releases/download/v1.18.2/kyverno-cli_v1.18.2_linux_x86_64.tar.gz
+tar -xvf kyverno-cli_v1.18.2_linux_x86_64.tar.gz
+sudo cp kyverno /usr/local/bin/
+```
 
 ## How this works?
 The policies in this catalog are helm templates. Because kyverno can't read them directly, it is required to execute `render.sh` which renders the templates into `/tmp/*.yaml`.
@@ -23,7 +30,7 @@ The policies in this catalog are helm templates. Because kyverno can't read them
 Render the policies with:
 `./render.sh`
 And execute the tests with:
-`kyverno test kyverno test bestPractices traefik certManager itGrundschutz`
+`kyverno test bestPractices traefik certManager itGrundschutz`
 For Verify Image Policy:
 `kyverno test verifyImage --registry`
 

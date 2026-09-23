@@ -1,0 +1,37 @@
+{{- range $policyName, $rules := (index .Values "kyverno-policies" "policyExclude" | default dict) }}
+{{- $resolvedPolicyNames := list $policyName }}
+{{- if eq $policyName "certificate-duration-max-100days" }}{{ $resolvedPolicyNames = list "cert-manager-limit-duration" }}{{ end }}
+{{- if eq $policyName "limit-dnsnames" }}{{ $resolvedPolicyNames = list "cert-manager-limit-dnsnames" }}{{ end }}
+{{- if eq $policyName "disallow-privilege-escalation" }}{{ $resolvedPolicyNames = list "disallow-privilege-escalation-itgrundschutz" }}{{ end }}
+{{- if eq $policyName "disallow-privileged-containers" }}{{ $resolvedPolicyNames = list "disallow-privileged-containers-itgrundschutz" "disallow-privileged-containers" }}{{ end }}
+{{- range $i, $rule := $rules.any }}
+---
+apiVersion: policies.kyverno.io/v1
+kind: PolicyException
+metadata:
+  name: {{ printf "%s-exception-%d" $policyName $i | replace "_" "-" | lower }}
+  namespace: {{ $.Release.Namespace }}
+  annotations:
+    policies.kyverno.io/title: {{ printf "Exception for %s" $policyName | quote }}
+    policies.kyverno.io/category: PolicyException
+spec:
+  policyRefs:
+    {{- range $pol := $resolvedPolicyNames }}
+    - name: {{ $pol }}
+      kind: ValidatingPolicy
+    {{- end }}
+  {{- if or $rule.resources.namespaces $rule.resources.names }}
+  matchConditions:
+    {{- if $rule.resources.namespaces }}
+    - name: match-namespaces
+      expression: >-
+        request.namespace in [{{ range $nsIdx, $ns := $rule.resources.namespaces }}{{ if $nsIdx }}, {{ end }}'{{ $ns }}'{{ end }}]
+    {{- end }}
+    {{- if $rule.resources.names }}
+    - name: match-names
+      expression: >-
+        [{{ range $nIdx, $n := $rule.resources.names }}{{ if $nIdx }}, {{ end }}'^{{ $n | trimSuffix "-*" | trimSuffix "*" | replace "." "\\." }}(-[a-zA-Z0-9]+)*$'{{ end }}].exists(pattern, object.metadata.name.matches(pattern))
+    {{- end }}
+  {{- end }}
+{{- end }}
+{{- end }}

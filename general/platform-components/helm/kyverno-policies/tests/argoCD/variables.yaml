@@ -5,19 +5,8 @@ metadata:
   name: update
 policies:
   - name: application-prevent-updates-project
-    rules:
-      - name: project-updates
+    resources:
+      - name: test
         values:
+          oldObject.spec.project: default
           request.operation: UPDATE
-          request.oldObject.spec.project: default
----
-kind: Values
-metadata:
-  name: create
-policies:
-  - name: application-prevent-default-project
-    rules:
-      - name: project-updates
-        values:
-          request.operation: UPDATE
-          request.oldObject.spec.project: default
