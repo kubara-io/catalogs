@@ -28,9 +28,7 @@ clusterCredentialRotator:
     name: "cluster-credential-rotator"
   resources: {}
   secret:
-    labelKey: "kubara.io/cluster-credential-rotator"
-    labelValue: "true"
-    requiredType: "kubara.io/argocd-cluster-bootstrap"
+    requiredType: "kubara.io/cluster-credentials"
     bootstrapKubeconfigKey: "bootstrapKubeconfig"
     generatedConfigKey: "config"
     configMapSuffix: "-config"

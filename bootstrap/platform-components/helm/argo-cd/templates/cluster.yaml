@@ -76,7 +76,6 @@ the spoke and is intentionally unrelated to this Hub-side namespace.
 {{- end }}
 {{- end }}
 {{- $_ := set $configLabels "argocd.argoproj.io/secret-type" "cluster" -}}
-{{- $_ := set $configLabels $.Values.clusterCredentialRotator.secret.labelKey $.Values.clusterCredentialRotator.secret.labelValue -}}
 apiVersion: v1
 kind: ConfigMap
 metadata:
