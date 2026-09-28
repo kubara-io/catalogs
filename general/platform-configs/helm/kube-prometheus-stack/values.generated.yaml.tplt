@@ -21,6 +21,7 @@ kube-prometheus-stack:
     serviceMonitor:
       additionalLabels:
         monitoring.instance: {{ .cluster.name }}-{{ .cluster.stage }}
+  prometheus-node-exporter:
     prometheus:
       monitor:
         additionalLabels:
