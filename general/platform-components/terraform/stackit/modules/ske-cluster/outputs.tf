@@ -14,8 +14,12 @@ output "egress_address_ranges" {
 }
 
 output "node_pools" {
-  description = "List of node_pools as returned by the API (including any read-only fields)"
-  value       = stackit_ske_cluster.this.node_pools
+  description = "List of node_pools as returned by the API, excluding deprecated attributes"
+  value = [
+    for pool in stackit_ske_cluster.this.node_pools : {
+      for key, value in pool : key => value if key != "os_version"
+    }
+  ]
 }
 
 

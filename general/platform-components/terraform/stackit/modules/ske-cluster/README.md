@@ -91,5 +91,5 @@ No modules.
 | <a name="output_kubeconfig"></a> [kubeconfig](#output\_kubeconfig) | Admin kubeconfig (short-lived, sensitive) |
 | <a name="output_kubeconfig_file"></a> [kubeconfig\_file](#output\_kubeconfig\_file) | Path to the written kubeconfig file |
 | <a name="output_kubernetes_version_used"></a> [kubernetes\_version\_used](#output\_kubernetes\_version\_used) | Full Kubernetes version currently running |
-| <a name="output_node_pools"></a> [node\_pools](#output\_node\_pools) | List of node\_pools as returned by the API (including any read-only fields) |
+| <a name="output_node_pools"></a> [node\_pools](#output\_node\_pools) | List of node\_pools as returned by the API, excluding deprecated attributes |
 <!-- END_TF_DOCS -->
