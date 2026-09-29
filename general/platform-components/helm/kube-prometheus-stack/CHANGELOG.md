@@ -4,6 +4,30 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [6.5.1] - 2026-09-28
+### Changed
+- Updated chart dependency version: kube-prometheus-stack 91.8.0 → 91.8.1
+
+## [6.5.0] - 2026-09-28
+### Changed
+- Updated chart dependency version: kube-prometheus-stack 91.5.3 → 91.8.0
+
+## [6.4.2] - 2026-09-25
+### Changed
+- Updated chart dependency version: kube-prometheus-stack 91.5.2 → 91.5.3
+
+## [6.4.1] - 2026-09-25
+### Changed
+- Updated chart dependency version: kube-prometheus-stack 91.5.1 → 91.5.2
+
+## [6.4.0] - 2026-09-24
+### Changed
+- Updated chart dependency version: prometheus-blackbox-exporter 11.18.0 → 11.19.1
+
+## [6.3.1] - 2026-09-24
+### Changed
+- Updated chart dependency version: kube-prometheus-stack 91.5.0 → 91.5.1
+
 ## [6.3.0] - 2026-09-22
 ### Changed
 - Updated chart dependency version: kube-prometheus-stack 91.4.1 → 91.5.0
