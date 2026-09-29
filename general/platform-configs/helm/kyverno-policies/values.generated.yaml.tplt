@@ -8,7 +8,7 @@
 {{- end -}}
 {{- if not $gitRepositoryURL -}}
 {{- $gitRepositoryURL = dig "cluster" "argocd" "repo" "oci" "configs" "url" "" . -}}
-{{- end -}}
+{{- end }}
 
 global:
   allowedIssuerDomains: "{{ (index .cluster.services "cert-manager" "config" "clusterIssuer" "server") }}"
