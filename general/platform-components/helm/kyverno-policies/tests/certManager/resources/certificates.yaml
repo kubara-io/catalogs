@@ -63,3 +63,25 @@ spec:
     name: approved-issuer
     kind: ClusterIssuer
     group: cert-manager.io
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: subdomain-approved-issuer
+spec:
+  dnsNames:
+    - app.example.com
+  issuerRef:
+    name: approved-issuer
+    kind: ClusterIssuer
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: internal-certificate
+spec:
+  dnsNames:
+    - service.namespace.svc
+  issuerRef:
+    name: internal-issuer
+    kind: Issuer

@@ -1,6 +1,0 @@
----
-certManager:
-  restrictIssuer:
-    dnsZones: [example.com]
-    issuerRef:
-      name: approved-issuer
