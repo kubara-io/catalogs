@@ -85,3 +85,24 @@ spec:
   issuerRef:
     name: internal-issuer
     kind: Issuer
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: uppercase-wrong-issuer
+spec:
+  dnsNames:
+    - App.Example.Net
+  issuerRef:
+    name: other-issuer
+    kind: ClusterIssuer
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: common-name-wrong-issuer
+spec:
+  commonName: app.example.com
+  issuerRef:
+    name: other-issuer
+    kind: ClusterIssuer

@@ -8,7 +8,8 @@ Deploy this chart onto a cluster with a running kyverno instance. The policies w
 ## Restrict certificate issuers
 
 `certManager.restrictIssuer` requires certificates containing a name in a configured DNS zone
-(apex or any subdomain, including wildcard names) to use the configured issuer. Certificates
+(apex or any subdomain, including wildcard names) to use the configured issuer. Matching
+is case-insensitive and considers both `spec.dnsNames` and `spec.commonName`. Certificates
 outside these zones are unaffected. This does not restrict other names on the same certificate.
 The default action is `Audit`.
 

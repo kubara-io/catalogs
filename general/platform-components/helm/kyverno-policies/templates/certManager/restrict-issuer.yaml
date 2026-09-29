@@ -41,9 +41,9 @@ spec:
   matchConditions:
     - name: matches-restricted-domain
       expression: >-
-        object.spec.?dnsNames.orValue([]).exists(dns,
+        (object.spec.?dnsNames.orValue([]) + [object.spec.?commonName.orValue('')]).exists(dns,
           {{ .Values.certManager.restrictIssuer.dnsZones | toJson }}.exists(zone,
-            dns == zone || dns.endsWith("." + zone)
+            dns.lowerAscii() == zone.lowerAscii() || dns.lowerAscii().endsWith("." + zone.lowerAscii())
           )
         )
   validations:

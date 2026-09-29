@@ -3,6 +3,6 @@ bestPractices:
   enabled: true
 certManager:
   restrictIssuer:
-    dnsZones: [example.com]
+    dnsZones: [example.com, EXAMPLE.NET]
     issuerRef:
       name: approved-issuer

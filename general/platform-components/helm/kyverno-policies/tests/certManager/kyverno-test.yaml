@@ -55,3 +55,9 @@ results:
       - internal-certificate
     kind: Certificate
     result: skip
+  - policy: cert-manager-restrict-issuer
+    resources:
+      - uppercase-wrong-issuer
+      - common-name-wrong-issuer
+    kind: Certificate
+    result: fail
