@@ -5,6 +5,32 @@ This Helm Charts is composed of the official Kyverno-policies chart and addition
 # Usage
 Deploy this chart onto a cluster with a running kyverno instance. The policies will be used by kyverno.
 
+## Restrict certificate issuers
+
+`certManager.restrictIssuer` requires certificates containing a name in a configured DNS zone
+(apex or any subdomain, including wildcard names) to use the configured issuer. Certificates
+outside these zones are unaffected. This does not restrict other names on the same certificate.
+The default action is `Audit`.
+
+```yaml
+certManager:
+  restrictIssuer:
+    dnsZones: [example.com]
+    issuerRef:
+      name: letsencrypt
+      kind: ClusterIssuer
+      group: cert-manager.io
+```
+
+Kubara generates the zone from `cluster.dnsName` and the issuer name from
+`cluster.services.cert-manager.config.clusterIssuer.name` when cert-manager is enabled.
+The ACME directory URL is not a certificate DNS name. An empty `dnsZones` list disables
+this policy; a configured zone requires an issuer name.
+
+Replace existing `global.allowedIssuerDomains` overrides with
+`certManager.restrictIssuer.dnsZones` (plain DNS zones, without wildcards or `|`) and
+`certManager.restrictIssuer.issuerRef`. Regenerate catalog values during the upgrade.
+
 ## CI
 During development you can use kyverno cli to apply the policies to a manifests.
 To overwrite variables and values that are needed to emulate how kyverno behaves on a live cluster you can utilize 

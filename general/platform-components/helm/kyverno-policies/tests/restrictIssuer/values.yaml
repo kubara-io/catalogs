@@ -1,6 +1,3 @@
----
-bestPractices:
-  enabled: true
 certManager:
   restrictIssuer:
     dnsZones: [example.com]

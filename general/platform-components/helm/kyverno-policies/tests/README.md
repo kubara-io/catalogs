@@ -30,10 +30,23 @@ The policies in this catalog are helm templates. Because kyverno can't read them
 Render the policies with:
 `./render.sh`
 And execute the tests with:
-`kyverno test bestPractices traefik certManager itGrundschutz`
+`kyverno test bestPractices traefik certManager restrictIssuer itGrundschutz`
 For Verify Image Policy:
 `kyverno test verifyImage --registry`
 
 ## Verify Image
 This test is unique, it requires to have an active internet connetivity to run the test. The other tests can be run fully offline and will not cause any traffic. The verify image test pulls image(s) from the kyverno registry.
 This is also ostensibly the most prone to breaking in the future. If kyverno decides to update the image, the respective key also needs to be updated.
+
+### Issuer policy regression tests
+
+From the chart directory:
+
+```sh
+helm template . -f tests/restrictIssuer/values.yaml \
+  --show-only templates/certManager/restrict-issuer.yaml > /tmp/kyverno-restrict-issuer.yaml
+kyverno test tests/restrictIssuer
+```
+
+Covers apex, subdomain and wildcard names, issuer mismatches, defaulted API group,
+internal certificates, lookalike domains, and certificates containing multiple DNS names.

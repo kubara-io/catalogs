@@ -1,0 +1,74 @@
+apiVersion: cli.kyverno.io/v1alpha1
+kind: Test
+metadata:
+  name: restrict-issuer
+policies:
+- /tmp/kyverno-restrict-issuer.yaml
+resources:
+- certificates.yaml
+results:
+- policy: cert-manager-restrict-issuer
+  resources:
+  - apex
+  kind: Certificate
+  result: pass
+- policy: cert-manager-restrict-issuer
+  resources:
+  - subdomain
+  kind: Certificate
+  result: pass
+- policy: cert-manager-restrict-issuer
+  resources:
+  - wildcard
+  kind: Certificate
+  result: pass
+- policy: cert-manager-restrict-issuer
+  resources:
+  - default-group
+  kind: Certificate
+  result: pass
+- policy: cert-manager-restrict-issuer
+  resources:
+  - wrong-issuer
+  kind: Certificate
+  result: fail
+- policy: cert-manager-restrict-issuer
+  resources:
+  - wrong-kind
+  kind: Certificate
+  result: fail
+- policy: cert-manager-restrict-issuer
+  resources:
+  - wrong-group
+  kind: Certificate
+  result: fail
+- policy: cert-manager-restrict-issuer
+  resources:
+  - missing-issuer
+  kind: Certificate
+  result: fail
+- policy: cert-manager-restrict-issuer
+  resources:
+  - internal
+  kind: Certificate
+  result: skip
+- policy: cert-manager-restrict-issuer
+  resources:
+  - lookalike
+  kind: Certificate
+  result: skip
+- policy: cert-manager-restrict-issuer
+  resources:
+  - no-dns-names
+  kind: Certificate
+  result: skip
+- policy: cert-manager-restrict-issuer
+  resources:
+  - mixed-wrong-issuer
+  kind: Certificate
+  result: fail
+- policy: cert-manager-restrict-issuer
+  resources:
+  - mixed-approved-issuer
+  kind: Certificate
+  result: pass

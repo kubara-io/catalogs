@@ -60,6 +60,6 @@ spec:
   dnsNames:
     - example.com
   issuerRef:
-    name: our-corp-issuer
+    name: approved-issuer
     kind: ClusterIssuer
     group: cert-manager.io

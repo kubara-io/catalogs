@@ -1,0 +1,155 @@
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: apex
+spec:
+  secretName: apex
+  dnsNames:
+  - example.com
+  issuerRef:
+    name: approved-issuer
+    kind: ClusterIssuer
+    group: cert-manager.io
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: subdomain
+spec:
+  secretName: subdomain
+  dnsNames:
+  - app.example.com
+  issuerRef:
+    name: approved-issuer
+    kind: ClusterIssuer
+    group: cert-manager.io
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: wildcard
+spec:
+  secretName: wildcard
+  dnsNames:
+  - '*.example.com'
+  issuerRef:
+    name: approved-issuer
+    kind: ClusterIssuer
+    group: cert-manager.io
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: default-group
+spec:
+  secretName: default-group
+  dnsNames:
+  - example.com
+  issuerRef:
+    name: approved-issuer
+    kind: ClusterIssuer
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: wrong-issuer
+spec:
+  secretName: wrong-issuer
+  dnsNames:
+  - example.com
+  issuerRef:
+    name: other
+    kind: ClusterIssuer
+    group: cert-manager.io
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: wrong-kind
+spec:
+  secretName: wrong-kind
+  dnsNames:
+  - example.com
+  issuerRef:
+    name: approved-issuer
+    kind: Issuer
+    group: cert-manager.io
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: wrong-group
+spec:
+  secretName: wrong-group
+  dnsNames:
+  - example.com
+  issuerRef:
+    name: approved-issuer
+    kind: ClusterIssuer
+    group: other.io
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: missing-issuer
+spec:
+  secretName: missing-issuer
+  dnsNames:
+  - example.com
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: internal
+spec:
+  secretName: internal
+  dnsNames:
+  - service.namespace.svc
+  issuerRef:
+    name: internal
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: lookalike
+spec:
+  secretName: lookalike
+  dnsNames:
+  - notexample.com
+  issuerRef:
+    name: other
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: no-dns-names
+spec:
+  secretName: no-dns-names
+  issuerRef:
+    name: internal
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: mixed-wrong-issuer
+spec:
+  secretName: mixed-wrong-issuer
+  dnsNames:
+  - outside.org
+  - app.example.com
+  issuerRef:
+    name: other
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: mixed-approved-issuer
+spec:
+  secretName: mixed-approved-issuer
+  dnsNames:
+  - outside.org
+  - app.example.com
+  issuerRef:
+    name: approved-issuer
+    kind: ClusterIssuer
+    group: cert-manager.io

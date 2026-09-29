@@ -43,6 +43,10 @@ helm template . -f tests/verifyImage/values.yaml \
   --show-only templates/bestPractices/verify-image.yaml \
   > /tmp/kyverno-verify-image.yaml
 
+helm template . -f tests/restrictIssuer/values.yaml \
+  --show-only templates/certManager/restrict-issuer.yaml \
+  > /tmp/kyverno-restrict-issuer.yaml
+
 # test policy exceptions template
 helm template . -f values.yaml \
   --show-only templates/policy-exceptions.yaml \

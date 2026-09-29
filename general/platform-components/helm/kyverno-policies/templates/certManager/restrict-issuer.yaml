@@ -1,4 +1,6 @@
-{{- if and .Values.certManager.enabled (dig "certManager" "restrictIssuer" "enabled" true (merge .Values)) .Values.global.allowedIssuerDomains }}
+{{- if and .Values.certManager.enabled (dig "certManager" "restrictIssuer" "enabled" true (merge .Values)) .Values.certManager.restrictIssuer.dnsZones }}
+{{- $issuer := .Values.certManager.restrictIssuer.issuerRef -}}
+{{- $issuerName := required "certManager.restrictIssuer.issuerRef.name is required when dnsZones are configured" $issuer.name }}
 apiVersion: policies.kyverno.io/v1
 kind: ValidatingPolicy
 metadata:
@@ -36,17 +38,19 @@ spec:
           - UPDATE
         resources:
           - certificates
-  {{- if .Values.global.allowedIssuerDomains }}
   matchConditions:
     - name: matches-restricted-domain
       expression: >-
-        object.spec.?dnsNames.orValue([]).exists(dns, dns.matches({{ regexReplaceAll "\\*" (regexReplaceAll "\\." (regexReplaceAll "\\|" (default ".*" .Values.global.allowedIssuerDomains) "$|^.*") "\\.") ".*" | quote }}))
-  {{- end }}
+        object.spec.?dnsNames.orValue([]).exists(dns,
+          {{ .Values.certManager.restrictIssuer.dnsZones | toJson }}.exists(zone,
+            dns == zone || dns.endsWith("." + zone)
+          )
+        )
   validations:
     - expression: >-
         has(object.spec.issuerRef) &&
-        object.spec.issuerRef.?name.orValue('') == 'our-corp-issuer' &&
-        object.spec.issuerRef.?kind.orValue('') == 'ClusterIssuer' &&
-        object.spec.issuerRef.?group.orValue('') == 'cert-manager.io'
-      message: "When requesting a cert for this domain, you must use our corporate issuer (our-corp-issuer)."
+        object.spec.issuerRef.?name.orValue('') == {{ $issuerName | toJson }} &&
+        object.spec.issuerRef.?kind.orValue('Issuer') == {{ $issuer.kind | toJson }} &&
+        object.spec.issuerRef.?group.orValue('cert-manager.io') == {{ $issuer.group | toJson }}
+      message: {{ printf "Certificates for the configured DNS zones must use %s %s (%s)." $issuer.kind $issuerName $issuer.group | quote }}
 {{- end }}

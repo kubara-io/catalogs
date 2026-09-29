@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+### Changed
+- Replace `global.allowedIssuerDomains` with `certManager.restrictIssuer.dnsZones` and a configurable `issuerRef`.
+- Generate the restricted zone and issuer name from the cluster configuration instead of using the ACME directory URL and a hard-coded issuer.
+
 ## [1.0.0] - 2026-09-22
 ### Changed
 - Migrated all policies from legacy `ClusterPolicy` (`kyverno.io/v1`) to Kyverno 1.17 CEL-based CRDs (`policies.kyverno.io/v1`):
