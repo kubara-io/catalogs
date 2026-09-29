@@ -1,3 +1,4 @@
+---
 apiVersion: cert-manager.io/v1
 kind: Certificate
 metadata:
@@ -5,7 +6,7 @@ metadata:
 spec:
   secretName: apex
   dnsNames:
-  - example.com
+    - example.com
   issuerRef:
     name: approved-issuer
     kind: ClusterIssuer
@@ -18,7 +19,7 @@ metadata:
 spec:
   secretName: subdomain
   dnsNames:
-  - app.example.com
+    - app.example.com
   issuerRef:
     name: approved-issuer
     kind: ClusterIssuer
@@ -31,7 +32,7 @@ metadata:
 spec:
   secretName: wildcard
   dnsNames:
-  - '*.example.com'
+    - '*.example.com'
   issuerRef:
     name: approved-issuer
     kind: ClusterIssuer
@@ -44,7 +45,7 @@ metadata:
 spec:
   secretName: default-group
   dnsNames:
-  - example.com
+    - example.com
   issuerRef:
     name: approved-issuer
     kind: ClusterIssuer
@@ -56,7 +57,7 @@ metadata:
 spec:
   secretName: wrong-issuer
   dnsNames:
-  - example.com
+    - example.com
   issuerRef:
     name: other
     kind: ClusterIssuer
@@ -69,7 +70,7 @@ metadata:
 spec:
   secretName: wrong-kind
   dnsNames:
-  - example.com
+    - example.com
   issuerRef:
     name: approved-issuer
     kind: Issuer
@@ -82,7 +83,7 @@ metadata:
 spec:
   secretName: wrong-group
   dnsNames:
-  - example.com
+    - example.com
   issuerRef:
     name: approved-issuer
     kind: ClusterIssuer
@@ -95,7 +96,7 @@ metadata:
 spec:
   secretName: missing-issuer
   dnsNames:
-  - example.com
+    - example.com
 ---
 apiVersion: cert-manager.io/v1
 kind: Certificate
@@ -104,7 +105,7 @@ metadata:
 spec:
   secretName: internal
   dnsNames:
-  - service.namespace.svc
+    - service.namespace.svc
   issuerRef:
     name: internal
 ---
@@ -115,7 +116,7 @@ metadata:
 spec:
   secretName: lookalike
   dnsNames:
-  - notexample.com
+    - notexample.com
   issuerRef:
     name: other
 ---
@@ -135,8 +136,8 @@ metadata:
 spec:
   secretName: mixed-wrong-issuer
   dnsNames:
-  - outside.org
-  - app.example.com
+    - outside.org
+    - app.example.com
   issuerRef:
     name: other
 ---
@@ -147,8 +148,8 @@ metadata:
 spec:
   secretName: mixed-approved-issuer
   dnsNames:
-  - outside.org
-  - app.example.com
+    - outside.org
+    - app.example.com
   issuerRef:
     name: approved-issuer
     kind: ClusterIssuer

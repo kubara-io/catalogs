@@ -1,3 +1,4 @@
+---
 certManager:
   restrictIssuer:
     dnsZones: [example.com]
