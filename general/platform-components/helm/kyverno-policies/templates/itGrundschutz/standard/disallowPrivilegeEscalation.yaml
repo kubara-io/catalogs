@@ -23,7 +23,7 @@ spec:
     background:
       enabled: {{ dig "itGrundschutz" "standard" "disallowPrivilegeEscalation" "enableBackgroundScanning" true (merge .Values) }}
   validationActions:
-    - {{ $action := dig "itGrundschutz" "standard" "disallowPrivilegeEscalation" "actionOverride" "Enforce" (merge .Values) }}{{ if eq $action "Enforce" }}Deny{{ else }}{{ $action }}{{ end }}
+    - {{ $action := dig "itGrundschutz" "standard" "disallowPrivilegeEscalation" "actionOverride" (dig "itGrundschutz" "mode" "Audit" (merge .Values)) (merge .Values) }}{{ if eq $action "Enforce" }}Deny{{ else }}{{ $action }}{{ end }}
   matchConstraints:
     resourceRules:
       - apiGroups:
