@@ -554,7 +554,11 @@ variable "openbao_ingress_path" {
 variable "openbao_ingress_class_name" {
   description = "IngressClass name used for the OpenBao ingress."
   type        = string
-  default     = "{{ .cluster.ingressClassName | default "traefik" }}"
+  default     = "{{ dig
+  "cluster" "networking" "ingress" "className"
+  (.cluster.ingressClassName | default "traefik")
+  .
+}}"
 }
 
 variable "openbao_ingress_annotations" {
