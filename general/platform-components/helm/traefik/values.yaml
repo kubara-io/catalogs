@@ -1,5 +1,10 @@
 ---
 traefik:
+  log:
+    format: json
+    noColor: true
+  accessLog:
+    format: json
   resources:
     requests:
       cpu: 100m

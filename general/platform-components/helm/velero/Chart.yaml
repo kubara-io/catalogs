@@ -3,7 +3,7 @@ apiVersion: v2
 name: velero
 description: Umbrella Chart for Velero Config
 type: application
-version: 0.4.0
+version: 0.4.1
 dependencies:
   - name: velero
     version: 12.2.0

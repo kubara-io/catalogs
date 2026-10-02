@@ -37,6 +37,8 @@ argo-cd:
   notifications:
     enabled: false
   global:
+    logging:
+      format: json
     env:
       - name: "TZ"
         value: "Europe/Berlin"

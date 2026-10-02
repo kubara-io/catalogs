@@ -7,6 +7,8 @@ clusterIssuer:
   ingressClassName: ''
   customDefinition: {}
 cert-manager:
+  extraArgs:
+    - --logging-format=json
   resources:
     requests:
       cpu: 10m
@@ -20,6 +22,8 @@ cert-manager:
   serviceAccount:
     automountServiceAccountToken: true
   webhook:
+    extraArgs:
+      - --logging-format=json
     timeoutSeconds: 15  # set timeout to 15 seconds because of gardener, see: https://github.com/gardener/gardener/blob/master/docs/usage/shoot/shoot_status.md#constraints
     resources:
       requests:
@@ -28,6 +32,8 @@ cert-manager:
       limits:
         memory: 100Mi
   cainjector:
+    extraArgs:
+      - --logging-format=json
     resources:
       requests:
         cpu: 10m
@@ -35,6 +41,9 @@ cert-manager:
       limits:
         memory: 150Mi
   startupapicheck:
+    extraArgs:
+      - -v
+      - --logging-format=json
     resources:
       requests:
         cpu: 10m

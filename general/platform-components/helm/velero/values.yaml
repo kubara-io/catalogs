@@ -58,6 +58,7 @@ velero:
         - mountPath: /target
           name: plugins
   configuration:
+    logFormat: json
     backupStorageLocation: []
     volumeSnapshotLocation: []
 volumeSnapshotClass:
