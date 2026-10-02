@@ -182,6 +182,7 @@ kube-prometheus-stack:
       userKey: admin-user
       passwordKey: admin-password
     serviceMonitor:
+      path: /grafana/metrics
       labels:
         monitoring.instance: {{ .cluster.name }}-{{ .cluster.stage }}
     ingress:
