@@ -13,10 +13,6 @@ Today this repo contains the official catalogs that kubara uses as its default p
 
 These catalogs are versioned and meant to be packaged and distributed as OCI artifacts.
 
-## Logging
-
-See [Catalog logging defaults](docs/logging.md) for JSON logging coverage, upstream limitations and rollout validation.
-
 ## Publishing
 
 Catalogs are published independently from git tags. Before creating a tag,
