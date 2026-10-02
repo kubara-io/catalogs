@@ -3,7 +3,7 @@ apiVersion: v2
 name: reloader
 description: Umbrella Chart for reloader
 type: application
-version: 1.0.7
+version: 1.0.8
 dependencies:
   - name: template-library
     repository: file://../template-library

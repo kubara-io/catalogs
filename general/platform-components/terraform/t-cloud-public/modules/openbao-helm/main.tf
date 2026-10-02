@@ -101,9 +101,11 @@ resource "helm_release" "this" {
         imagePullSecrets = local.image_pull_secrets
       }
       injector = {
-        enabled = var.injector_enabled
+        logFormat = "json"
+        enabled   = var.injector_enabled
       }
       server = {
+        logFormat            = "json"
         extraEnvironmentVars = local.merged_extra_env
         updateStrategyType   = "RollingUpdate"
         affinity             = local.server_affinity

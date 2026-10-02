@@ -5,6 +5,7 @@ namespace:
   annotations: {}
   labels: {}
 external-dns:
+  logFormat: json
   sources: [ingress]
   policy: sync
   serviceMonitor:
