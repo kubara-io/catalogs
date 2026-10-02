@@ -1,3 +1,4 @@
+{{- $ephemeral := index .cluster.terraform "ephemeralSecrets" -}}
 variable "openbao_address" {
   description = "OpenBao API address used by the Terraform Vault provider. Use a local port-forward for the default value."
   type        = string
@@ -5,6 +6,9 @@ variable "openbao_address" {
 }
 
 variable "openbao_token" {
+{{ if $ephemeral -}}
+  ephemeral   = true
+{{ end -}}
   description = "OpenBao token. Leave null to use VAULT_TOKEN from the environment."
   type        = string
   sensitive   = true
@@ -48,6 +52,9 @@ variable "openbao_oidc_client_id" {
 }
 
 variable "openbao_oidc_client_secret" {
+{{ if $ephemeral -}}
+  ephemeral   = true
+{{ end -}}
   description = "OIDC client secret used by OpenBao."
   type        = string
   sensitive   = true
@@ -252,8 +259,23 @@ variable "grafana_admin_user" {
 }
 
 variable "grafana_admin_password" {
+{{ if $ephemeral -}}
+  ephemeral   = true
+{{ end -}}
   description = "Grafana admin password. If empty, Terraform generates one."
   type        = string
   sensitive   = true
   default     = ""
 }
+
+{{ if $ephemeral -}}
+variable "grafana_admin_credentials_version" {
+  description = "Positive integer revision for the Grafana admin payload. Increment to update."
+  type        = number
+  default     = 1
+  validation {
+    condition     = var.grafana_admin_credentials_version >= 1 && var.grafana_admin_credentials_version == floor(var.grafana_admin_credentials_version)
+    error_message = "The secret version must be a positive integer."
+  }
+}
+{{ end -}}
