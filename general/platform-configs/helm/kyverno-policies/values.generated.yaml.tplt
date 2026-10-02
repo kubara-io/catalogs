@@ -8,9 +8,19 @@
 {{- end -}}
 {{- if not $gitRepositoryURL -}}
 {{- $gitRepositoryURL = dig "cluster" "argocd" "repo" "oci" "configs" "url" "" . -}}
-{{- end -}}
+{{- end }}
 
 global:
-  allowedIssuerDomains: "{{ (index .cluster.services "cert-manager" "config" "clusterIssuer" "server") }}"
   allowedImageRegistries: |
    "{{ $gitRepositoryURL }}/*|${ARGOCD_HELM_REPO_URL}/*"
+
+{{ if eq (dig "cluster" "services" "cert-manager" "status" "disabled" .) "enabled" }}
+certManager:
+  restrictIssuer:
+    dnsZones:
+      - {{ .cluster.dnsName | quote }}
+    issuerRef:
+      name: {{ (index .cluster.services "cert-manager" "config" "clusterIssuer" "name") | quote }}
+      kind: ClusterIssuer
+      group: cert-manager.io
+{{ end }}

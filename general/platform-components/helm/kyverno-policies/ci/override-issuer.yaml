@@ -1,5 +1,8 @@
 ---
-global:
-  allowedIssuerDomains: foo.bar
+certManager:
+  restrictIssuer:
+    dnsZones: [foo.bar]
+    issuerRef:
+      name: example-issuer
 softwareSupplyChainSecurity:
   enabled: false
