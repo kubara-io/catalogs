@@ -1,5 +1,6 @@
+{{- $ephemeral := index .cluster.terraform "ephemeralSecrets" -}}
 terraform {
-  required_version = ">= 1.9.3"
+  required_version = ">= {{ if $ephemeral }}1.11.0{{ else }}1.9.3{{ end }}"
 
   backend "s3" {
     bucket = "bucket-tf-{{ .cluster.name }}-{{ .cluster.stage }}"

@@ -1,3 +1,4 @@
+{{- $ephemeral := index .cluster.terraform "ephemeralSecrets" -}}
 output "openbao_kv_mount_path" {
   description = "OpenBao KV v2 mount path used by kubara ExternalSecrets."
   value       = var.openbao_kv_mount_path
@@ -45,8 +46,10 @@ output "grafana_admin_user" {
   value       = var.manage_grafana_admin_credentials ? local.grafana_admin_user : null
 }
 
+{{ if not $ephemeral -}}
 output "grafana_admin_password" {
   description = "Grafana admin password."
   value       = var.manage_grafana_admin_credentials ? local.grafana_admin_password : null
   sensitive   = true
 }
+{{ end -}}

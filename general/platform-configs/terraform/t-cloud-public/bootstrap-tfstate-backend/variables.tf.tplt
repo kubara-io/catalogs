@@ -1,3 +1,4 @@
+{{- $ephemeral := index .cluster.terraform "ephemeralSecrets" -}}
 variable "t_cloud_public_region" {
   description = "T Cloud Public region for the project."
   type        = string
@@ -33,6 +34,9 @@ variable "t_cloud_public_tenant_name" {
 }
 
 variable "t_cloud_public_access_key" {
+{{ if $ephemeral -}}
+  ephemeral   = true
+{{ end -}}
   description = "T Cloud Public access key."
   type        = string
   sensitive   = true
@@ -44,6 +48,9 @@ variable "t_cloud_public_access_key" {
 }
 
 variable "t_cloud_public_secret_key" {
+{{ if $ephemeral -}}
+  ephemeral   = true
+{{ end -}}
   description = "T Cloud Public secret key."
   type        = string
   sensitive   = true
