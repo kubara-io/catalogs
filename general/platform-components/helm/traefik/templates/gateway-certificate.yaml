@@ -1,0 +1,14 @@
+{{- with .Values.gatewayCertificate }}
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: platform-gateway-tls
+  namespace: {{ $.Release.Namespace }}
+spec:
+  secretName: platform-gateway-tls
+  dnsNames:
+    - {{ .hostname | quote }}
+  issuerRef:
+    name: {{ .issuer | quote }}
+    kind: ClusterIssuer
+{{- end }}
