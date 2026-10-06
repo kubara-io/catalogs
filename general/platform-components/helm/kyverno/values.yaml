@@ -1,6 +1,8 @@
 ---
 namespace: {}
 kyverno:
+  global:
+    crdWatcher: true
   features:
     logging:
       format: json
