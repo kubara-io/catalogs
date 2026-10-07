@@ -182,7 +182,7 @@ jobs:
           sparse-checkout: .github/helm-profiles
 
       - name: Download generated artifacts
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: kubara-generated-${{ matrix.target }}-${{ github.run_attempt }}-${{ github.sha }}-${{ github.run_number }}
 
@@ -243,7 +243,7 @@ jobs:
           sparse-checkout: .scripts
 
       - name: Download generated artifacts
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: kubara-generated-${{ matrix.target }}-${{ github.run_attempt }}-${{ github.sha }}-${{ github.run_number }}
 
@@ -291,7 +291,7 @@ jobs:
             general
 
       - name: Download generated kubara artifacts
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: kubara-generated-${{ matrix.target }}-${{ github.run_attempt }}-${{ github.sha }}-${{ github.run_number }}
 
