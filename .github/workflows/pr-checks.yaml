@@ -153,7 +153,7 @@ jobs:
           velero-s3-url: ${{ matrix.velero_s3_url }}
 
       - name: Upload generated artifacts
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: kubara-generated-${{ matrix.target }}-${{ github.run_attempt }}-${{ github.sha }}-${{ github.run_number }}
           retention-days: ${{ env.ARTIFACT_RETENTION_DAYS }}
@@ -219,7 +219,7 @@ jobs:
         run: .scripts/helm-checks.sh
 
       - name: Upload Helm validation results
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: always()
         with:
           name: helm-validation-${{ matrix.target }}-${{ github.run_attempt }}-${{ github.sha }}-${{ github.run_number }}
@@ -261,7 +261,7 @@ jobs:
         run: .scripts/terraform-checks.sh
 
       - name: Upload Terraform validation results
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: always()
         with:
           name: terraform-validation-${{ matrix.target }}-${{ github.run_attempt }}-${{ github.sha }}-${{ github.run_number }}
@@ -324,7 +324,7 @@ jobs:
           fi
 
       - name: Upload image list
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: always()
         with:
           name: container-images-${{ matrix.catalog }}-${{ matrix.target }}-${{ github.run_attempt }}-${{ github.sha }}-${{ github.run_number }}
