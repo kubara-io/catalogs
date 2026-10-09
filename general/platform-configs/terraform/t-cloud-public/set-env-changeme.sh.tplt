@@ -26,7 +26,8 @@ export TF_VAR_grafana_oauth2_client_secret=""
 export TF_VAR_oauth2_client_id=""
 export TF_VAR_oauth2_client_secret=""
 
-# Imported from the .env. Used by the OpenBao Terraform layer.
+# (optional) add your registry secret (docker config base64 encoded)
+# Used by the OpenBao Terraform layer.
 export TF_VAR_image_pull_secret="{{ .env.DockerconfigBase64 }}"
 
 # OpenBao Terraform layer (openbao/) only. Port-forward OpenBao first:
