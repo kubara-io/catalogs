@@ -212,9 +212,6 @@ global:
   kyvernoVersion: autodetect
   # -- default for every policy. Can be overriden by policies actionOverride
   actionOverride: Audit
-  # -- allow issuing certificates from this issuerDomain. Multiple domains separated by "|"
-  # -- e.g. set *.my.domain for allowing acme.my.domain/foo/bar
-  # allowedIssuerDomains:
   # -- specify registries which are trusted. Multiple registries separated by "|"
   # allowedImageRegistries: change-me
 # Kyverno Policies:
@@ -333,6 +330,13 @@ certManager:
     actionOverride: Audit
   restrictIssuer:
     enabled: true
+    # -- DNS zones whose apex and subdomains must use issuerRef. Empty disables this policy.
+    dnsZones: []
+    issuerRef:
+      # -- Required when dnsZones are configured.
+      name: ""
+      kind: ClusterIssuer
+      group: cert-manager.io
     webhookFailurePolicy: Fail
     enableBackgroundScanning: true
     actionOverride: Audit
