@@ -115,7 +115,10 @@ jobs:
           TAG: ${{ github.ref_name }}
         run: |
           set -euo pipefail
-
+          
+          # Find the immediately preceding release tag by sorting tags in descending
+          # version order (handling CalVer <year>.<week>.<release>) and selecting the tag
+          # directly after the current release tag.
           LAST_RELEASE="$(
             git tag -l "${catalog}-v*" --sort=-v:refname |
               awk -v current="$TAG" '$0 == current { found = 1; next } found { print; exit }'
