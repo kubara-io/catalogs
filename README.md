@@ -19,8 +19,8 @@ Catalogs are published independently from git tags. Before creating a tag,
 update `spec.version` in the corresponding `Catalog.yaml` and merge that change
 to `main`.
 
-- `bootstrap-v1.0.1` publishes `bootstrap/` as version `1.0.1`
-- `general-v1.0.1` publishes `general/` as version `1.0.1`
+- `bootstrap-v2026.42.1` publishes `bootstrap/` as version `2026.42.1`
+- `general-v2026.42.1` publishes `general/` as version `2026.42.1`
 
 The tag version must match the catalog manifest exactly. Published versions are
 immutable, so use a new version instead of moving or recreating a release tag.

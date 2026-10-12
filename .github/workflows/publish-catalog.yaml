@@ -116,15 +116,9 @@ jobs:
         run: |
           set -euo pipefail
 
-          # Compare the semantic version independently of the legacy optional
-          # "v" in tags such as bootstrap-1.1.0 and bootstrap-v1.2.0.
           LAST_RELEASE="$(
-            git tag -l "${catalog}-*" |
-              awk -v prefix="${catalog}-" \
-                '{ version = $0; sub("^" prefix "v?", "", version); print version "\t" $0 }' |
-              sort -t $'\t' -k1,1Vr |
-              awk -F '\t' -v current="$TAG" \
-                '$2 == current { found = 1; next } found { print $2; exit }'
+            git tag -l "${catalog}-v*" --sort=-v:refname |
+              awk -v current="$TAG" '$0 == current { found = 1; next } found { print; exit }'
           )"
 
           if [[ -n "$LAST_RELEASE" ]]; then
