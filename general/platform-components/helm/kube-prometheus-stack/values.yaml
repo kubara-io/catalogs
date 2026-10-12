@@ -178,7 +178,7 @@ kube-prometheus-stack:
           cpu: 10m
           memory: 100Mi
         limits:
-          memory: 100Mi
+          memory: 250Mi
       securityContext:
         runAsNonRoot: true
         runAsUser: 472
