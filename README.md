@@ -25,6 +25,21 @@ to `main`.
 The tag version must match the catalog manifest exactly. Published versions are
 immutable, so use a new version instead of moving or recreating a release tag.
 
+Moving forward kubara catalogs are published using CalVer (year.calendarWeek.releaseNumber). 
+
+SemVer works well for single tools, but our catalogs contain a a lot of dependencies from 
+open source project that follow SemVer loosely but not completely. 
+
+Each catalog bundles dozens of Helm charts and Terraform providers and each of those charts 
+often pulls multiple container images. Every single component has its own versioning schem, 
+which makes applying a sensical SemVer to a catalog a difficult task.  
+  
+Therefore we decided to run our integration-tests including all updates twice per week to have a full end-to-end test of the full kubara setup. 
+  
+Note:
+This can never guarantee every custom configuration and edge case will work but should cover most use cases. 
+Based on those runs we will publish CalVer versioned catalogs twice per week.
+
 ## Compatibility checks
 
 Catalog changes are packaged locally and exercised through the full kubara
