@@ -6,6 +6,10 @@ and this chart adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.h
 
 ## [1.1.0] - 2026-10-14
 ### Changed
+- Updated chart dependency version: kube-prometheus-stack 92.4.0 → 92.6.0
+
+## [1.1.0] - 2026-10-14
+### Changed
 - Updated chart dependency version: kube-prometheus-stack 92.3.1 → 92.4.0
 
 ## [1.0.1] - 2026-10-13
