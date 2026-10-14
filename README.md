@@ -13,14 +13,33 @@ Today this repo contains the official catalogs that kubara uses as its default p
 
 These catalogs are versioned and meant to be packaged and distributed as OCI artifacts.
 
+
+## Versioning
+
+Moving forward kubara catalogs are published using **CalVer (year.calendarWeek.releaseNumber)**. 
+
+SemVer works well for single tools, but our catalogs contain a lot of dependencies from 
+open source projects that follow SemVer loosely but not completely. 
+
+Each catalog bundles dozens of Helm charts and Terraform providers and each of those charts 
+often pulls multiple container images. Every single component has its own versioning scheme, 
+which makes applying a sensical SemVer to a catalog a difficult task.
+  
+Therefore we decided to run our integration-tests including all updates twice per week to have a full end-to-end test of the full kubara setup based on the latest upstream changes.
+  
+**Note:**
+This can never guarantee every custom configuration and edge case will work but should cover most use cases. 
+Based on those runs we will publish CalVer versioned catalogs twice per week as described below.
+
+
 ## Publishing
 
 Catalogs are published independently from git tags. Before creating a tag,
 update `spec.version` in the corresponding `Catalog.yaml` and merge that change
 to `main`.
 
-- `bootstrap-v1.0.1` publishes `bootstrap/` as version `1.0.1`
-- `general-v1.0.1` publishes `general/` as version `1.0.1`
+- `bootstrap-v2026.42.1` publishes `bootstrap/` as version `2026.42.1`
+- `general-v2026.42.1` publishes `general/` as version `2026.42.1`
 
 The tag version must match the catalog manifest exactly. Published versions are
 immutable, so use a new version instead of moving or recreating a release tag.
