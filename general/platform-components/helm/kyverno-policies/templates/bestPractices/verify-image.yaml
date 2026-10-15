@@ -23,7 +23,7 @@ spec:
     background:
       enabled: {{ dig "bestPractices" "verifyImage" "enableBackgroundScanning" false (merge .Values) }}
   validationActions:
-    - {{ $action := dig "bestPractices" "verifyImage" "actionOverride" "Audit" (merge .Values) }}{{ if eq $action "Enforce" }}Deny{{ else }}{{ $action }}{{ end }}
+    - {{ $action := dig "bestPractices" "verifyImage" "actionOverride" (dig "bestPractices" "mode" "Audit" (merge .Values)) (merge .Values) }}{{ if eq $action "Enforce" }}Deny{{ else }}{{ $action }}{{ end }}
   matchConstraints:
     resourceRules:
       - apiGroups:
