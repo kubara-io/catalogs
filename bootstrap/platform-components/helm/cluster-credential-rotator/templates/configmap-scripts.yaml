@@ -1,0 +1,44 @@
+{{- $serviceAccountName := .Values.serviceAccount.name | default "cluster-credential-rotator" }}
+{{- $configMapName := printf "%s-scripts" $serviceAccountName }}
+{{- $componentLabels := include "clusterCredentialRotator.labels" . }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ $configMapName }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- $componentLabels | nindent 4 }}
+data:
+  config.env: |-
+    RELEASE_NAMESPACE={{ .Release.Namespace | quote }}
+    REQUIRED_TYPE={{ .Values.secret.requiredType | quote }}
+    BOOTSTRAP_KUBECONFIG_KEY={{ .Values.secret.bootstrapKubeconfigKey | quote }}
+    KUBECONFIG_KEY={{ .Values.secret.kubeconfigKey | quote }}
+    CONFIG_MAP_SUFFIX={{ default "-config" .Values.secret.configMapSuffix | quote }}
+    AGENT_NAMESPACE_ANNOTATION={{ default "kubara.io/agent-namespace" .Values.agent.namespaceAnnotation | quote }}
+    DEFAULT_AGENT_NAMESPACE={{ default "kubara" .Values.agent.defaultNamespace | quote }}
+    AGENT_SERVICE_ACCOUNT_NAME={{ default "kubara-agent" .Values.agent.serviceAccountName | quote }}
+    AGENT_CLUSTER_ROLE_BINDING_NAME={{ default "kubara-agent" .Values.agent.clusterRoleBindingName | quote }}
+    AGENT_CLUSTER_ROLE_NAME={{ .Values.agent.clusterRoleName | quote }}
+    TOKEN_DURATION={{ .Values.token.duration | quote }}
+    REFRESH_BEFORE={{ .Values.token.refreshBefore | quote }}
+    TARGET_ARGO_ENABLED={{ .Values.targets.argo.enabled | quote }}
+    TARGET_ARGO_NAMESPACE={{ default "argocd" .Values.targets.argo.namespace | quote }}
+    TARGET_ARGO_SECRET_SUFFIX={{ default "-cluster-secret" .Values.targets.argo.secretSuffix | quote }}
+    TARGET_ARGO_CONFIG_KEY={{ default "config" .Values.targets.argo.configKey | quote }}
+    TARGET_FLUX_ENABLED={{ .Values.targets.flux.enabled | quote }}
+    TARGET_FLUX_NAMESPACE={{ default "flux-system" .Values.targets.flux.namespace | quote }}
+    TARGET_FLUX_SECRET_SUFFIX={{ default "-kubeconfig" .Values.targets.flux.secretSuffix | quote }}
+    TARGET_FLUX_KUBECONFIG_KEY={{ default "value" .Values.targets.flux.kubeconfigKey | quote }}
+  entrypoint.sh: |-
+    {{- $.Files.Get "script/entrypoint.sh" | nindent 4 }}
+  common.sh: |-
+    {{- $.Files.Get "script/lib/common.sh" | nindent 4 }}
+  k8s.sh: |-
+    {{- $.Files.Get "script/lib/k8s.sh" | nindent 4 }}
+  agent.sh: |-
+    {{- $.Files.Get "script/lib/agent.sh" | nindent 4 }}
+  target-argo.sh: |-
+    {{- $.Files.Get "script/targets/argo.sh" | nindent 4 }}
+  target-flux.sh: |-
+    {{- $.Files.Get "script/targets/flux.sh" | nindent 4 }}

@@ -1,6 +1,8 @@
 ---
 namespace: {}
 externalSecrets: {}
+clusterSecrets:
+  useExternalSecrets: false
 dexRestarter:
   enabled: true
   image:
@@ -16,38 +18,6 @@ dexRestarter:
     requests:
       cpu: 10m
       memory: 64Mi
-clusterCredentialRotator:
-  enabled: true
-  schedule: "* * * * *"
-  suspend: false
-  concurrencyPolicy: Forbid
-  successfulJobsHistoryLimit: 3
-  failedJobsHistoryLimit: 3
-  startingDeadlineSeconds: 300
-  activeDeadlineSeconds: 300
-  backoffLimit: 1
-  image:
-    repository: "alpine/kubectl"
-    tag: "1.36.4"
-    pullPolicy: IfNotPresent
-  serviceAccount:
-    create: true
-    name: "cluster-credential-rotator"
-  resources: {}
-  secret:
-    requiredType: "kubara.io/cluster-credentials"
-    bootstrapKubeconfigKey: "bootstrapKubeconfig"
-    generatedConfigKey: "config"
-    configMapSuffix: "-config"
-  agent:
-    namespaceAnnotation: "kubara.io/agent-namespace"
-    defaultNamespace: "kubara"
-    serviceAccountName: "kubara-agent"
-    clusterRoleBindingName: "kubara-agent"
-    clusterRoleName: "cluster-admin"
-  token:
-    duration: "10m"
-    refreshBefore: "5m"
 defaultProject:
   name: default
   description: |-
