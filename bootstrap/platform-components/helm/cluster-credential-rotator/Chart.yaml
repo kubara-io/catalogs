@@ -1,0 +1,6 @@
+---
+apiVersion: v2
+name: cluster-credential-rotator
+description: Kubernetes cluster credential rotator for Kubara Hub
+type: application
+version: 1.0.0
