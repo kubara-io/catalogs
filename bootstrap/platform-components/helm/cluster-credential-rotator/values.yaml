@@ -1,0 +1,44 @@
+---
+namespace: {}
+schedule: "* * * * *"
+suspend: false
+concurrencyPolicy: Forbid
+successfulJobsHistoryLimit: 3
+failedJobsHistoryLimit: 3
+startingDeadlineSeconds: 300
+activeDeadlineSeconds: 300
+backoffLimit: 1
+image:
+  repository: "alpine/kubectl"
+  tag: "1.36.4"
+  pullPolicy: IfNotPresent
+serviceAccount:
+  create: true
+  name: "cluster-credential-rotator"
+resources: {}
+secret:
+  requiredType: "kubara.io/cluster-credentials"
+  bootstrapKubeconfigKey: "bootstrapKubeconfig"
+  kubeconfigKey: "kubeconfig"
+  configMapSuffix: "-config"
+agent:
+  namespaceAnnotation: "kubara.io/agent-namespace"
+  defaultNamespace: "kubara"
+  serviceAccountName: "kubara-agent"
+  clusterRoleBindingName: "kubara-agent"
+  clusterRoleName: "cluster-admin"
+token:
+  duration: "10m"
+  refreshBefore: "5m"
+targets:
+  argo:
+    enabled: true
+    namespace: "argocd"
+    secretSuffix: "-cluster-secret"
+    configKey: "config"
+  flux:
+    enabled: false
+    namespace: "flux-system"
+    secretSuffix: "-kubeconfig"
+    kubeconfigKey: "value"
+clusters: []
