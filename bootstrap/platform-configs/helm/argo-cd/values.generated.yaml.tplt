@@ -15,6 +15,9 @@
 {{- end -}}
 
 {{- if (eq .cluster.type "hub") }}
+clusterSecrets:
+  useExternalSecrets: {{ ne .cluster.argocd.selfManaged "enabled" }}
+
 bootstrapValues:
   dockerPullSecrets:
     image-pull-secret:
@@ -44,10 +47,10 @@ bootstrapValues:
             name: cert-manager-webhook-ca
 {{/*
 
-For each spoke cluster in the config file a external secret gets created pointing to a secret inside the secret manager
+For each spoke cluster in the config file an external secret gets created pointing to a secret inside the secret manager
 <cluster-name>/<stage-name>/argocd/<spoke-name>
 
-This is a fixed assumption and needs to be followed for spoke cluster onboarding.
+This is a fixed assumption and needs to be followed for spoke cluster onboarding when selfManaged is disabled.
 */}}
 {{- if .spokes }}
   cluster:
@@ -67,7 +70,6 @@ This is a fixed assumption and needs to be followed for spoke cluster onboarding
 {{- end }}
 {{- end }}
 
-
   applicationSets:
     {{ .cluster.name }}-{{ .cluster.stage }}:
       projectName: "{{ .cluster.name }}-{{ .cluster.stage }}"
@@ -85,6 +87,10 @@ This is a fixed assumption and needs to be followed for spoke cluster onboarding
           name: argocd
           path: argo-cd
           namespace: argocd
+        cluster-credential-rotator:
+          name: cluster-credential-rotator
+          path: cluster-credential-rotator
+          namespace: kubara-system
 {{- end }}
 {{- range $serviceName := keys .cluster.services | sortAlpha }}
         {{ $serviceName }}:
@@ -105,6 +111,7 @@ inClusterSecretLabels:
 {{- if (eq .cluster.type "hub") }}
 ## Hub labels
   argocd: "{{ .cluster.argocd.selfManaged | default "disabled" }}"
+  cluster-credential-rotator: "{{ .cluster.argocd.selfManaged | default "disabled" }}"
 {{- range $serviceName := keys .cluster.services | sortAlpha }}
   {{ $serviceName }}: "{{ index $.cluster.services $serviceName "status" | default "disabled" }}"
 {{- end }}

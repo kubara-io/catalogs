@@ -1,3 +1,4 @@
+{{- if (.Values.clusterSecrets).useExternalSecrets }}
 {{- range $key, $clusterItem := (.Values.bootstrapValues).cluster }}
 {{- $authMethod := default "clientCertificate" $clusterItem.authMethod -}}
 apiVersion: external-secrets.io/v1
@@ -56,4 +57,5 @@ spec:
         metadataPolicy: None
         nullBytePolicy: Fail
 ---
+{{- end }}
 {{- end }}

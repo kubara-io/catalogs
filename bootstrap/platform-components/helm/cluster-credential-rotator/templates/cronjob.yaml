@@ -1,0 +1,53 @@
+{{- $serviceAccountName := .Values.serviceAccount.name | default "cluster-credential-rotator" }}
+{{- $configMapName := printf "%s-scripts" $serviceAccountName }}
+{{- $componentLabels := include "clusterCredentialRotator.labels" . }}
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: {{ $serviceAccountName }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- $componentLabels | nindent 4 }}
+spec:
+  schedule: {{ .Values.schedule | quote }}
+  concurrencyPolicy: {{ .Values.concurrencyPolicy }}
+  suspend: {{ .Values.suspend | default false }}
+  failedJobsHistoryLimit: {{ .Values.failedJobsHistoryLimit }}
+  successfulJobsHistoryLimit: {{ .Values.successfulJobsHistoryLimit }}
+  {{- with .Values.startingDeadlineSeconds }}
+  startingDeadlineSeconds: {{ . }}
+  {{- end }}
+  jobTemplate:
+    spec:
+      backoffLimit: {{ .Values.backoffLimit | default 1 }}
+      {{- with .Values.activeDeadlineSeconds }}
+      activeDeadlineSeconds: {{ . }}
+      {{- end }}
+      template:
+        metadata:
+          labels:
+            {{- $componentLabels | nindent 12 }}
+        spec:
+          restartPolicy: Never
+          serviceAccountName: {{ $serviceAccountName }}
+          automountServiceAccountToken: true
+          containers:
+            - name: cluster-credential-rotator
+              image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+              imagePullPolicy: {{ .Values.image.pullPolicy }}
+              command:
+                - sh
+                - /script/entrypoint.sh
+              volumeMounts:
+                - name: scripts
+                  mountPath: /script
+                  readOnly: true
+              {{- with .Values.resources }}
+              resources:
+                {{- toYaml . | nindent 16 }}
+              {{- end }}
+          volumes:
+            - name: scripts
+              configMap:
+                name: {{ $configMapName }}
+                defaultMode: 0555
