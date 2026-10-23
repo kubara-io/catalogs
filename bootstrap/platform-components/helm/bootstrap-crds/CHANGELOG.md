@@ -4,6 +4,10 @@ All notable changes to this chart will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this chart adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.0] - 2026-10-23
+### Changed
+- Updated chart dependency version: external-secrets 2.13.0 → 2.14.0
+
 ## [1.1.0] - 2026-10-20
 ### Changed
 - Updated chart dependency version: kube-prometheus-stack 92.10.1 → 92.11.0
