@@ -7,6 +7,7 @@ policies:
   - /tmp/kyverno-itGrundschutz-standard.yaml
 resources:
   - resources/pods.yaml
+  - resources/probe-workloads.yaml
   - resources/namespaces.yaml
 results:
   - policy: disallow-privileged-containers-itgrundschutz
@@ -75,3 +76,48 @@ results:
     kind: Namespace
     generatedResource: resources/generated-netpol.yaml
     result: pass
+  - policy: require-pod-probes
+    resources:
+      - deployment-without-probe
+    kind: Deployment
+    result: fail
+  - policy: require-pod-probes
+    resources:
+      - daemonset-without-probe
+    kind: DaemonSet
+    result: fail
+  - policy: require-pod-probes
+    resources:
+      - statefulset-without-probe
+    kind: StatefulSet
+    result: fail
+  - policy: require-pod-probes
+    resources:
+      - job-without-probe
+    kind: Job
+    result: skip
+  - policy: require-pod-probes
+    resources:
+      - cronjob-without-probe
+    kind: CronJob
+    result: skip
+  - policy: require-pod-probes
+    resources:
+      - job-pod
+    kind: Pod
+    result: skip
+  - policy: require-pod-probes
+    resources:
+      - deployment-pod
+    kind: Pod
+    result: fail
+  - policy: require-pod-probes
+    resources:
+      - non-controller-job-reference
+    kind: Pod
+    result: fail
+  - policy: require-pod-probes
+    resources:
+      - other-api-job-reference
+    kind: Pod
+    result: fail
