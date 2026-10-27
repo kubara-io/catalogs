@@ -47,8 +47,9 @@ externalSecrets:
 
 
 oauth2-proxy:
-  imagePullSecrets:
-    - name: image-pull-secret
+{{- with (dig "cluster" "imagePullSecretName" "image-pull-secret" .) }}
+  imagePullSecrets: [{name: {{ . | quote }}}]
+{{- end }}
   config:
     existingSecret: oauth2-credentials
     configFile: |-

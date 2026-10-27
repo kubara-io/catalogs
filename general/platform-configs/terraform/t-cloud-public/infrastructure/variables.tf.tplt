@@ -497,11 +497,13 @@ variable "openbao_replicas" {
   default     = 3
 }
 
+{{- if (dig "cluster" "imagePullSecretName" "image-pull-secret" .) }}
 variable "openbao_image_pull_secrets" {
   description = "Image pull secrets for OpenBao pods."
   type        = list(string)
-  default     = ["image-pull-secret"]
+  default     = [{{ dig "cluster" "imagePullSecretName" "image-pull-secret" . | quote }}]
 }
+{{- end }}
 
 variable "openbao_injector_enabled" {
   description = "Enable the OpenBao agent injector."

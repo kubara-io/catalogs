@@ -16,9 +16,10 @@
 
 {{- if (eq .cluster.type "hub") }}
 bootstrapValues:
+  {{- if $imagePullSecretName := dig "cluster" "imagePullSecretName" "image-pull-secret" . }}
   dockerPullSecrets:
-    image-pull-secret:
-      name: image-pull-secret
+    {{ $imagePullSecretName | quote }}:
+      name: {{ $imagePullSecretName | quote }}
       matchNamespaceLabels:
         project-name: "{{ .cluster.name }}"
         stage: "{{ .cluster.stage }}"
@@ -28,6 +29,7 @@ bootstrapValues:
       remoteRef:
         remoteKey: {{ .cluster.name }}/{{ .cluster.stage }}/cluster_secrets/docker_config
         remoteKeyProperty: pull-secret
+  {{- end }}
   projects:
     {{ .cluster.name }}-{{ .cluster.stage }}:
       name: "{{ .cluster.name }}-{{ .cluster.stage }}"
@@ -205,8 +207,9 @@ argo-cd:
   global:
     domain: {{ .cluster.dnsName }}
     revisionHistoryLimit: 5
-    imagePullSecrets:
-      - name: image-pull-secret
+{{- with (dig "cluster" "imagePullSecretName" "image-pull-secret" .) }}
+    imagePullSecrets: [{name: {{ . | quote }}}]
+{{- end }}
     {{- if (eq $reloaderStatus "enabled") }}
     statefulsetAnnotations:
       reloader.stakater.com/auto: "true"
