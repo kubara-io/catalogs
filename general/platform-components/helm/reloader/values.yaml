@@ -51,7 +51,7 @@ reloader:
       resources:
         requests:
           cpu: 10m
-          memory: 64Mi
+          memory: 128Mi
         limits:
           memory: 128Mi
   logLevel: info  # Log level to use (trace, debug, info, warning, error, fatal and panic)
