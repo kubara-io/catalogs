@@ -18,7 +18,7 @@ metadata:
       are running or need to be restarted. A `readinessProbe` is used by Services
       and Deployments to determine if the Pod is ready to receive network traffic.
       This policy validates that all containers have one of livenessProbe, readinessProbe,
-      or startupProbe defined.
+      or startupProbe defined. Jobs, CronJobs and their Pods are excluded.
 spec:
   failurePolicy: {{ dig "itGrundschutz" "standard" "requirePodProbes" "webhookFailurePolicy" "Fail" (merge .Values) }}
   webhookConfiguration:
@@ -50,21 +50,16 @@ spec:
           - daemonsets
           - deployments
           - statefulsets
-      - apiGroups:
-          - batch
-        apiVersions:
-          - v1
-        operations:
-          - CREATE
-          - UPDATE
-        resources:
-          - jobs
-          - cronjobs
+  matchConditions:
+    - name: exclude-job-pods
+      expression: >-
+        object.kind != 'Pod' || !object.metadata.?ownerReferences.orValue([]).exists(owner,
+          owner.apiVersion == 'batch/v1' && owner.kind == 'Job' && owner.?controller.orValue(false)
+        )
   variables:
     - name: podSpec
       expression: >-
         object.kind == 'Pod' ? object.spec :
-        object.kind == 'CronJob' ? object.spec.jobTemplate.spec.template.spec :
         object.spec.template.spec
   validations:
     - expression: >-
