@@ -41,6 +41,19 @@ reloader:
   resourceLabelSelector: '' # Comma separated list of k8s label selectors for configmap/secret selection
   reloader:
     logFormat: json
+    deployment:
+      containerSecurityContext:
+        allowPrivilegeEscalation: false
+        readOnlyRootFilesystem: true
+        capabilities:
+          drop:
+            - ALL
+      resources:
+        requests:
+          cpu: 10m
+          memory: 64Mi
+        limits:
+          memory: 128Mi
   logLevel: info  # Log level to use (trace, debug, info, warning, error, fatal and panic)
   watchGlobally: true
   # Set to true to enable leadership election allowing you to run multiple replicas
