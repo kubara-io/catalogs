@@ -49,11 +49,13 @@ traefik:
         namespacePolicy:
           from: All
         certificateRefs:
-          - name: platform-gateway-tls
+          - group: ""
+            kind: Secret
+            name: traefik-gateway-tls
   tlsStore:
     default:
       defaultCertificate:
-        secretName: platform-gateway-tls
+        secretName: traefik-gateway-tls
   {{- end }}
   deployment:
     imagePullSecrets:
