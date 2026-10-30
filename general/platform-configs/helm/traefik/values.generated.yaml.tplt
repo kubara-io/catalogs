@@ -3,8 +3,9 @@
 # To customize values, you can add additional files named values-*.yaml to this directory.
 
 {{- $networkingType := dig "cluster" "networking" "type" "ingress" . }}
+{{- $traefikEnabled := eq (dig "cluster" "services" "traefik" "status" "disabled" .) "enabled" }}
 {{- $gateway := dig "cluster" "networking" "gateway" (dict) . }}
-{{- if ne $networkingType "gateway" }}
+{{- if or (ne $networkingType "gateway") (not $traefikEnabled) }}
 {{- $gateway = dict }}
 {{- end }}
 {{- $oauth2ProxyEnabled := eq (index .cluster.services "oauth2-proxy" "status") "enabled" }}
@@ -46,11 +47,7 @@ traefik:
         protocol: HTTPS
         hostname: {{ .cluster.dnsName | quote }}
         namespacePolicy:
-          from: Selector
-          selector:
-            matchLabels:
-              project-name: {{ .cluster.name | quote }}
-              stage: {{ .cluster.stage | quote }}
+          from: All
         certificateRefs:
           - name: platform-gateway-tls
   tlsStore:

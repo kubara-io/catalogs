@@ -3,7 +3,7 @@ apiVersion: v2
 name: crds
 description: A wrapper helm chart library for all CRD dependencies necessary for kubara
 type: application
-version: 1.0.0
+version: 1.1.0
 dependencies:
   # Certificate CRDs
   - name: cert-manager

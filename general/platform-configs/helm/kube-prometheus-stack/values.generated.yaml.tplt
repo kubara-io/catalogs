@@ -311,7 +311,7 @@ namespace:
 {{- if $gateway }}
 gatewayRoutes:
   enabled: {{ eq $oauth2ProxyStatus "enabled" }}
-  auth: true
+  auth: {{ and (eq $oauth2ProxyStatus "enabled") (eq $traefikStatus "enabled") }}
   parentRef:
     {{- toYaml $gateway | nindent 4 }}
   hostname: {{ .cluster.dnsName | quote }}
