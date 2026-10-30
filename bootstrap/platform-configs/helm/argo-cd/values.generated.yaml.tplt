@@ -187,12 +187,14 @@ argo-cd:
             - path:
                 type: PathPrefix
                 value: /argocd
+          {{- if (and (eq $oauth2ProxyStatus "enabled") (eq $traefikStatus "enabled")) }}
           filters:
             - type: ExtensionRef
               extensionRef:
                 group: traefik.io
                 kind: Middleware
                 name: argocd-gateway-auth
+          {{- end }}
     {{- end }}
     ingressGrpc:
       enabled: {{ not $gateway }}
