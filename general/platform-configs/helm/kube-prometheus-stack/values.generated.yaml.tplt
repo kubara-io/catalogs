@@ -14,8 +14,9 @@
 
 kube-prometheus-stack:
   global:
-    imagePullSecrets:
-      - name: image-pull-secret
+{{- with (dig "cluster" "imagePullSecretName" "image-pull-secret" .) }}
+    imagePullSecrets: [{name: {{ . | quote }}}]
+{{- end }}
     imageRegistry: ""
   prometheusOperator:
     serviceMonitor:
@@ -233,9 +234,10 @@ kube-prometheus-stack:
         version: 1
 {{- end }}
 prometheus-blackbox-exporter:
+{{- with (dig "cluster" "imagePullSecretName" "image-pull-secret" .) }}
   image:
-    pullSecrets:
-      - image-pull-secret
+    pullSecrets: [{{ . | quote }}]
+{{- end }}
   global:
     imageRegistry: "quay.io"
 

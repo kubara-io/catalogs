@@ -11,8 +11,10 @@
 {{- $longhornIngressAnnotations = mergeOverwrite $longhornIngressAnnotations (dig "cluster" "services" "longhorn" "networking" "annotations" (dict) .) }}
 
 longhorn:
+{{- with (dig "cluster" "imagePullSecretName" "image-pull-secret" .) }}
   privateRegistry:
-    registrySecret: image-pull-secret
+    registrySecret: {{ . | quote }}
+{{- end }}
   metrics:
     serviceMonitor:
       {{- if (eq (index .cluster.services "kube-prometheus-stack" "status") "enabled") }}
