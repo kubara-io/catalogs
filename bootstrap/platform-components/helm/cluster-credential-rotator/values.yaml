@@ -1,0 +1,51 @@
+---
+cronJob:
+  enabled: true
+namespace: {}
+schedule: "*/3 * * * *"
+suspend: false
+concurrencyPolicy: Forbid
+successfulJobsHistoryLimit: 3
+failedJobsHistoryLimit: 3
+startingDeadlineSeconds: 300
+activeDeadlineSeconds: 300
+backoffLimit: 1
+image:
+  repository: "ghcr.io/kubara-io/kubara"
+  tag: "v0.18.0"
+  pullPolicy: IfNotPresent
+serviceAccount:
+  create: true
+  name: "cluster-credential-rotator"
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 65532
+  runAsGroup: 65532
+  seccompProfile:
+    type: RuntimeDefault
+securityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true
+  capabilities:
+    drop:
+      - ALL
+resources:
+  limits:
+    cpu: 100m
+    memory: 128Mi
+  requests:
+    cpu: 10m
+    memory: 64Mi
+agent:
+  clusterRoleName: "cluster-admin"
+token:
+  duration: "1h"
+  refreshBefore: "15m"
+targets:
+  argo:
+    enabled: true
+    namespace: "argocd"
+  flux:
+    enabled: false
+    namespace: "flux-system"
+clusters: []
