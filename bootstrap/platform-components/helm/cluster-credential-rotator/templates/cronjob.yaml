@@ -1,6 +1,5 @@
 {{- if (.Values.cronJob).enabled }}
 {{- $serviceAccountName := .Values.serviceAccount.name | default "cluster-credential-rotator" }}
-{{- $configMapName := printf "%s-scripts" $serviceAccountName }}
 {{- $componentLabels := include "clusterCredentialRotator.labels" . }}
 apiVersion: batch/v1
 kind: CronJob
@@ -41,31 +40,27 @@ spec:
               image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
               imagePullPolicy: {{ .Values.image.pullPolicy }}
               command:
-                - sh
-                - /script/entrypoint.sh
-              env:
-                - name: HOME
-                  value: /tmp
+                - /kubara
+                - cluster
+                - rotate-credentials
+              args:
+                - --token-duration={{ .Values.token.duration | default "1h" }}
+                - --refresh-before={{ .Values.token.refreshBefore | default "15m" }}
+                - --cluster-role={{ (.Values.agent).clusterRoleName | default "cluster-admin" }}
+                {{- if (.Values.targets.argo).enabled }}
+                - --argo-enabled
+                - --argo-namespace={{ .Values.targets.argo.namespace | default "argocd" }}
+                {{- end }}
+                {{- if (.Values.targets.flux).enabled }}
+                - --flux-enabled
+                - --flux-namespace={{ .Values.targets.flux.namespace | default "flux-system" }}
+                {{- end }}
               {{- with .Values.securityContext }}
               securityContext:
                 {{- toYaml . | nindent 16 }}
               {{- end }}
-              volumeMounts:
-                - name: scripts
-                  mountPath: /script
-                  readOnly: true
-                - name: tmp
-                  mountPath: /tmp
               {{- with .Values.resources }}
               resources:
                 {{- toYaml . | nindent 16 }}
               {{- end }}
-          volumes:
-            - name: scripts
-              configMap:
-                name: {{ $configMapName }}
-                defaultMode: 0555
-            - name: tmp
-              emptyDir:
-                medium: Memory
 {{- end }}

@@ -9,7 +9,7 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: {{ $clusterItem.name }}{{ default "-config" $.Values.secret.configMapSuffix }}
+  name: {{ $clusterItem.name }}-config
   namespace: {{ $.Release.Namespace }}
   labels:
     {{- $configLabels | toYaml | nindent 4 }}
