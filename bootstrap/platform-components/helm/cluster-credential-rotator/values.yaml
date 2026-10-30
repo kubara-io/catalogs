@@ -11,8 +11,8 @@ startingDeadlineSeconds: 300
 activeDeadlineSeconds: 300
 backoffLimit: 1
 image:
-  repository: "alpine/kubectl"
-  tag: "1.36.4"
+  repository: "ghcr.io/kubara-io/kubara"
+  tag: "v0.18.0"
   pullPolicy: IfNotPresent
 serviceAccount:
   create: true
@@ -36,14 +36,7 @@ resources:
   requests:
     cpu: 10m
     memory: 64Mi
-secret:
-  requiredType: "kubara.io/cluster-credentials"
-  bootstrapKubeconfigKey: "bootstrapKubeconfig"
-  kubeconfigKey: "kubeconfig"
-  configMapSuffix: "-config"
 agent:
-  serviceAccountName: "kubara-agent"
-  clusterRoleBindingName: "kubara-agent"
   clusterRoleName: "cluster-admin"
 token:
   duration: "1h"
@@ -52,11 +45,7 @@ targets:
   argo:
     enabled: true
     namespace: "argocd"
-    secretSuffix: "-cluster-secret"
-    configKey: "config"
   flux:
     enabled: false
     namespace: "flux-system"
-    secretSuffix: "-kubeconfig"
-    kubeconfigKey: "value"
 clusters: []
