@@ -15,8 +15,9 @@
 {{- end -}}
 
 {{- if (eq .cluster.type "hub") }}
+{{- $clusterSecretsProvider := dig "cluster" "argocd" "clusterSecrets" "provider" "auto-rotator" . -}}
 clusterSecrets:
-  useExternalSecrets: {{ ne .cluster.argocd.selfManaged "enabled" }}
+  useExternalSecrets: {{ eq $clusterSecretsProvider "external-secrets" }}
 
 bootstrapValues:
   dockerPullSecrets:
@@ -52,7 +53,7 @@ For each spoke cluster in the config file an external secret gets created pointi
 
 This is a fixed assumption and needs to be followed for spoke cluster onboarding when selfManaged is disabled.
 */}}
-{{- if .spokes }}
+{{- if and .spokes (eq $clusterSecretsProvider "external-secrets") }}
   cluster:
 {{- range .spokes }}
     - name: {{ .name }}
@@ -87,11 +88,11 @@ This is a fixed assumption and needs to be followed for spoke cluster onboarding
           name: argocd
           path: argo-cd
           namespace: argocd
+{{- end }}
         cluster-credential-rotator:
           name: cluster-credential-rotator
           path: cluster-credential-rotator
           namespace: kubara-system
-{{- end }}
 {{- range $serviceName := keys .cluster.services | sortAlpha }}
         {{ $serviceName }}:
           name: {{ $serviceName }}
@@ -111,7 +112,7 @@ inClusterSecretLabels:
 {{- if (eq .cluster.type "hub") }}
 ## Hub labels
   argocd: "{{ .cluster.argocd.selfManaged | default "disabled" }}"
-  cluster-credential-rotator: "{{ .cluster.argocd.selfManaged | default "disabled" }}"
+  cluster-credential-rotator: "enabled"
 {{- range $serviceName := keys .cluster.services | sortAlpha }}
   {{ $serviceName }}: "{{ index $.cluster.services $serviceName "status" | default "disabled" }}"
 {{- end }}

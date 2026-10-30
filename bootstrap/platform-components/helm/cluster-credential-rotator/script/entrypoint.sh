@@ -13,7 +13,7 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 . "${SCRIPT_DIR}/target-argo.sh"
 . "${SCRIPT_DIR}/target-flux.sh"
 
-TARGET_SECRET_NAME="${KUBARA_TARGET_SECRET_NAME:-}"
+AGENT_NAMESPACE="kubara-system"
 ISSUED_AT_ANNOTATION="kubara.io/cluster-credential-issued-at"
 EXPIRES_AT_ANNOTATION="kubara.io/cluster-credential-expires-at"
 MANAGED_BY_ANNOTATION="kubara.io/cluster-credential-managed-by"
@@ -47,6 +47,9 @@ patch_agnostic_secret_with_credentials() (
       "${MANAGED_BY_ANNOTATION}": "${MANAGED_BY_VALUE}"
     }
   },
+  "data": {
+    "${BOOTSTRAP_KUBECONFIG_KEY}": null
+  },
   "stringData": {
     "name": "${escaped_name}",
     "server": "${escaped_server}",
@@ -66,13 +69,23 @@ EOF_PATCH
     >/dev/null
 )
 
+fail_secret_reconcile() (
+  secret_name=$1
+  message=$2
+
+  log "$message"
+  failed_at="$(date +%s 2>/dev/null || printf '0')"
+  set_secret_rotation_status "$RELEASE_NAMESPACE" "$secret_name" "failed" "$failed_at" "$message" || true
+  return 1
+)
+
 reconcile_secret() (
   set -u
 
   secret_name=$1
 
   work_dir="$(mktemp -d)" || {
-    log "failed to create temporary working directory for ${secret_name}"
+    fail_secret_reconcile "$secret_name" "failed to create temporary working directory for ${secret_name}"
     return 1
   }
   trap 'rm -rf "$work_dir"' EXIT INT TERM
@@ -94,17 +107,12 @@ reconcile_secret() (
   fi
 
   if [ "$secret_type" != "$REQUIRED_TYPE" ]; then
-    if [ -n "$TARGET_SECRET_NAME" ]; then
-      log "target secret ${secret_name}: expected secret type ${REQUIRED_TYPE}, found ${secret_type:-<empty>}"
-      return 1
-    fi
-
     log "skipping ${secret_name}: expected secret type ${REQUIRED_TYPE}, found ${secret_type:-<empty>}"
     return 0
   fi
 
   if ! cluster_name="$(get_secret_value "$RELEASE_NAMESPACE" "$secret_name" "name")"; then
-    log "failed to read cluster name from secret ${secret_name}"
+    fail_secret_reconcile "$secret_name" "failed to read cluster name from secret ${secret_name}"
     return 1
   fi
 
@@ -121,48 +129,56 @@ reconcile_secret() (
 
   config_map_name="${cluster_name}${CONFIG_MAP_SUFFIX}"
 
+  check_config_map_state "$RELEASE_NAMESPACE" "$config_map_name"
+  cm_status=$?
+  if [ $cm_status -eq 1 ]; then
+    fail_secret_reconcile "$secret_name" "API error checking configmap ${config_map_name} for secret ${secret_name}"
+    return 1
+  elif [ $cm_status -eq 2 ]; then
+    log "decommissioning spoke cluster ${cluster_name} (configmap ${config_map_name} NotFound)"
+    if [ "$TARGET_ARGO_ENABLED" = "true" ]; then
+      if ! delete_managed_target_secret "$TARGET_ARGO_NAMESPACE" "${cluster_name}${TARGET_ARGO_SECRET_SUFFIX}"; then
+        fail_secret_reconcile "$secret_name" "failed to delete managed Argo CD target secret for ${cluster_name}"
+        return 1
+      fi
+    fi
+    if [ "$TARGET_FLUX_ENABLED" = "true" ]; then
+      if ! delete_managed_target_secret "$TARGET_FLUX_NAMESPACE" "${cluster_name}${TARGET_FLUX_SECRET_SUFFIX}"; then
+        fail_secret_reconcile "$secret_name" "failed to delete managed Flux target secret for ${cluster_name}"
+        return 1
+      fi
+    fi
+    log "deleting spoke credential secret ${RELEASE_NAMESPACE}/${secret_name}"
+    if ! kubectl -n "$RELEASE_NAMESPACE" delete secret "$secret_name" --ignore-not-found >/dev/null; then
+      fail_secret_reconcile "$secret_name" "failed to delete spoke credential secret ${RELEASE_NAMESPACE}/${secret_name}"
+      return 1
+    fi
+    return 0
+  fi
+
   if ! get_resource_label_lines "$RELEASE_NAMESPACE" configmap "$config_map_name" "$desired_labels_file"; then
-    log "failed to read authoritative labels from configmap ${config_map_name}"
+    fail_secret_reconcile "$secret_name" "failed to read authoritative labels from configmap ${config_map_name}"
     return 1
   fi
 
   if ! validate_cluster_config_map "$desired_labels_file" "$config_map_name" "$cluster_name"; then
-    return 1
-  fi
-
-  if ! agent_namespace="$(get_secret_annotation "$RELEASE_NAMESPACE" "$secret_name" "$AGENT_NAMESPACE_ANNOTATION")"; then
-    log "failed to read agent namespace annotation from secret ${secret_name}"
-    return 1
-  fi
-
-  if [ -z "$agent_namespace" ]; then
-    agent_namespace="$DEFAULT_AGENT_NAMESPACE"
-  fi
-
-  if ! validate_agent_namespace "$agent_namespace"; then
-    log "invalid kubara-agent namespace ${agent_namespace} for ${cluster_name}"
+    fail_secret_reconcile "$secret_name" "configmap ${config_map_name} failed cluster label validation for ${cluster_name}"
     return 1
   fi
 
   if ! current_kubeconfig="$(get_secret_value "$RELEASE_NAMESPACE" "$secret_name" "$KUBECONFIG_KEY")"; then
-    log "failed to read kubeconfig from secret ${secret_name}"
+    fail_secret_reconcile "$secret_name" "failed to read kubeconfig from secret ${secret_name}"
     return 1
   fi
 
-  # Support migration from legacy config key if kubeconfig key is empty
-  legacy_config=""
-  if [ -z "$current_kubeconfig" ]; then
-    legacy_config="$(get_secret_value "$RELEASE_NAMESPACE" "$secret_name" "config")" || true
-  fi
-
   if ! current_epoch="$(date +%s)"; then
-    log "failed to determine current time while reconciling ${secret_name}"
+    fail_secret_reconcile "$secret_name" "failed to determine current time while reconciling ${secret_name}"
     return 1
   fi
 
   case "$current_epoch" in
     ''|*[!0-9]*)
-      log "current time is not a valid epoch value while reconciling ${secret_name}"
+      fail_secret_reconcile "$secret_name" "current time is not a valid epoch value while reconciling ${secret_name}"
       return 1
       ;;
   esac
@@ -172,24 +188,27 @@ reconcile_secret() (
   issued_at=""
   expires_at=""
 
-  if [ -z "$current_kubeconfig" ] && [ -z "$legacy_config" ]; then
+  if [ -z "$current_kubeconfig" ]; then
     # FIRST ONBOARDING: bootstrap is used only to establish kubara-agent and mint the first rotating credential.
     log "no credentials found for ${cluster_name}; using bootstrap credentials for initial onboarding"
 
     if ! bootstrap_kubeconfig="$(get_secret_value "$RELEASE_NAMESPACE" "$secret_name" "$BOOTSTRAP_KUBECONFIG_KEY")"; then
-      log "failed to read bootstrap kubeconfig from secret ${secret_name}"
+      fail_secret_reconcile "$secret_name" "failed to read bootstrap kubeconfig from secret ${secret_name}"
       return 1
     fi
 
     if [ -z "$bootstrap_kubeconfig" ]; then
-      log "secret ${secret_name} is missing required bootstrap key ${BOOTSTRAP_KUBECONFIG_KEY}"
+      fail_secret_reconcile "$secret_name" "secret ${secret_name} is missing required bootstrap key ${BOOTSTRAP_KUBECONFIG_KEY}"
       return 1
     fi
 
-    printf '%s' "$bootstrap_kubeconfig" >"$bootstrap_kubeconfig_file" || return 1
+    printf '%s' "$bootstrap_kubeconfig" >"$bootstrap_kubeconfig_file" || {
+      fail_secret_reconcile "$secret_name" "failed to write temporary bootstrap kubeconfig for ${cluster_name}"
+      return 1
+    }
 
     if ! extract_bootstrap_cluster_info "$bootstrap_kubeconfig_file" "$bootstrap_info_file"; then
-      log "failed to extract cluster information from bootstrap kubeconfig for ${cluster_name}"
+      fail_secret_reconcile "$secret_name" "failed to extract cluster information from bootstrap kubeconfig for ${cluster_name}"
       return 1
     fi
 
@@ -197,15 +216,15 @@ reconcile_secret() (
     ca_data="$(sed -n '2p' "$bootstrap_info_file")"
     insecure="$(sed -n '3p' "$bootstrap_info_file")"
 
-    log "provisioning kubara-agent in namespace ${agent_namespace} for ${cluster_name}"
+    log "provisioning kubara-agent in namespace ${AGENT_NAMESPACE} for ${cluster_name}"
 
-    if ! ensure_agent_identity "$bootstrap_kubeconfig_file" "$agent_namespace"; then
-      log "failed to provision kubara-agent for ${cluster_name}"
+    if ! ensure_agent_identity "$bootstrap_kubeconfig_file" "$AGENT_NAMESPACE"; then
+      fail_secret_reconcile "$secret_name" "failed to provision kubara-agent for ${cluster_name}"
       return 1
     fi
 
-    if ! mint_agent_token "$bootstrap_kubeconfig_file" "$agent_namespace" "$token_request_file"; then
-      log "failed to mint initial kubara-agent token for ${cluster_name}"
+    if ! mint_agent_token "$bootstrap_kubeconfig_file" "$AGENT_NAMESPACE" "$token_request_file"; then
+      fail_secret_reconcile "$secret_name" "failed to mint initial kubara-agent token for ${cluster_name}"
       return 1
     fi
 
@@ -213,16 +232,19 @@ reconcile_secret() (
     expiration_timestamp="$(sed -n '2p' "$token_request_file")"
 
     if [ -z "$token" ]; then
-      log "token request returned an empty token for ${cluster_name}"
+      fail_secret_reconcile "$secret_name" "token request returned an empty token for ${cluster_name}"
       return 1
     fi
 
     if ! expires_at="$(rfc3339_to_epoch "$expiration_timestamp")"; then
-      log "failed to parse token expiration timestamp for ${cluster_name}: ${expiration_timestamp}"
+      fail_secret_reconcile "$secret_name" "failed to parse token expiration timestamp for ${cluster_name}: ${expiration_timestamp}"
       return 1
     fi
 
-    issued_at="$(date +%s)" || return 1
+    issued_at="$(date +%s)" || {
+      fail_secret_reconcile "$secret_name" "failed to determine token issue timestamp for ${cluster_name}"
+      return 1
+    }
 
     if ! build_kubeconfig \
       "$candidate_kubeconfig_file" \
@@ -230,16 +252,19 @@ reconcile_secret() (
       "$ca_data" \
       "$insecure" \
       "$token"; then
-      log "failed to build initial kubeconfig for ${cluster_name}"
+      fail_secret_reconcile "$secret_name" "failed to build initial kubeconfig for ${cluster_name}"
       return 1
     fi
 
     if ! validate_kubeconfig "$candidate_kubeconfig_file"; then
-      log "initial generated credentials for ${cluster_name} failed validation"
+      fail_secret_reconcile "$secret_name" "initial generated credentials for ${cluster_name} failed validation"
       return 1
     fi
 
-    kubeconfig_content="$(cat "$candidate_kubeconfig_file")" || return 1
+    kubeconfig_content="$(cat "$candidate_kubeconfig_file")" || {
+      fail_secret_reconcile "$secret_name" "failed to read candidate kubeconfig for ${cluster_name}"
+      return 1
+    }
 
     if ! patch_agnostic_secret_with_credentials \
       "$secret_name" \
@@ -252,7 +277,7 @@ reconcile_secret() (
       "$insecure" \
       "$issued_at" \
       "$expires_at"; then
-      log "failed to persist initial credentials in secret ${secret_name}"
+      fail_secret_reconcile "$secret_name" "failed to persist initial credentials in secret ${secret_name}"
       return 1
     fi
 
@@ -263,10 +288,14 @@ reconcile_secret() (
       "$current_labels_file" \
       "$labels_json_file" \
       "$labels_patch_file"; then
+      fail_secret_reconcile "$secret_name" "failed to synchronize labels on secret ${secret_name}"
       return 1
     fi
 
-    cp "$candidate_kubeconfig_file" "$current_kubeconfig_file" || return 1
+    cp "$candidate_kubeconfig_file" "$current_kubeconfig_file" || {
+      fail_secret_reconcile "$secret_name" "failed to stage current kubeconfig for ${cluster_name}"
+      return 1
+    }
     log "successfully onboarded cluster credentials for ${cluster_name}"
   else
     # NORMAL ROTATION
@@ -277,11 +306,12 @@ reconcile_secret() (
       "$current_labels_file" \
       "$labels_json_file" \
       "$labels_patch_file"; then
+      fail_secret_reconcile "$secret_name" "failed to synchronize labels on secret ${secret_name}"
       return 1
     fi
 
     if ! server="$(get_secret_value "$RELEASE_NAMESPACE" "$secret_name" "server")"; then
-      log "failed to read server endpoint from secret ${secret_name}"
+      fail_secret_reconcile "$secret_name" "failed to read server endpoint from secret ${secret_name}"
       return 1
     fi
 
@@ -289,29 +319,14 @@ reconcile_secret() (
     ca_data="$(get_secret_value "$RELEASE_NAMESPACE" "$secret_name" "caData")" || true
     insecure="$(get_secret_value "$RELEASE_NAMESPACE" "$secret_name" "insecure")" || true
 
-    # Migration / reconstruction if reading legacy config
-    if [ -n "$legacy_config" ] && [ -z "$current_kubeconfig" ]; then
-      token="$(legacy_config_token "$legacy_config")"
-      ca_data="$(legacy_config_ca_data "$legacy_config")"
-      insecure="$(legacy_config_insecure "$legacy_config")"
-      [ -n "$insecure" ] || insecure="false"
-
-      if ! build_kubeconfig \
-        "$current_kubeconfig_file" \
-        "$server" \
-        "$ca_data" \
-        "$insecure" \
-        "$token"; then
-        log "failed to reconstruct kubeconfig from legacy credentials for ${cluster_name}"
-        return 1
-      fi
-    else
-      printf '%s' "$current_kubeconfig" >"$current_kubeconfig_file" || return 1
-      [ -n "$insecure" ] || insecure="false"
-    fi
+    printf '%s' "$current_kubeconfig" >"$current_kubeconfig_file" || {
+      fail_secret_reconcile "$secret_name" "failed to write current kubeconfig for ${cluster_name}"
+      return 1
+    }
+    [ -n "$insecure" ] || insecure="false"
 
     if ! validate_kubeconfig "$current_kubeconfig_file"; then
-      log "current credentials for ${cluster_name} are invalid; automatic rotation cannot continue without explicit re-onboarding"
+      fail_secret_reconcile "$secret_name" "current credentials for ${cluster_name} are invalid; automatic rotation cannot continue without explicit re-onboarding"
       return 1
     fi
 
@@ -321,8 +336,8 @@ reconcile_secret() (
     if refresh_due "$expires_at" "$refresh_after_epoch"; then
       log "rotating credentials for ${cluster_name} using current kubara-agent credentials"
 
-      if ! mint_agent_token "$current_kubeconfig_file" "$agent_namespace" "$token_request_file"; then
-        log "failed to mint replacement kubara-agent token for ${cluster_name}"
+      if ! mint_agent_token "$current_kubeconfig_file" "$AGENT_NAMESPACE" "$token_request_file"; then
+        fail_secret_reconcile "$secret_name" "failed to mint replacement kubara-agent token for ${cluster_name}"
         return 1
       fi
 
@@ -330,25 +345,28 @@ reconcile_secret() (
       expiration_timestamp="$(sed -n '2p' "$token_request_file")"
 
       if [ -z "$token" ]; then
-        log "token request returned an empty token for ${cluster_name}"
+        fail_secret_reconcile "$secret_name" "token request returned an empty token for ${cluster_name}"
         return 1
       fi
 
       if ! expires_at="$(rfc3339_to_epoch "$expiration_timestamp")"; then
-        log "failed to parse token expiration timestamp for ${cluster_name}: ${expiration_timestamp}"
+        fail_secret_reconcile "$secret_name" "failed to parse token expiration timestamp for ${cluster_name}: ${expiration_timestamp}"
         return 1
       fi
 
-      issued_at="$(date +%s)" || return 1
+      issued_at="$(date +%s)" || {
+        fail_secret_reconcile "$secret_name" "failed to determine token issue timestamp for ${cluster_name}"
+        return 1
+      }
 
       if [ "$expires_at" -le "$issued_at" ]; then
-        log "token request returned an already-expired credential for ${cluster_name}"
+        fail_secret_reconcile "$secret_name" "token request returned an already-expired credential for ${cluster_name}"
         return 1
       fi
 
       actual_lifetime=$((expires_at - issued_at))
       if [ "$actual_lifetime" -le "$REFRESH_BEFORE_SECONDS" ]; then
-        log "token lifetime returned for ${cluster_name} (${actual_lifetime}s) is not greater than refreshBefore (${REFRESH_BEFORE_SECONDS}s)"
+        fail_secret_reconcile "$secret_name" "token lifetime returned for ${cluster_name} (${actual_lifetime}s) is not greater than refreshBefore (${REFRESH_BEFORE_SECONDS}s)"
         return 1
       fi
 
@@ -358,16 +376,19 @@ reconcile_secret() (
         "$ca_data" \
         "$insecure" \
         "$token"; then
-        log "failed to build replacement kubeconfig for ${cluster_name}"
+        fail_secret_reconcile "$secret_name" "failed to build replacement kubeconfig for ${cluster_name}"
         return 1
       fi
 
       if ! validate_kubeconfig "$candidate_kubeconfig_file"; then
-        log "replacement credentials for ${cluster_name} failed validation"
+        fail_secret_reconcile "$secret_name" "replacement credentials for ${cluster_name} failed validation"
         return 1
       fi
 
-      kubeconfig_content="$(cat "$candidate_kubeconfig_file")" || return 1
+      kubeconfig_content="$(cat "$candidate_kubeconfig_file")" || {
+        fail_secret_reconcile "$secret_name" "failed to read candidate kubeconfig for ${cluster_name}"
+        return 1
+      }
 
       if ! patch_agnostic_secret_with_credentials \
         "$secret_name" \
@@ -380,30 +401,17 @@ reconcile_secret() (
         "$insecure" \
         "$issued_at" \
         "$expires_at"; then
-        log "failed to update rotated credentials in secret ${secret_name}"
+        fail_secret_reconcile "$secret_name" "failed to update rotated credentials in secret ${secret_name}"
         return 1
       fi
 
-      cp "$candidate_kubeconfig_file" "$current_kubeconfig_file" || return 1
+      cp "$candidate_kubeconfig_file" "$current_kubeconfig_file" || {
+        fail_secret_reconcile "$secret_name" "failed to stage current kubeconfig for ${cluster_name}"
+        return 1
+      }
       log "successfully rotated credentials for ${cluster_name}"
     else
       log "credentials for ${cluster_name} are valid"
-      # If migrating from legacy, persist the canonical kubeconfig key
-      if [ -n "$legacy_config" ] && [ -z "$current_kubeconfig" ]; then
-        kubeconfig_content="$(cat "$current_kubeconfig_file")" || return 1
-        [ -n "$issued_at" ] || issued_at="$(date +%s)"
-        patch_agnostic_secret_with_credentials \
-          "$secret_name" \
-          "$credential_patch_file" \
-          "$cluster_name" \
-          "$server" \
-          "$kubeconfig_content" \
-          "$token" \
-          "$ca_data" \
-          "$insecure" \
-          "$issued_at" \
-          "$expires_at" || return 1
-      fi
     fi
   fi
 
@@ -420,6 +428,7 @@ reconcile_secret() (
       "$desired_labels_file" \
       "$issued_at" \
       "$expires_at"; then
+      fail_secret_reconcile "$secret_name" "failed to project credentials to Argo CD target for ${cluster_name}"
       return 1
     fi
   fi
@@ -431,8 +440,14 @@ reconcile_secret() (
       "$desired_labels_file" \
       "$issued_at" \
       "$expires_at"; then
+      fail_secret_reconcile "$secret_name" "failed to project credentials to Flux target for ${cluster_name}"
       return 1
     fi
+  fi
+
+  if ! set_secret_rotation_status "$RELEASE_NAMESPACE" "$secret_name" "ready" "$issued_at"; then
+    log "failed to set ready rotation status on secret ${secret_name}"
+    return 1
   fi
 
   return 0
@@ -468,19 +483,15 @@ if [ -z "$REQUIRED_TYPE" ]; then
   exit 1
 fi
 
-if [ -n "$TARGET_SECRET_NAME" ]; then
-  managed_secrets="$TARGET_SECRET_NAME"
-else
-  if ! managed_secrets="$(
-    kubectl \
-      -n "$RELEASE_NAMESPACE" \
-      get secrets \
-      --field-selector "type=${REQUIRED_TYPE}" \
-      -o jsonpath='{range .items[*]}{.metadata.name}{"\n"}{end}'
-  )"; then
-    log "failed to list cluster credential secrets in namespace ${RELEASE_NAMESPACE}"
-    exit 1
-  fi
+if ! managed_secrets="$(
+  kubectl \
+    -n "$RELEASE_NAMESPACE" \
+    get secrets \
+    --field-selector "type=${REQUIRED_TYPE}" \
+    -o jsonpath='{range .items[*]}{.metadata.name}{"\n"}{end}'
+)"; then
+  log "failed to list cluster credential secrets in namespace ${RELEASE_NAMESPACE}"
+  exit 1
 fi
 
 if [ -z "$managed_secrets" ]; then

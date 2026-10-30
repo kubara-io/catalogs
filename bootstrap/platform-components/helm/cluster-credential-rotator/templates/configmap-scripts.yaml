@@ -15,8 +15,6 @@ data:
     BOOTSTRAP_KUBECONFIG_KEY={{ .Values.secret.bootstrapKubeconfigKey | quote }}
     KUBECONFIG_KEY={{ .Values.secret.kubeconfigKey | quote }}
     CONFIG_MAP_SUFFIX={{ default "-config" .Values.secret.configMapSuffix | quote }}
-    AGENT_NAMESPACE_ANNOTATION={{ default "kubara.io/agent-namespace" .Values.agent.namespaceAnnotation | quote }}
-    DEFAULT_AGENT_NAMESPACE={{ default "kubara-system" .Values.agent.defaultNamespace | quote }}
     AGENT_SERVICE_ACCOUNT_NAME={{ default "kubara-agent" .Values.agent.serviceAccountName | quote }}
     AGENT_CLUSTER_ROLE_BINDING_NAME={{ default "kubara-agent" .Values.agent.clusterRoleBindingName | quote }}
     AGENT_CLUSTER_ROLE_NAME={{ .Values.agent.clusterRoleName | quote }}

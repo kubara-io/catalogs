@@ -43,12 +43,9 @@ project_argo_target() (
   )"
   escaped_config="$(json_escape "$argo_config")" || return 1
 
-  # Create secret if it does not exist yet
-  if ! kubectl -n "$target_ns" get secret "$target_secret_name" >/dev/null 2>&1; then
-    if ! kubectl -n "$target_ns" create secret generic "$target_secret_name" --type=Opaque >/dev/null; then
-      log "failed to create Argo CD secret ${target_ns}/${target_secret_name}"
-      return 1
-    fi
+  # Ensure secret exists and is managed by cluster-credential-rotator
+  if ! ensure_managed_target_secret "$target_ns" "$target_secret_name"; then
+    return 1
   fi
 
   cat >"$argo_patch_file" <<EOF_ARGO_PATCH

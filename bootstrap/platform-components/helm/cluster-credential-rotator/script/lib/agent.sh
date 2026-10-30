@@ -179,15 +179,3 @@ extract_bootstrap_cluster_info() (
 
   printf '%s\n%s\n%s\n' "$server" "$ca_data" "$insecure" >"$output_file"
 )
-
-legacy_config_token() (
-  printf '%s' "$1" | sed -n 's/.*"bearerToken":"\([^"]*\)".*/\1/p'
-)
-
-legacy_config_ca_data() (
-  printf '%s' "$1" | sed -n 's/.*"caData":"\([^"]*\)".*/\1/p'
-)
-
-legacy_config_insecure() (
-  printf '%s' "$1" | sed -n 's/.*"insecure":\([^,}]*\).*/\1/p'
-)
