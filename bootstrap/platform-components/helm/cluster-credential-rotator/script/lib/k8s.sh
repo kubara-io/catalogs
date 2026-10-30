@@ -5,16 +5,12 @@ get_secret_annotation() (
   secret_name=$2
   annotation_key=$3
 
-  open_braces="$(printf '%s%s' '{' '{')"
-  close_braces="$(printf '%s%s' '}' '}')"
-
-  template_string="${open_braces} index .metadata.annotations \"${annotation_key}\" ${close_braces}"
-
   if ! value="$(
     kubectl \
       -n "$namespace" \
       get secret "$secret_name" \
-      -o "go-template=${template_string}"
+      --ignore-not-found \
+      -o "go-template={{ index .metadata.annotations \"${annotation_key}\" }}"
   )"; then
     return 1
   fi
@@ -28,26 +24,27 @@ get_secret_annotation() (
   printf '%s' "$value"
 )
 
-validate_agent_namespace() (
-  namespace=$1
-
-  if [ -z "$namespace" ]; then
-    return 1
-  fi
-
-  if [ "${#namespace}" -gt 63 ]; then
-    return 1
-  fi
-
-  printf '%s' "$namespace" |
-    grep -Eq '^[a-z0-9]([-a-z0-9]*[a-z0-9])?$'
-)
-
 get_secret_data() (
-  kubectl \
-    -n "$1" \
-    get secret "$2" \
-    -o "jsonpath={.data['$3']}"
+  namespace=$1
+  secret_name=$2
+  data_key=$3
+
+  if ! value="$(
+    kubectl \
+      -n "$namespace" \
+      get secret "$secret_name" \
+      -o "go-template={{ index .data \"${data_key}\" }}"
+  )"; then
+    return 1
+  fi
+
+  case "$value" in
+    "<no value>"|"<nil>")
+      return 0
+      ;;
+  esac
+
+  printf '%s' "$value"
 )
 
 get_secret_value() (
@@ -76,14 +73,10 @@ get_resource_label_lines() (
   raw_labels_file="$(mktemp)" || return 1
   trap 'rm -f "$raw_labels_file"' EXIT INT TERM
 
-  open_braces="$(printf '%s%s' '{' '{')"
-  close_braces="$(printf '%s%s' '}' '}')"
-  template_string="${open_braces}range \$key, \$value := .metadata.labels${close_braces}${open_braces}printf \"%s=%s\\n\" \$key \$value${close_braces}${open_braces}end${close_braces}"
-
   if ! kubectl \
     -n "$namespace" \
     get "$resource_kind" "$resource_name" \
-    -o "go-template=${template_string}" \
+    -o 'go-template={{range $key, $value := .metadata.labels}}{{printf "%s=%s\n" $key $value}}{{end}}' \
     >"$raw_labels_file"; then
     return 1
   fi
@@ -197,4 +190,101 @@ EOF_LABEL_PATCH
   fi
 
   log "synchronized labels for ${namespace}/${secret_name}"
+)
+
+check_config_map_state() (
+  namespace=$1
+  config_map_name=$2
+
+  output="$(kubectl -n "$namespace" get configmap "$config_map_name" --ignore-not-found -o name 2>&1)"
+  exit_code=$?
+
+  if [ $exit_code -ne 0 ]; then
+    log "error checking configmap ${namespace}/${config_map_name}: ${output}"
+    return 1
+  fi
+
+  if [ -z "$output" ]; then
+    return 2
+  fi
+
+  return 0
+)
+
+ensure_managed_target_secret() (
+  namespace=$1
+  secret_name=$2
+
+  existing="$(kubectl -n "$namespace" get secret "$secret_name" --ignore-not-found -o name)" || return 1
+  if [ -z "$existing" ]; then
+    if ! kubectl -n "$namespace" create secret generic "$secret_name" --type=Opaque >/dev/null; then
+      log "failed to create target secret ${namespace}/${secret_name}"
+      return 1
+    fi
+    return 0
+  fi
+
+  managed_by="$(get_secret_annotation "$namespace" "$secret_name" "kubara.io/cluster-credential-managed-by")" || return 1
+  if [ "$managed_by" != "cluster-credential-rotator" ]; then
+    log "refusing to overwrite unmanaged target secret ${namespace}/${secret_name} (managed-by: ${managed_by:-none})"
+    return 1
+  fi
+
+  return 0
+)
+
+delete_managed_target_secret() (
+  namespace=$1
+  secret_name=$2
+
+  existing="$(kubectl -n "$namespace" get secret "$secret_name" --ignore-not-found -o name)" || return 1
+  if [ -z "$existing" ]; then
+    return 0
+  fi
+
+  managed_by="$(get_secret_annotation "$namespace" "$secret_name" "kubara.io/cluster-credential-managed-by")" || return 1
+  if [ "$managed_by" = "cluster-credential-rotator" ]; then
+    log "deleting managed target secret ${namespace}/${secret_name}"
+    kubectl -n "$namespace" delete secret "$secret_name" --ignore-not-found >/dev/null || return 1
+  else
+    log "skipping deletion of unmanaged target secret ${namespace}/${secret_name} (managed-by: ${managed_by:-none})"
+  fi
+  return 0
+)
+
+set_secret_rotation_status() (
+  namespace=$1
+  secret_name=$2
+  status=$3
+  rotated_at=$4
+  error_message=${5:-}
+
+  patch_file="$(mktemp)" || return 1
+  trap 'rm -f "$patch_file"' EXIT INT TERM
+
+  if [ -n "$error_message" ]; then
+    escaped_error="$(json_escape "$error_message")" || return 1
+    error_field="\"${escaped_error}\""
+  else
+    error_field="null"
+  fi
+
+  cat >"$patch_file" <<EOF_STATUS_PATCH
+{
+  "metadata": {
+    "annotations": {
+      "kubara.io/rotation-status": "${status}",
+      "kubara.io/rotated-at": "${rotated_at}",
+      "kubara.io/rotation-error": ${error_field}
+    }
+  }
+}
+EOF_STATUS_PATCH
+
+  kubectl \
+    -n "$namespace" \
+    patch secret "$secret_name" \
+    --type merge \
+    --patch-file "$patch_file" \
+    >/dev/null
 )

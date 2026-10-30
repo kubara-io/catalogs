@@ -1,6 +1,8 @@
 ---
+cronJob:
+  enabled: true
 namespace: {}
-schedule: "* * * * *"
+schedule: "*/3 * * * *"
 suspend: false
 concurrencyPolicy: Forbid
 successfulJobsHistoryLimit: 3
@@ -15,21 +17,37 @@ image:
 serviceAccount:
   create: true
   name: "cluster-credential-rotator"
-resources: {}
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 65532
+  runAsGroup: 65532
+  seccompProfile:
+    type: RuntimeDefault
+securityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true
+  capabilities:
+    drop:
+      - ALL
+resources:
+  limits:
+    cpu: 100m
+    memory: 128Mi
+  requests:
+    cpu: 10m
+    memory: 64Mi
 secret:
   requiredType: "kubara.io/cluster-credentials"
   bootstrapKubeconfigKey: "bootstrapKubeconfig"
   kubeconfigKey: "kubeconfig"
   configMapSuffix: "-config"
 agent:
-  namespaceAnnotation: "kubara.io/agent-namespace"
-  defaultNamespace: "kubara-system"
   serviceAccountName: "kubara-agent"
   clusterRoleBindingName: "kubara-agent"
   clusterRoleName: "cluster-admin"
 token:
-  duration: "10m"
-  refreshBefore: "5m"
+  duration: "1h"
+  refreshBefore: "15m"
 targets:
   argo:
     enabled: true

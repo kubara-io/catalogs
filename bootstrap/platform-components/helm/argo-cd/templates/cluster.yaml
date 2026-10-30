@@ -13,7 +13,7 @@ spec:
     name: {{ $clusterItem.secretStoreRef.name }}
   target:
     name: {{ $clusterItem.name }}-cluster-secret
-    creationPolicy: Owner
+    creationPolicy: Orphan
     template:
       metadata:
         {{- with $clusterItem.annotations }}
