@@ -33,7 +33,9 @@ metadata:
   {{- end }}
 spec:
   parentRefs:
-    - name: {{ $routing.parentRef.name | quote }}
+    - group: gateway.networking.k8s.io
+      kind: Gateway
+      name: {{ $routing.parentRef.name | quote }}
       namespace: {{ $routing.parentRef.namespace | quote }}
       {{- with $routing.parentRef.sectionName }}
       sectionName: {{ . | quote }}
@@ -63,8 +65,11 @@ spec:
         {{- end }}
       {{- end }}
       backendRefs:
-        - name: {{ tpl .service $root | quote }}
+        - group: ''
+          kind: Service
+          name: {{ tpl .service $root | quote }}
           port: {{ .port }}
+          weight: 1
 {{- end }}
 {{- end }}
 {{- end }}

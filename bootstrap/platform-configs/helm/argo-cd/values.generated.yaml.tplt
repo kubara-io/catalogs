@@ -173,7 +173,9 @@ argo-cd:
     httproute:
       enabled: {{ eq $oauth2ProxyStatus "enabled" }}
       parentRefs:
-        - name: {{ $gateway.name | quote }}
+        - group: gateway.networking.k8s.io
+          kind: Gateway
+          name: {{ $gateway.name | quote }}
           namespace: {{ $gateway.namespace | quote }}
           {{- with $gateway.sectionName }}
           sectionName: {{ . | quote }}
