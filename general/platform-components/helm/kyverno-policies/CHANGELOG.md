@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.2] - 2026-10-31
+### Fixed
+- Honor `policyExclude` resource kinds and match names exactly unless a wildcard is explicit.
+  Previously, kinds were ignored and even literal names matched additional hyphenated suffixes.
+  Existing exclusions relying on that behavior must declare the intended kinds and wildcards.
+
 ## [1.0.1] - 2026-10-21
 ### Changed
 - Updated chart dependency version: kyverno-policies 3.9.1 → 3.9.2

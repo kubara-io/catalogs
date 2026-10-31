@@ -5,7 +5,35 @@ This Helm Charts is composed of the official Kyverno-policies chart and addition
 # Usage
 Deploy this chart onto a cluster with a running kyverno instance. The policies will be used by kyverno.
 
+## Policy exclusions
+
+`policyExclude` matches the configured kinds, namespaces and names together. Names
+without wildcards match exactly; `*` matches any sequence and `?` one character.
+For example, this exception matches only the Pod `demo-worker` in `demo`, not
+`demo-worker-ui` or a ConfigMap with the same name:
+
+```yaml
+kyverno-policies:
+  policyExclude:
+    disallow-privileged-containers:
+      any:
+        - resources:
+            kinds: [Pod]
+            namespaces: [demo]
+            names: [demo-worker]
+```
+
+Use `demo-worker-*` explicitly for generated Pod names. When overriding an `any`
+list, include existing entries you want to keep; Helm replaces lists.
+
 ## CI
+
+Run the exception matching regression tests with Helm, Kyverno CLI and Python 3:
+
+```bash
+python3 -m unittest discover -s general/platform-components/helm/kyverno-policies/tests/policyExceptions -v
+```
+
 During development you can use kyverno cli to apply the policies to a manifests.
 To overwrite variables and values that are needed to emulate how kyverno behaves on a live cluster you can utilize 
 the files in **kyverno-policies/ci**.  
