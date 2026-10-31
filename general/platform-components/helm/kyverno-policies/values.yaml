@@ -45,19 +45,19 @@ kyverno-policies:
     require-readonly-root-filesystem:
       any:
         - resources:
-            kinds: [Pod]
-            names: [traefik-*]
+            kinds: [Pod, Deployment, DaemonSet, StatefulSet, Job, CronJob]
+            names: [traefik, traefik-*]
             namespaces: [traefik]
         - resources:
-            kinds: [Pod]
-            names: [kube-prometheus-stack-grafana-*]
+            kinds: [Pod, Deployment, DaemonSet, StatefulSet, Job, CronJob]
+            names: [kube-prometheus-stack-grafana, kube-prometheus-stack-grafana-*]
             namespaces: [kube-prometheus-stack]
         - resources:
-            kinds: [Pod]
+            kinds: [Pod, Deployment, DaemonSet, StatefulSet, Job, CronJob]
             namespaces: [kube-system, longhorn]
         - resources:
-            kinds: [Pod]
-            names: [metallb-speaker-*]
+            kinds: [Pod, Deployment, DaemonSet, StatefulSet, Job, CronJob]
+            names: [metallb-speaker, metallb-speaker-*]
             namespaces: [metallb]
     disallow-host-ports:
       any:
@@ -88,16 +88,16 @@ kyverno-policies:
     disallow-privileged-containers:
       any:
         - resources:
-            kinds: [Pod]
+            kinds: [Pod, Deployment, DaemonSet, StatefulSet, Job, CronJob]
             namespaces: [longhorn, kube-system]
     disallow-privilege-escalation:
       any:
         - resources:
-            kinds: [Pod]
+            kinds: [Pod, Deployment, DaemonSet, StatefulSet, Job, CronJob]
             namespaces: [kube-system, longhorn]
         - resources:
-            kinds: [Pod]
-            names: [metallb-speaker-*]
+            kinds: [Pod, Deployment, DaemonSet, StatefulSet, Job, CronJob]
+            names: [metallb-speaker, metallb-speaker-*]
             namespaces: [metallb]
     disallow-capabilities:
       any:
@@ -120,14 +120,14 @@ kyverno-policies:
     require-requests-limits:
       any:
         - resources:
-            kinds: [Pod]
+            kinds: [Pod, Deployment, DaemonSet, StatefulSet, Job, CronJob]
             namespaces:
               - longhorn
               - kube-system
         # request-limits for metallb-speaker initContainers cannot be set in the official helm chart
         - resources:
-            kinds: [Pod]
-            names: [metallb-speaker-*]
+            kinds: [Pod, Deployment, DaemonSet, StatefulSet, Job, CronJob]
+            names: [metallb-speaker, metallb-speaker-*]
             namespaces: [metallb]
     restrict-volume-types:
       any:
@@ -176,35 +176,40 @@ kyverno-policies:
     require-pod-probes:
       any:
         - resources:
-            kinds: [Pod]
+            kinds: [Pod, Deployment, DaemonSet, StatefulSet, Job, CronJob]
             namespaces: [kube-system, longhorn, loki, kube-prometheus-stack]
         - resources:
-            kinds: [Pod]
-            names: [metallb-speaker-*]
+            kinds: [Pod, Deployment, DaemonSet, StatefulSet, Job, CronJob]
+            names: [metallb-speaker, metallb-speaker-*]
             namespaces: [metallb]
         - resources:
-            kinds: [Pod]
-            names: [cert-manager-cainjector-*]
+            kinds: [Pod, Deployment, DaemonSet, StatefulSet, Job, CronJob]
+            names: [cert-manager-cainjector, cert-manager-cainjector-*]
             namespaces: [cert-manager]
         - resources:
-            kinds: [Pod]
-            names: [external-secrets-*]
+            kinds: [Pod, Deployment, DaemonSet, StatefulSet, Job, CronJob]
+            names: [external-secrets, external-secrets-*]
             namespaces: [external-secrets]
         - resources:
-            kinds: [Pod]
+            kinds: [Pod, Deployment, DaemonSet, StatefulSet, Job, CronJob]
             names:
+              - kyverno-background-controller
               - kyverno-background-controller-*
+              - kyverno-reports-controller
               - kyverno-reports-controller-*
+              - kyverno-migrate-resources
               - kyverno-migrate-resources-*
             namespaces: [kyverno]
         - resources:
-            kinds: [Pod]
-            names: [node-agent-*]
+            kinds: [Pod, Deployment, DaemonSet, StatefulSet, Job, CronJob]
+            names: [node-agent, node-agent-*]
             namespaces: [velero]
         - resources:
-            kinds: [Pod]
+            kinds: [Pod, Deployment, DaemonSet, StatefulSet, Job, CronJob]
             names:
+              - dex-restarter
               - dex-restarter-*
+              - argocd-redis-secret-init
               - argocd-redis-secret-init-*
             namespaces: [argocd]
 global:

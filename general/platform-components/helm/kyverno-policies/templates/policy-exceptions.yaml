@@ -20,8 +20,13 @@ spec:
     - name: {{ $pol }}
       kind: ValidatingPolicy
     {{- end }}
-  {{- if or $rule.resources.namespaces $rule.resources.names }}
+  {{- if or $rule.resources.kinds $rule.resources.namespaces $rule.resources.names }}
   matchConditions:
+    {{- if $rule.resources.kinds }}
+    - name: match-kinds
+      expression: >-
+        object.kind in {{ $rule.resources.kinds | toJson }}
+    {{- end }}
     {{- if $rule.resources.namespaces }}
     - name: match-namespaces
       expression: >-
@@ -30,7 +35,7 @@ spec:
     {{- if $rule.resources.names }}
     - name: match-names
       expression: >-
-        [{{ range $nIdx, $n := $rule.resources.names }}{{ if $nIdx }}, {{ end }}'^{{ $n | trimSuffix "-*" | trimSuffix "*" | replace "." "\\." }}(-[a-zA-Z0-9]+)*$'{{ end }}].exists(pattern, object.metadata.name.matches(pattern))
+        [{{ range $nIdx, $n := $rule.resources.names }}{{ if $nIdx }}, {{ end }}{{ printf "^%s$" ($n | regexQuoteMeta | replace "\\*" ".*" | replace "\\?" ".") | toJson }}{{ end }}].exists(pattern, object.metadata.name.matches(pattern))
     {{- end }}
   {{- end }}
 {{- end }}
