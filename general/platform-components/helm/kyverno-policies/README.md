@@ -26,6 +26,14 @@ kyverno-policies:
 Use `demo-worker-*` explicitly for generated Pod names. When overriding an `any`
 list, include existing entries you want to keep; Helm replaces lists.
 
+### Migrating to 2.0.0
+
+Review custom `policyExclude` overrides: kinds were previously ignored and literal
+names also matched hyphenated suffixes. Include intended controller kinds explicitly
+and use `[demo-worker, demo-worker-*]` to cover both a controller and its generated
+Pods. Bundled exclusions have been adjusted. Newly evaluated resources can produce
+Audit failures or be blocked in Enforce mode.
+
 ## CI
 
 Run the exception matching regression tests with Helm, Kyverno CLI and Python 3:
