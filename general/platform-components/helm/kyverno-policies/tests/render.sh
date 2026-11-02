@@ -48,4 +48,8 @@ helm template . -f values.yaml \
   --show-only templates/policy-exceptions.yaml \
   > /tmp/kyverno-policy-exceptions.yaml
 
+# The shared exclusion must cover both escalation policies.
+grep -q -- '- name: disallow-privilege-escalation-itgrundschutz$' /tmp/kyverno-policy-exceptions.yaml
+grep -q -- '- name: disallow-privilege-escalation$' /tmp/kyverno-policy-exceptions.yaml
+
 echo "All Helm templates rendered successfully!"
