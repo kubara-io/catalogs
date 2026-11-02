@@ -36,6 +36,12 @@ kyverno:
       additionalLabels:
         monitoring.instance: "{{ .cluster.name }}-{{ .cluster.stage }}"
   reportsController:
+    rbac:
+      clusterRole:
+        extraResources:
+          - apiGroups: [traefik.io]
+            resources: [tlsoptions]
+            verbs: [get, list, watch]
     serviceMonitor:
       {{- if (eq (index .cluster.services "kube-prometheus-stack" "status") "enabled") }}
       enabled: true
