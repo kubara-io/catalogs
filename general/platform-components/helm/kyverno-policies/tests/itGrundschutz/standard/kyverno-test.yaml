@@ -8,6 +8,7 @@ policies:
 resources:
   - resources/pods.yaml
   - resources/namespaces.yaml
+  - resources/probe-workloads.yaml
 results:
   - policy: disallow-privileged-containers-itgrundschutz
     rule: privileged-containers
@@ -75,3 +76,99 @@ results:
     kind: Namespace
     generatedResource: resources/generated-netpol.yaml
     result: pass
+  - policy: require-pod-probes
+    rule: validate-probes
+    resources:
+      - scope-pod-without-probe
+    kind: Pod
+    result: fail
+  - policy: require-pod-probes
+    rule: validate-probes
+    resources:
+      - scope-pod-with-probe
+    kind: Pod
+    result: pass
+  - policy: require-pod-probes
+    rule: validate-probes
+    resources:
+      - scope-deployment-without-probe
+    kind: Deployment
+    result: fail
+  - policy: require-pod-probes
+    rule: validate-probes
+    resources:
+      - scope-deployment-with-probe
+    kind: Deployment
+    result: pass
+  - policy: require-pod-probes
+    rule: validate-probes
+    resources:
+      - scope-statefulset-without-probe
+    kind: StatefulSet
+    result: fail
+  - policy: require-pod-probes
+    rule: validate-probes
+    resources:
+      - scope-statefulset-with-probe
+    kind: StatefulSet
+    result: pass
+  - policy: require-pod-probes
+    rule: validate-probes
+    resources:
+      - scope-daemonset-without-probe
+    kind: DaemonSet
+    result: fail
+  - policy: require-pod-probes
+    rule: validate-probes
+    resources:
+      - scope-daemonset-with-probe
+    kind: DaemonSet
+    result: pass
+  - policy: require-pod-probes
+    rule: validate-probes
+    resources:
+      - scope-job-without-probe
+    kind: Job
+    result: skip
+  - policy: require-pod-probes
+    rule: validate-probes
+    resources:
+      - scope-job-with-probe
+    kind: Job
+    result: skip
+  - policy: require-pod-probes
+    rule: validate-probes
+    resources:
+      - scope-cronjob-without-probe
+    kind: CronJob
+    result: skip
+  - policy: require-pod-probes
+    rule: validate-probes
+    resources:
+      - scope-cronjob-with-probe
+    kind: CronJob
+    result: skip
+  - policy: require-pod-probes
+    rule: validate-probes
+    resources:
+      - scope-job-pod-never
+    kind: Pod
+    result: skip
+  - policy: require-pod-probes
+    rule: validate-probes
+    resources:
+      - scope-job-pod-onfailure
+    kind: Pod
+    result: skip
+  - policy: require-pod-probes
+    rule: validate-probes
+    resources:
+      - scope-standalone-never
+    kind: Pod
+    result: fail
+  - policy: require-pod-probes
+    rule: validate-probes
+    resources:
+      - scope-standalone-onfailure
+    kind: Pod
+    result: fail
