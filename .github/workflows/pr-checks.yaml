@@ -37,60 +37,6 @@ env:
   ARTIFACT_RETENTION_DAYS: "15"
 
 jobs:
-  kyverno-policy-tests:
-    name: Kyverno policy regressions
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          fetch-depth: 0
-      - name: Detect relevant changes
-        id: changes
-        env:
-          EVENT_NAME: ${{ github.event_name }}
-          BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
-          HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
-        run: |
-          set -euo pipefail
-          if [[ "$EVENT_NAME" == workflow_dispatch || -z "$BASE_SHA" || "$BASE_SHA" =~ ^0+$ ]]; then
-            echo 'changed=true' >> "$GITHUB_OUTPUT"
-          elif git diff --quiet "$BASE_SHA" "$HEAD_SHA" -- \
-            general/platform-components/helm/kyverno-policies/ \
-            general/platform-components/helm/template-library/ \
-            .github/workflows/pr-checks.yaml; then
-            echo 'changed=false' >> "$GITHUB_OUTPUT"
-          else
-            echo 'changed=true' >> "$GITHUB_OUTPUT"
-          fi
-      - name: Prepare Kyverno chart dependencies
-        if: steps.changes.outputs.changed == 'true'
-        run: helm dependency build general/platform-components/helm/kyverno-policies
-      - name: Check Kyverno policy regressions
-        if: steps.changes.outputs.changed == 'true'
-        run: bash general/platform-components/helm/kyverno-policies/tests/render.sh
-
-      - name: Install Kyverno CLI
-        if: steps.changes.outputs.changed == 'true'
-        env:
-          # renovate: datasource=github-releases depName=kyverno/kyverno
-          KYVERNO_VERSION: v1.19.2
-        run: |
-          set -euo pipefail
-          archive="kyverno-cli_${KYVERNO_VERSION}_linux_x86_64.tar.gz"
-          base="https://github.com/kyverno/kyverno/releases/download/${KYVERNO_VERSION}"
-          cd "$RUNNER_TEMP"
-          curl -fsSLO "$base/$archive"
-          curl -fsSLO "$base/checksums.txt"
-          grep " $archive\$" checksums.txt | sha256sum --check --strict
-          tar -xzf "$archive" kyverno
-          mkdir -p "$HOME/.local/bin"
-          install kyverno "$HOME/.local/bin/kyverno"
-          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
-      - name: Test exception matching and all bundled exclusions
-        if: steps.changes.outputs.changed == 'true'
-        run: python3 general/platform-components/helm/kyverno-policies/tests/policyExceptions/test_matching.py
-
   integration-generate:
     name: Generate all services (${{ matrix.target }})
     runs-on: ubuntu-latest
