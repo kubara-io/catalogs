@@ -8,19 +8,19 @@ kyverno-policies:
     disallow-host-path:
       any:
         - resources:
-            kinds: [Pod]
-            names: [kube-prometheus-stack-prometheus-node-exporter-*]
+            kinds: [Pod, Deployment, DaemonSet, StatefulSet, ReplicaSet, ReplicationController, Job, CronJob]
+            names: [kube-prometheus-stack-prometheus-node-exporter, kube-prometheus-stack-prometheus-node-exporter-*]
             namespaces: [kube-prometheus-stack]
         - resources:
-            kinds: [Pod]
-            names: [loki-alloy-*]
+            kinds: [Pod, Deployment, DaemonSet, StatefulSet, ReplicaSet, ReplicationController, Job, CronJob]
+            names: [loki-alloy, loki-alloy-*]
             namespaces: [loki]
         - resources:
-            kinds: [Pod]
+            kinds: [Pod, Deployment, DaemonSet, StatefulSet, ReplicaSet, ReplicationController, Job, CronJob]
             namespaces: [kube-system, longhorn]
         - resources:
-            kinds: [Pod]
-            names: [node-agent-*]
+            kinds: [Pod, Deployment, DaemonSet, StatefulSet, ReplicaSet, ReplicationController, Job, CronJob]
+            names: [node-agent, node-agent-*]
             namespaces: [velero]
     certificate-duration-max-100days:
       any:
@@ -45,153 +45,153 @@ kyverno-policies:
     require-readonly-root-filesystem:
       any:
         - resources:
-            kinds: [Pod, Deployment, DaemonSet, StatefulSet, Job, CronJob]
+            kinds: [Pod, Deployment, DaemonSet, StatefulSet, ReplicaSet, ReplicationController, Job, CronJob]
             names: [traefik, traefik-*]
             namespaces: [traefik]
         - resources:
-            kinds: [Pod, Deployment, DaemonSet, StatefulSet, Job, CronJob]
+            kinds: [Pod, Deployment, DaemonSet, StatefulSet, ReplicaSet, ReplicationController, Job, CronJob]
             names: [kube-prometheus-stack-grafana, kube-prometheus-stack-grafana-*]
             namespaces: [kube-prometheus-stack]
         - resources:
-            kinds: [Pod, Deployment, DaemonSet, StatefulSet, Job, CronJob]
+            kinds: [Pod, Deployment, DaemonSet, StatefulSet, ReplicaSet, ReplicationController, Job, CronJob]
             namespaces: [kube-system, longhorn]
         - resources:
-            kinds: [Pod, Deployment, DaemonSet, StatefulSet, Job, CronJob]
+            kinds: [Pod, Deployment, DaemonSet, StatefulSet, ReplicaSet, ReplicationController, Job, CronJob]
             names: [metallb-speaker, metallb-speaker-*]
             namespaces: [metallb]
     disallow-host-ports:
       any:
         - resources:
-            kinds: [Pod]
-            names: [kube-prometheus-stack-prometheus-node-exporter-*]
+            kinds: [Pod, Deployment, DaemonSet, StatefulSet, ReplicaSet, ReplicationController, Job, CronJob]
+            names: [kube-prometheus-stack-prometheus-node-exporter, kube-prometheus-stack-prometheus-node-exporter-*]
             namespaces: [kube-prometheus-stack]
         - resources:
-            kinds: [Pod]
+            kinds: [Pod, Deployment, DaemonSet, StatefulSet, ReplicaSet, ReplicationController, Job, CronJob]
             namespaces: [kube-system]
         - resources:
-            kinds: [Pod]
-            names: [metallb-speaker-*]
+            kinds: [Pod, Deployment, DaemonSet, StatefulSet, ReplicaSet, ReplicationController, Job, CronJob]
+            names: [metallb-speaker, metallb-speaker-*]
             namespaces: [metallb]
     disallow-host-namespaces:
       any:
         - resources:
-            kinds: [Pod]
-            names: [kube-prometheus-stack-prometheus-node-exporter-*]
+            kinds: [Pod, Deployment, DaemonSet, StatefulSet, ReplicaSet, ReplicationController, Job, CronJob]
+            names: [kube-prometheus-stack-prometheus-node-exporter, kube-prometheus-stack-prometheus-node-exporter-*]
             namespaces: [kube-prometheus-stack]
         - resources:
-            kinds: [Pod]
-            names: [metallb-speaker-*]
+            kinds: [Pod, Deployment, DaemonSet, StatefulSet, ReplicaSet, ReplicationController, Job, CronJob]
+            names: [metallb-speaker, metallb-speaker-*]
             namespaces: [metallb]
         - resources:
-            kinds: [Pod]
+            kinds: [Pod, Deployment, DaemonSet, StatefulSet, ReplicaSet, ReplicationController, Job, CronJob]
             namespaces: [kube-system]
     disallow-privileged-containers:
       any:
         - resources:
-            kinds: [Pod, Deployment, DaemonSet, StatefulSet, Job, CronJob]
+            kinds: [Pod, Deployment, DaemonSet, StatefulSet, ReplicaSet, ReplicationController, Job, CronJob]
             namespaces: [longhorn, kube-system]
     disallow-privilege-escalation:
       any:
         - resources:
-            kinds: [Pod, Deployment, DaemonSet, StatefulSet, Job, CronJob]
+            kinds: [Pod, Deployment, DaemonSet, StatefulSet, ReplicaSet, ReplicationController, Job, CronJob]
             namespaces: [kube-system, longhorn]
         - resources:
-            kinds: [Pod, Deployment, DaemonSet, StatefulSet, Job, CronJob]
+            kinds: [Pod, Deployment, DaemonSet, StatefulSet, ReplicaSet, ReplicationController, Job, CronJob]
             names: [metallb-speaker, metallb-speaker-*]
             namespaces: [metallb]
     disallow-capabilities:
       any:
         - resources:
-            kinds: [Pod]
+            kinds: [Pod, Deployment, DaemonSet, StatefulSet, ReplicaSet, ReplicationController, Job, CronJob]
             namespaces: [kube-system, longhorn]
         - resources:
-            kinds: [Pod]
-            names: [metallb-speaker-*]
+            kinds: [Pod, Deployment, DaemonSet, StatefulSet, ReplicaSet, ReplicationController, Job, CronJob]
+            names: [metallb-speaker, metallb-speaker-*]
             namespaces: [metallb]
     disallow-capabilities-strict:
       any:
         - resources:
-            kinds: [Pod]
+            kinds: [Pod, Deployment, DaemonSet, StatefulSet, ReplicaSet, ReplicationController, Job, CronJob]
             namespaces: [kube-system, longhorn]
         - resources:
-            kinds: [Pod]
-            names: [metallb-speaker-*]
+            kinds: [Pod, Deployment, DaemonSet, StatefulSet, ReplicaSet, ReplicationController, Job, CronJob]
+            names: [metallb-speaker, metallb-speaker-*]
             namespaces: [metallb]
     require-requests-limits:
       any:
         - resources:
-            kinds: [Pod, Deployment, DaemonSet, StatefulSet, Job, CronJob]
+            kinds: [Pod, Deployment, DaemonSet, StatefulSet, ReplicaSet, ReplicationController, Job, CronJob]
             namespaces:
               - longhorn
               - kube-system
         # request-limits for metallb-speaker initContainers cannot be set in the official helm chart
         - resources:
-            kinds: [Pod, Deployment, DaemonSet, StatefulSet, Job, CronJob]
+            kinds: [Pod, Deployment, DaemonSet, StatefulSet, ReplicaSet, ReplicationController, Job, CronJob]
             names: [metallb-speaker, metallb-speaker-*]
             namespaces: [metallb]
     restrict-volume-types:
       any:
         - resources:
-            kinds: [Pod]
-            names: [kube-prometheus-stack-prometheus-node-exporter-*]
+            kinds: [Pod, Deployment, DaemonSet, StatefulSet, ReplicaSet, ReplicationController, Job, CronJob]
+            names: [kube-prometheus-stack-prometheus-node-exporter, kube-prometheus-stack-prometheus-node-exporter-*]
             namespaces: [kube-prometheus-stack]
         - resources:
-            kinds: [Pod]
-            names: [loki-alloy-*]
+            kinds: [Pod, Deployment, DaemonSet, StatefulSet, ReplicaSet, ReplicationController, Job, CronJob]
+            names: [loki-alloy, loki-alloy-*]
             namespaces: [loki]
         - resources:
-            kinds: [Pod]
+            kinds: [Pod, Deployment, DaemonSet, StatefulSet, ReplicaSet, ReplicationController, Job, CronJob]
             namespaces: [kube-system, longhorn]
     require-run-as-non-root-user:
       any:
         - resources:
-            kinds: [Pod]
+            kinds: [Pod, Deployment, DaemonSet, StatefulSet, ReplicaSet, ReplicationController, Job, CronJob]
             namespaces: [kube-system]
         - resources:
-            kinds: [Pod]
-            names: [longhorn-driver-deployer-*]
+            kinds: [Pod, Deployment, DaemonSet, StatefulSet, ReplicaSet, ReplicationController, Job, CronJob]
+            names: [longhorn-driver-deployer, longhorn-driver-deployer-*]
             namespaces: [longhorn]
         - resources:
-            kinds: [Pod]
-            names: [loki-alloy-*]
+            kinds: [Pod, Deployment, DaemonSet, StatefulSet, ReplicaSet, ReplicationController, Job, CronJob]
+            names: [loki-alloy, loki-alloy-*]
             namespaces: [loki]
     require-run-as-nonroot:
       any:
         - resources:
-            kinds: [Pod]
+            kinds: [Pod, Deployment, DaemonSet, StatefulSet, ReplicaSet, ReplicationController, Job, CronJob]
             namespaces: [kube-system, longhorn]
         - resources:
-            kinds: [Pod]
-            names: [metallb-speaker-*]
+            kinds: [Pod, Deployment, DaemonSet, StatefulSet, ReplicaSet, ReplicationController, Job, CronJob]
+            names: [metallb-speaker, metallb-speaker-*]
             namespaces: [metallb]
         - resources:
-            kinds: [Pod]
-            names: [loki-alloy-*]
+            kinds: [Pod, Deployment, DaemonSet, StatefulSet, ReplicaSet, ReplicationController, Job, CronJob]
+            names: [loki-alloy, loki-alloy-*]
             namespaces: [loki]
     restrict-seccomp-strict:
       any:
         - resources:
-            kinds: [Pod]
+            kinds: [Pod, Deployment, DaemonSet, StatefulSet, ReplicaSet, ReplicationController, Job, CronJob]
             namespaces: [kube-system, longhorn, metallb]
     require-pod-probes:
       any:
         - resources:
-            kinds: [Pod, Deployment, DaemonSet, StatefulSet, Job, CronJob]
+            kinds: [Pod, Deployment, DaemonSet, StatefulSet, ReplicaSet, ReplicationController, Job, CronJob]
             namespaces: [kube-system, longhorn, loki, kube-prometheus-stack]
         - resources:
-            kinds: [Pod, Deployment, DaemonSet, StatefulSet, Job, CronJob]
+            kinds: [Pod, Deployment, DaemonSet, StatefulSet, ReplicaSet, ReplicationController, Job, CronJob]
             names: [metallb-speaker, metallb-speaker-*]
             namespaces: [metallb]
         - resources:
-            kinds: [Pod, Deployment, DaemonSet, StatefulSet, Job, CronJob]
+            kinds: [Pod, Deployment, DaemonSet, StatefulSet, ReplicaSet, ReplicationController, Job, CronJob]
             names: [cert-manager-cainjector, cert-manager-cainjector-*]
             namespaces: [cert-manager]
         - resources:
-            kinds: [Pod, Deployment, DaemonSet, StatefulSet, Job, CronJob]
+            kinds: [Pod, Deployment, DaemonSet, StatefulSet, ReplicaSet, ReplicationController, Job, CronJob]
             names: [external-secrets, external-secrets-*]
             namespaces: [external-secrets]
         - resources:
-            kinds: [Pod, Deployment, DaemonSet, StatefulSet, Job, CronJob]
+            kinds: [Pod, Deployment, DaemonSet, StatefulSet, ReplicaSet, ReplicationController, Job, CronJob]
             names:
               - kyverno-background-controller
               - kyverno-background-controller-*
@@ -201,11 +201,11 @@ kyverno-policies:
               - kyverno-migrate-resources-*
             namespaces: [kyverno]
         - resources:
-            kinds: [Pod, Deployment, DaemonSet, StatefulSet, Job, CronJob]
+            kinds: [Pod, Deployment, DaemonSet, StatefulSet, ReplicaSet, ReplicationController, Job, CronJob]
             names: [node-agent, node-agent-*]
             namespaces: [velero]
         - resources:
-            kinds: [Pod, Deployment, DaemonSet, StatefulSet, Job, CronJob]
+            kinds: [Pod, Deployment, DaemonSet, StatefulSet, ReplicaSet, ReplicationController, Job, CronJob]
             names:
               - dex-restarter
               - dex-restarter-*

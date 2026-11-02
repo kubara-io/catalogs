@@ -24,3 +24,21 @@ jobs:
         run: bash general/platform-components/helm/kyverno-policies/tests/render.sh
       - name: Lint chart
         run: helm lint general/platform-components/helm/kyverno-policies
+      - name: Install Kyverno CLI
+        env:
+          # renovate: datasource=github-releases depName=kyverno/kyverno
+          KYVERNO_VERSION: v1.19.2
+        run: |
+          set -euo pipefail
+          archive="kyverno-cli_${KYVERNO_VERSION}_linux_x86_64.tar.gz"
+          base="https://github.com/kyverno/kyverno/releases/download/${KYVERNO_VERSION}"
+          cd "$RUNNER_TEMP"
+          curl -fsSLO "$base/$archive"
+          curl -fsSLO "$base/checksums.txt"
+          grep " $archive\$" checksums.txt | sha256sum --check --strict
+          tar -xzf "$archive" kyverno
+          mkdir -p "$HOME/.local/bin"
+          install kyverno "$HOME/.local/bin/kyverno"
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+      - name: Test exception matching and all bundled exclusions
+        run: python3 general/platform-components/helm/kyverno-policies/tests/policyExceptions/test_matching.py
