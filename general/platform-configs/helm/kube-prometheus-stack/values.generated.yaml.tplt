@@ -21,6 +21,7 @@ kube-prometheus-stack:
     serviceMonitor:
       additionalLabels:
         monitoring.instance: {{ .cluster.name }}-{{ .cluster.stage }}
+  prometheus-node-exporter:
     prometheus:
       monitor:
         additionalLabels:
@@ -182,6 +183,7 @@ kube-prometheus-stack:
       userKey: admin-user
       passwordKey: admin-password
     serviceMonitor:
+      path: /grafana/metrics
       labels:
         monitoring.instance: {{ .cluster.name }}-{{ .cluster.stage }}
     ingress:

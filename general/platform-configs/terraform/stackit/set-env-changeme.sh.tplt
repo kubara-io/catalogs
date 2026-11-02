@@ -31,7 +31,6 @@ export TF_VAR_oauth2_client_secret=""
 #    random_password.oauth2_cookie_secret
 
 
-# Imported from the .env
-# Please avoid setting this manually and use:
-# $ kubara generate for this instead
-export TF_VAR_image_pull_secret="{{ .env.DockerconfigBase64 }}"
+# (optional) add your registry secret (docker config base64 encoded)
+# Used by Secrets Manager / Vault layer.
+export TF_VAR_image_pull_secret=""

@@ -23,7 +23,7 @@ spec:
     background:
       enabled: {{ dig "bestPractices" "requirePodDisruptionBudget" "enableBackgroundScanning" true (merge .Values) }}
   validationActions:
-    - {{ $action := dig "bestPractices" "requirePodDisruptionBudget" "actionOverride" "Audit" (merge .Values) }}{{ if eq $action "Enforce" }}Deny{{ else }}{{ $action }}{{ end }}
+    - {{ $action := dig "bestPractices" "requirePodDisruptionBudget" "actionOverride" (dig "bestPractices" "mode" "Audit" (merge .Values)) (merge .Values) }}{{ if eq $action "Enforce" }}Deny{{ else }}{{ $action }}{{ end }}
   matchConstraints:
     resourceRules:
       - apiGroups:

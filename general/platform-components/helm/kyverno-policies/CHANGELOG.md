@@ -12,6 +12,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - Match DNS zones case-insensitively in both `dnsNames` and `commonName`.
 
+## [1.0.1] - 2026-10-21
+### Changed
+- Updated chart dependency version: kyverno-policies 3.9.1 → 3.9.2
+
 ## [1.0.0] - 2026-09-22
 ### Changed
 - Migrated all policies from legacy `ClusterPolicy` (`kyverno.io/v1`) to Kyverno 1.17 CEL-based CRDs (`policies.kyverno.io/v1`):

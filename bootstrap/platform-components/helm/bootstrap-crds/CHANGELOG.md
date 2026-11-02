@@ -4,6 +4,110 @@ All notable changes to this chart will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this chart adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.0] - 2026-11-02
+### Changed
+- Updated chart dependency version: kube-prometheus-stack 92.16.1 → 92.17.0
+
+## [1.0.1] - 2026-10-30
+### Changed
+- Updated chart dependency version: kube-prometheus-stack 92.16.0 → 92.16.1
+
+## [1.1.0] - 2026-10-29
+### Changed
+- Updated chart dependency version: kube-prometheus-stack 92.15.0 → 92.16.0
+
+## [1.1.0] - 2026-10-29
+### Changed
+- Updated chart dependency version: kube-prometheus-stack 92.14.1 → 92.15.0
+
+## [1.0.1] - 2026-10-27
+### Changed
+- Updated chart dependency version: kube-prometheus-stack 92.14.0 → 92.14.1
+
+## [1.1.0] - 2026-10-26
+### Changed
+- Updated chart dependency version: kube-prometheus-stack 92.13.1 → 92.14.0
+
+## [1.1.0] - 2026-10-26
+### Changed
+- Updated chart dependency version: kube-prometheus-stack 92.11.0 → 92.13.1
+
+## [1.0.1] - 2026-10-23
+### Changed
+- Updated chart dependency version: cert-manager v1.21.2 → v1.21.3
+
+## [1.1.0] - 2026-10-23
+### Changed
+- Updated chart dependency version: external-secrets 2.13.0 → 2.14.0
+
+## [1.1.0] - 2026-10-20
+### Changed
+- Updated chart dependency version: kube-prometheus-stack 92.10.1 → 92.11.0
+
+## [1.0.1] - 2026-10-16
+### Changed
+- Updated chart dependency version: kube-prometheus-stack 92.10.0 → 92.10.1
+
+## [1.1.0] - 2026-10-16
+### Changed
+- Updated chart dependency version: kube-prometheus-stack 92.9.0 → 92.10.0
+
+## [1.1.0] - 2026-10-16
+### Changed
+- Updated chart dependency version: external-secrets 2.12.0 → 2.13.0
+
+## [1.1.0] - 2026-10-15
+### Changed
+- Updated chart dependency version: kube-prometheus-stack 92.8.0 → 92.9.0
+
+## [1.1.0] - 2026-10-15
+### Changed
+- Updated chart dependency version: kube-prometheus-stack 92.7.0 → 92.8.0
+
+## [1.1.0] - 2026-10-14
+### Changed
+- Updated chart dependency version: kube-prometheus-stack 92.6.0 → 92.7.0
+
+## [1.1.0] - 2026-10-14
+### Changed
+- Updated chart dependency version: kube-prometheus-stack 92.4.0 → 92.6.0
+
+## [1.1.0] - 2026-10-14
+### Changed
+- Updated chart dependency version: kube-prometheus-stack 92.3.1 → 92.4.0
+
+## [1.0.1] - 2026-10-13
+### Changed
+- Updated chart dependency version: kube-prometheus-stack 92.3.0 → 92.3.1
+
+## [1.1.0] - 2026-10-12
+### Changed
+- Updated chart dependency version: kube-prometheus-stack 92.2.0 → 92.3.0
+
+## [1.1.0] - 2026-10-08
+### Changed
+- Updated chart dependency version: kube-prometheus-stack 92.1.1 → 92.2.0
+
+## [1.0.1] - 2026-10-08
+### Changed
+- Updated chart dependency version: kube-prometheus-stack 92.1.0 → 92.1.1
+
+## [1.1.0] - 2026-10-07
+### Changed
+- Updated chart dependency version: kube-prometheus-stack 92.0.0 → 92.1.0
+
+## [2.0.0] - 2026-10-06
+### Changed
+- Updated chart dependency version: kube-prometheus-stack 91.9.0 → 92.0.0
+
+## [1.1.0] - 2026-10-06
+### Changed
+- Updated chart dependency version: external-secrets 2.11.0 → 2.12.0
+
+## [1.1.0] - 2026-10-02
+### Changed
+- Updated chart dependency version: kube-prometheus-stack 91.8.2 → 91.9.0
+
 ## [1.0.1] - 2026-09-29
 ### Changed
 - Updated chart dependency version: kube-prometheus-stack 91.8.1 → 91.8.2

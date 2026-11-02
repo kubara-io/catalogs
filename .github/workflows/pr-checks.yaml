@@ -26,14 +26,14 @@ env:
   # PR, or commit SHA); a non-release ref switches CLI acquisition to a source
   # build (see "Determine kubara acquisition mode" below).
   # renovate: datasource=github-releases depName=kubara-io/kubara
-  KUBARA_REF: ${{ inputs.kubara_ref || 'v0.16.0' }}
+  KUBARA_REF: ${{ inputs.kubara_ref || 'v0.17.0' }}
   OUTPUT_GENERATED_DIR: ${{ github.workspace }}/output-generated
   REPORT_DIR: ${{ github.workspace }}/reports
   RENDER_DIR: ${{ github.workspace }}/rendered
   # renovate: datasource=github-releases depName=yannh/kubeconform
   KUBECONFORM_VERSION: "v0.8.0"
   # renovate: datasource=github-releases depName=terraform-linters/tflint
-  TFLINT_VERSION: "v0.64.0"
+  TFLINT_VERSION: "v0.65.0"
   ARTIFACT_RETENTION_DAYS: "15"
 
 jobs:
@@ -153,7 +153,7 @@ jobs:
           velero-s3-url: ${{ matrix.velero_s3_url }}
 
       - name: Upload generated artifacts
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: kubara-generated-${{ matrix.target }}-${{ github.run_attempt }}-${{ github.sha }}-${{ github.run_number }}
           retention-days: ${{ env.ARTIFACT_RETENTION_DAYS }}
@@ -182,7 +182,7 @@ jobs:
           sparse-checkout: .github/helm-profiles
 
       - name: Download generated artifacts
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: kubara-generated-${{ matrix.target }}-${{ github.run_attempt }}-${{ github.sha }}-${{ github.run_number }}
 
@@ -219,7 +219,7 @@ jobs:
         run: .scripts/helm-checks.sh
 
       - name: Upload Helm validation results
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: always()
         with:
           name: helm-validation-${{ matrix.target }}-${{ github.run_attempt }}-${{ github.sha }}-${{ github.run_number }}
@@ -243,17 +243,17 @@ jobs:
           sparse-checkout: .scripts
 
       - name: Download generated artifacts
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: kubara-generated-${{ matrix.target }}-${{ github.run_attempt }}-${{ github.sha }}-${{ github.run_number }}
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@dfe3c3f87815947d99a8997f908cb6525fc44e9e # v4.0.1
         with:
-          terraform_version: v1.16.4
+          terraform_version: v1.17.1
 
       - name: Setup TFLint
-        uses: terraform-linters/setup-tflint@1cf010d3c7aef302051ccdb68c14c5dc2efa34ef # v6.3.1
+        uses: terraform-linters/setup-tflint@6ffdbaa3be476b3431f7275c26966ef32ff60337 # v6.3.2
         with:
           tflint_version: ${{ env.TFLINT_VERSION }}
 
@@ -261,7 +261,7 @@ jobs:
         run: .scripts/terraform-checks.sh
 
       - name: Upload Terraform validation results
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: always()
         with:
           name: terraform-validation-${{ matrix.target }}-${{ github.run_attempt }}-${{ github.sha }}-${{ github.run_number }}
@@ -291,7 +291,7 @@ jobs:
             general
 
       - name: Download generated kubara artifacts
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: kubara-generated-${{ matrix.target }}-${{ github.run_attempt }}-${{ github.sha }}-${{ github.run_number }}
 
@@ -324,7 +324,7 @@ jobs:
           fi
 
       - name: Upload image list
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: always()
         with:
           name: container-images-${{ matrix.catalog }}-${{ matrix.target }}-${{ github.run_attempt }}-${{ github.sha }}-${{ github.run_number }}

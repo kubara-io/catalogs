@@ -3,6 +3,9 @@ alloy:
   alloy:
     configMap:
       content: |-
+        logging {
+          format = "json"
+        }
         discovery.kubernetes "pod" {
           role = "pod"
         }
@@ -100,6 +103,9 @@ alloy:
       seccompProfile:
         type: RuntimeDefault
 loki:
+  memcachedExporter:
+    extraArgs:
+      log.format: json
   # the loki.storage.bucketNames.chunks value is only added because of a templating bug in loki; actual value should be set as loki.loki.storage.bucketNames.chunks
   monitoring:
     serviceMonitor:
@@ -111,6 +117,9 @@ loki:
   test:
     enabled: false
   gateway:
+    nginxConfig:
+      logFormat: |-
+        main escape=json '{"time":"$time_iso8601","remote_addr":"$remote_addr","remote_user":"$remote_user","status":$status,"request":"$request","body_bytes_sent":$body_bytes_sent,"http_referer":"$http_referer","http_user_agent":"$http_user_agent","http_x_forwarded_for":"$http_x_forwarded_for"}';
     enabled: false  # for the canary
   ingress:
     enabled: false
@@ -157,6 +166,8 @@ loki:
     dnsService: kube-dns
   deploymentMode: SimpleScalable
   loki:
+    server:
+      log_format: json
     podSecurityContext:
       fsGroup: 10001
       runAsGroup: 10001

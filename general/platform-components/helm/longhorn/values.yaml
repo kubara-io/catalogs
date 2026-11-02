@@ -4,6 +4,12 @@ traefikPathRewrite:
   enabled: false
   pathPrefix: /longhorn
 longhorn:
+  longhornManager:
+    log:
+      format: json
+  longhornDriver:
+    log:
+      format: json
   ingress:
     enabled: false
   longhornUI:

@@ -4,6 +4,106 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [7.16.0] - 2026-11-02
+### Changed
+- Updated chart dependency version: kube-prometheus-stack 92.16.1 → 92.17.0
+
+## [7.15.1] - 2026-10-30
+### Changed
+- Updated chart dependency version: kube-prometheus-stack 92.16.0 → 92.16.1
+
+## [7.15.0] - 2026-10-29
+### Changed
+- Updated chart dependency version: kube-prometheus-stack 92.15.0 → 92.16.0
+
+## [7.14.0] - 2026-10-29
+### Changed
+- Updated chart dependency version: kube-prometheus-stack 92.14.1 → 92.15.0
+
+## [7.13.1] - 2026-10-27
+### Changed
+- Updated chart dependency version: kube-prometheus-stack 92.14.0 → 92.14.1
+
+## [7.13.0] - 2026-10-26
+### Changed
+- Updated chart dependency version: kube-prometheus-stack 92.13.1 → 92.14.0
+
+## [7.12.0] - 2026-10-26
+### Changed
+- Updated chart dependency version: kube-prometheus-stack 92.11.0 → 92.13.1
+
+## [7.11.2] - 2026-10-22
+### Changed
+- Updated chart dependency version: prometheus-blackbox-exporter 11.20.1 → 11.20.2
+
+## [7.11.1] - 2026-10-21
+### Changed
+- Updated chart dependency version: prometheus-blackbox-exporter 11.20.0 → 11.20.1
+
+## [7.11.0] - 2026-10-20
+### Changed
+- Updated chart dependency version: kube-prometheus-stack 92.10.1 → 92.11.0
+
+## [7.10.1] - 2026-10-16
+### Changed
+- Updated chart dependency version: kube-prometheus-stack 92.10.0 → 92.10.1
+
+## [7.10.0] - 2026-10-16
+### Changed
+- Updated chart dependency version: kube-prometheus-stack 92.9.0 → 92.10.0
+
+## [7.9.0] - 2026-10-15
+### Changed
+- Updated chart dependency version: kube-prometheus-stack 92.8.0 → 92.9.0
+
+## [7.8.0] - 2026-10-15
+### Changed
+- Updated chart dependency version: kube-prometheus-stack 92.7.0 → 92.8.0
+
+## [7.7.0] - 2026-10-14
+### Changed
+- Updated chart dependency version: kube-prometheus-stack 92.6.0 → 92.7.0
+
+## [7.6.0] - 2026-10-14
+### Changed
+- Updated chart dependency version: kube-prometheus-stack 92.4.0 → 92.6.0
+
+## [7.5.0] - 2026-10-14
+### Changed
+- Updated chart dependency version: kube-prometheus-stack 92.3.1 → 92.4.0
+
+## [7.4.1] - 2026-10-13
+### Changed
+- Updated chart dependency version: kube-prometheus-stack 92.3.0 → 92.3.1
+
+## [7.4.0] - 2026-10-12
+### Changed
+- Updated chart dependency version: kube-prometheus-stack 92.2.0 → 92.3.0
+
+## [7.3.0] - 2026-10-08
+### Changed
+- Updated chart dependency version: kube-prometheus-stack 92.1.1 → 92.2.0
+
+## [7.2.1] - 2026-10-08
+### Changed
+- Updated chart dependency version: kube-prometheus-stack 92.1.0 → 92.1.1
+
+## [7.2.0] - 2026-10-07
+### Changed
+- Updated chart dependency version: prometheus-blackbox-exporter 11.19.1 → 11.20.0
+
+## [7.1.0] - 2026-10-07
+### Changed
+- Updated chart dependency version: kube-prometheus-stack 92.0.0 → 92.1.0
+
+## [7.0.0] - 2026-10-06
+### Changed
+- Updated chart dependency version: kube-prometheus-stack 91.9.0 → 92.0.0
+
+## [6.6.0] - 2026-10-02
+### Changed
+- Updated chart dependency version: kube-prometheus-stack 91.8.2 → 91.9.0
+
 ## [6.5.2] - 2026-09-29
 ### Changed
 - Updated chart dependency version: kube-prometheus-stack 91.8.1 → 91.8.2

@@ -3,7 +3,7 @@ apiVersion: v2
 name: metrics-server
 description: Umbrella Chart for metrics-server
 type: application
-version: 0.2.2
+version: 0.2.3
 dependencies:
   - name: template-library
     repository: file://../template-library
