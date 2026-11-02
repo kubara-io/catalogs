@@ -5,6 +5,19 @@
 {{- $oauth2ProxyEnabled := eq (index .cluster.services "oauth2-proxy" "status") "enabled" }}
 {{- $tCloudPublicCCE := and .cluster.terraform (eq .cluster.terraform.provider "t-cloud-public") (eq .cluster.terraform.kubernetesType "cce") }}
 traefik:
+  ports:
+    web:
+      allowACMEByPass: true
+      http:
+        redirections:
+          entryPoint:
+            to: websecure
+            scheme: https
+            permanent: true
+    websecure:
+      http:
+        middlewares:
+          - traefik-hsts-headers@kubernetescrd
   deployment:
     imagePullSecrets:
       - name: image-pull-secret
@@ -27,8 +40,16 @@ traefik:
       {{- else }}
       enabled: false
       {{- end }}
-  {{- if or $oauth2ProxyEnabled $tCloudPublicCCE }}
   extraObjects:
+    - apiVersion: traefik.io/v1alpha1
+      kind: Middleware
+      metadata:
+        name: hsts-headers
+        namespace: traefik
+      spec:
+        headers:
+          stsSeconds: 31536000
+          forceSTSHeader: true
     {{- if $oauth2ProxyEnabled }}
     - apiVersion: traefik.io/v1alpha1
       kind: Middleware
@@ -65,7 +86,6 @@ traefik:
           regex: "^/openbao/(.*)"
           replacement: "/${1}"
     {{- end }}
-  {{- end }}
   {{- if $tCloudPublicCCE }}
   service:
     annotations:

@@ -5,7 +5,7 @@ dexRestarter:
   enabled: true
   image:
     repository: "alpine/kubectl"
-    tag: "1.37.1"
+    tag: "1.37.2"
   maxAttempts: "30"
   interval: "10"  # in seconds
   secretName: "oauth2-credentials"
@@ -37,6 +37,8 @@ argo-cd:
   notifications:
     enabled: false
   global:
+    logging:
+      format: json
     env:
       - name: "TZ"
         value: "Europe/Berlin"

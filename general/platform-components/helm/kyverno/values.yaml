@@ -1,6 +1,11 @@
 ---
 namespace: {}
 kyverno:
+  global:
+    crdWatcher: true
+  features:
+    logging:
+      format: json
   crds:
     migration:
       podResources:

@@ -21,7 +21,7 @@ spec:
     background:
       enabled: {{ dig "argoCD" "preventDefaultProject" "enableBackgroundScanning" true (merge .Values) }}
   validationActions:
-    - {{ $action := dig "argoCD" "preventDefaultProject" "actionOverride" "Audit" (merge .Values) }}{{ if eq $action "Enforce" }}Deny{{ else }}{{ $action }}{{ end }}
+    - {{ $action := dig "argoCD" "preventDefaultProject" "actionOverride" (dig "argoCD" "mode" "Audit" (merge .Values)) (merge .Values) }}{{ if eq $action "Enforce" }}Deny{{ else }}{{ $action }}{{ end }}
   matchConstraints:
     resourceRules:
       - apiGroups:

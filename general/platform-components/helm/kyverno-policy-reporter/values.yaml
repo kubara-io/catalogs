@@ -1,6 +1,8 @@
 ---
 namespace: {}
 policy-reporter:
+  logging:
+    encoding: json
   metrics:
     enabled: true
   serviceMonitor:
@@ -8,7 +10,12 @@ policy-reporter:
   # We explicitly remove all filters because we want a complete dashboard
   sourceFilters: []
   plugin:
+    trivy:
+      logging:
+        encoding: json
     kyverno:
+      logging:
+        encoding: json
       enabled: true
       resources:
         requests:
@@ -17,6 +24,8 @@ policy-reporter:
         limits:
           memory: 100Mi
   ui:
+    logging:
+      encoding: json
     enabled: false
     resources:
       requests:

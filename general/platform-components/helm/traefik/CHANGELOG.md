@@ -4,6 +4,38 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.2.0] - 2026-10-30
+### Changed
+- Updated chart dependency version: traefik 42.1.3 → 42.2.0
+
+## [3.1.3] - 2026-10-22
+### Changed
+- Updated chart dependency version: traefik 42.1.2 → 42.1.3
+
+## [3.1.2] - 2026-10-21
+### Changed
+- Updated chart dependency version: traefik 42.1.1 → 42.1.2
+
+## [3.1.1] - 2026-10-21
+### Changed
+- Updated chart dependency version: traefik 42.1.0 → 42.1.1
+
+## [3.1.0] - 2026-10-20
+### Changed
+- Updated chart dependency version: traefik 42.0.0 → 42.1.0
+
+## [3.0.0] - 2026-10-15
+### Changed
+- Updated chart dependency version: traefik 41.7.1 → 42.0.0
+
+## [2.8.1] - 2026-10-09
+### Changed
+- Updated chart dependency version: traefik 41.7.0 → 41.7.1
+
+## [2.8.0] - 2026-10-08
+### Changed
+- Updated chart dependency version: traefik 41.6.1 → 41.7.0
+
 ## [2.7.1] - 2026-09-30
 ### Changed
 - Updated chart dependency version: traefik 41.6.0 → 41.6.1

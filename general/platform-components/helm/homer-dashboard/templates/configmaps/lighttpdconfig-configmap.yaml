@@ -20,3 +20,5 @@ data:
     server.feature-flags  += ( "server.clock-jump-restart" => 0 )
     server.max-request-field-size = 65535
     accesslog.filename = "/dev/fd/3"
+    accesslog.escaping = "json"
+    accesslog.format = "{\"time\":\"%{%Y-%m-%dT%H:%M:%S%z}t\",\"remote_addr\":\"%h\",\"request\":\"%r\",\"status\":%s,\"bytes\":\"%b\"}"

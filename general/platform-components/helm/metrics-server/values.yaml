@@ -14,4 +14,4 @@ metrics-server:
       memory: 100Mi
   apiService:
     insecureSkipTLSVerify: true
-  args: [--kubelet-insecure-tls]
+  args: [--kubelet-insecure-tls, --logging-format=json]
