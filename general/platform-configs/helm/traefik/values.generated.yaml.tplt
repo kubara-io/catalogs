@@ -18,9 +18,10 @@ traefik:
       http:
         middlewares:
           - traefik-hsts-headers@kubernetescrd
+{{- with (dig "cluster" "imagePullSecretName" "image-pull-secret" .) }}
   deployment:
-    imagePullSecrets:
-      - name: image-pull-secret
+    imagePullSecrets: [{name: {{ . | quote }}}]
+{{- end }}
   api:
     dashboard: true
     {{- if $oauth2ProxyEnabled }}

@@ -10,9 +10,10 @@ clusterIssuer:
 
 
 cert-manager:
+{{- with (dig "cluster" "imagePullSecretName" "image-pull-secret" .) }}
   global:
-    imagePullSecrets:
-      - name: image-pull-secret
+    imagePullSecrets: [{name: {{ . | quote }}}]
+{{- end }}
   prometheus:
     servicemonitor:
       {{- if (eq (index .cluster.services "kube-prometheus-stack" "status") "enabled") }}

@@ -27,8 +27,9 @@ loki:
       labels:
         monitoring.instance: {{ .cluster.name }}-{{ .cluster.stage }}
   loki:
-    imagePullSecrets:
-      - name: image-pull-secret
+{{- with (dig "cluster" "imagePullSecretName" "image-pull-secret" .) }}
+    imagePullSecrets: [{name: {{ . | quote }}}]
+{{- end }}
     auth_enabled: false
     useTestSchema: false
     storage:
@@ -84,9 +85,10 @@ loki:
   bloomGateway:
     replicas: 0
 alloy:
+{{- with (dig "cluster" "imagePullSecretName" "image-pull-secret" .) }}
   image:
-    pullSecrets:
-      - name: image-pull-secret
+    pullSecrets: [{name: {{ . | quote }}}]
+{{- end }}
   serviceMonitor:
     {{- if (eq (index .cluster.services "kube-prometheus-stack" "status") "enabled") }}
     enabled: true

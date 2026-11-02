@@ -27,14 +27,13 @@ namespace:
     project-name: "{{ .cluster.name }}"
     stage: "{{ .cluster.stage }}"
 external-secrets:
+{{- with (dig "cluster" "imagePullSecretName" "image-pull-secret" .) }}
   certController:
-    imagePullSecrets:
-      - name: image-pull-secret
+    imagePullSecrets: [{name: {{ . | quote }}}]
   webhook:
-    imagePullSecrets:
-      - name: image-pull-secret
-  imagePullSecrets:
-    - name: image-pull-secret
+    imagePullSecrets: [{name: {{ . | quote }}}]
+  imagePullSecrets: [{name: {{ . | quote }}}]
+{{- end }}
   serviceMonitor:
     {{- if (eq (index .cluster.services "kube-prometheus-stack" "status") "enabled") }}
     enabled: true

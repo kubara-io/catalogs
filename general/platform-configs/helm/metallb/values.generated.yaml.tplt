@@ -13,8 +13,9 @@ poolName: first-pool
 addresses: {{ dig "cluster" "services" "metallb" "config" "loadBalancerAddressPool" (list) . | toYaml | nindent 2 }}
 
 metallb:
-  imagePullSecrets:
-    - name: image-pull-secret
+{{- with (dig "cluster" "imagePullSecretName" "image-pull-secret" .) }}
+  imagePullSecrets: [{name: {{ . | quote }}}]
+{{- end }}
   prometheus:
     serviceMonitor:
       speaker:

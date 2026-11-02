@@ -7,8 +7,9 @@ namespace:
     project-name: "{{ .cluster.name }}"
     stage: "{{ .cluster.stage }}"
 metrics-server:
-  imagePullSecrets:
-    - name: image-pull-secret
+{{- with (dig "cluster" "imagePullSecretName" "image-pull-secret" .) }}
+  imagePullSecrets: [{name: {{ . | quote }}}]
+{{- end }}
   serviceMonitor:
     additionalLabels:
       monitoring.instance: "{{ .cluster.name }}-{{ .cluster.stage }}"

@@ -16,8 +16,9 @@ namespace:
     project-name: "{{ .cluster.name }}"
     stage: "{{ .cluster.stage }}"
 policy-reporter:
-  imagePullSecrets:
-    - name: image-pull-secret
+{{- with (dig "cluster" "imagePullSecretName" "image-pull-secret" .) }}
+  imagePullSecrets: [{name: {{ . | quote }}}]
+{{- end }}
   replicaCount: 1
   metrics:
     enabled: true

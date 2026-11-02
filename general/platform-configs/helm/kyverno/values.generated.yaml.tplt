@@ -11,9 +11,10 @@ namespace:
     stage: "{{ .cluster.stage }}"
 
 kyverno:
+{{- with (dig "cluster" "imagePullSecretName" "image-pull-secret" .) }}
   global:
-    imagePullSecrets:
-      - name: image-pull-secret
+    imagePullSecrets: [{name: {{ . | quote }}}]
+{{- end }}
   admissionController:
     serviceMonitor:
       {{- if (eq (index .cluster.services "kube-prometheus-stack" "status") "enabled") }}

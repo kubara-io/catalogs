@@ -166,7 +166,9 @@ module "openbao" {
   namespace          = var.openbao_namespace
   chart_version      = var.openbao_chart_version
   replicas           = var.openbao_replicas
+{{- if (dig "cluster" "imagePullSecretName" "image-pull-secret" .) }}
   image_pull_secrets = var.openbao_image_pull_secrets
+{{- end }}
 
   injector_enabled        = var.openbao_injector_enabled
   data_storage_size       = var.openbao_data_storage_size

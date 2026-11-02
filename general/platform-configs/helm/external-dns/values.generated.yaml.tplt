@@ -115,8 +115,9 @@ external-dns:
             path: clouds.yaml
 {{- end }}
   global:
-    imagePullSecrets:
-      - name: image-pull-secret
+{{- with (dig "cluster" "imagePullSecretName" "image-pull-secret" .) }}
+    imagePullSecrets: [{name: {{ . | quote }}}]
+{{- end }}
     security:
       allowInsecureImages: true
 {{- if eq .cluster.terraform.provider "stackit" }}
