@@ -1,0 +1,18 @@
+{{- range $clusterItem := .Values.clusters }}
+{{- $configLabels := dict }}
+{{- with $clusterItem.labels }}
+{{- range $k, $v := . }}
+{{- $_ := set $configLabels $k $v }}
+{{- end }}
+{{- end }}
+{{- $_ := set $configLabels "kubara.io/cluster-name" $clusterItem.name }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ $clusterItem.name }}-config
+  namespace: {{ $.Release.Namespace }}
+  labels:
+    {{- $configLabels | toYaml | nindent 4 }}
+data: {}
+---
+{{- end }}

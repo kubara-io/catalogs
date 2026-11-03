@@ -3,7 +3,7 @@
 {{- range $key, $app := $localCtx.apps }}
 {{- $appName := default "" $app.name }}
 {{- $appPath := default "" $app.path }}
-{{- $isArgoCdApp := or (eq $appName "argo-cd") (eq $appName "argocd") (eq $appPath "argo-cd") (eq $appPath "argocd") }}
+{{- $isArgoCdApp := or (eq $appName "argo-cd") (eq $appName "argocd") (eq $appPath "argo-cd") (eq $appPath "argocd") (eq $appName "cluster-credential-rotator") }}
 apiVersion: argoproj.io/v1alpha1
 kind: ApplicationSet
 metadata:

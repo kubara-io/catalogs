@@ -1,6 +1,8 @@
 ---
 namespace: {}
 externalSecrets: {}
+clusterSecrets:
+  useExternalSecrets: false
 dexRestarter:
   enabled: true
   image:
