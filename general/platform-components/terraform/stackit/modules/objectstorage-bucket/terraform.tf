@@ -21,6 +21,6 @@ provider "aws" {
   access_key                  = stackit_objectstorage_credential.this.access_key
   secret_key                  = stackit_objectstorage_credential.this.secret_access_key
   endpoints {
-    s3 = "https://object.storage.${var.region}.onstackit.cloud"
+    s3 = "https://object.storage.eu01.onstackit.cloud"
   }
 }

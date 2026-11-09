@@ -19,6 +19,9 @@ module "objectstorage_bucket" {
 
 ## Access policies
 
+This is opt-in: existing setups remain unchanged with the default `unmanaged`.
+Set `access_policy = "private"` to enable isolation; no migration is required unless you opt in.
+
 | `access_policy` | Behavior |
 | --- | --- |
 | `unmanaged` (default) | Does not manage a policy or add isolation. |
