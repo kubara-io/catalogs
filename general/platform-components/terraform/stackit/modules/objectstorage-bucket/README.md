@@ -21,38 +21,16 @@ module "objectstorage_bucket" {
 
 | `access_policy` | Behavior |
 | --- | --- |
-| `unmanaged` (default) | Does not manage a bucket policy; preserves compatibility with existing callers. This does **not** mean the bucket is isolated. |
-| `private` | Denies all S3 operations to principals outside this module's credential group. |
-| `public-read` | Allows public `GetObject`; denies every other S3 operation to principals outside this module's credential group. |
+| `unmanaged` (default) | Does not manage a policy or add isolation. |
+| `private` | Restricts all S3 access to the bucket's credential group. |
+| `public-read` | Additionally allows public object downloads (`GetObject`). |
 
-A separate credential group alone does not isolate a bucket. See the
-[STACKIT bucket policy documentation](https://docs.stackit.cloud/products/storage/object-storage/how-tos/manage-bucket-policies/).
-The policy covers both the bucket and its objects. The existing internal AWS provider
-uses this module's credential and the selected region's S3 endpoint.
+Move or import existing policy state to `module.objectstorage_bucket.aws_s3_bucket_policy.this[0]`
+before enabling management; only one resource may own the policy. Custom statements are replaced.
+Switching back to `unmanaged` deletes the managed policy.
 
-Only one Terraform resource may manage a bucket's policy. When adopting a policy
-already managed elsewhere, move its state to
-`module.objectstorage_bucket.aws_s3_bucket_policy.this[0]` (adjust the module name).
-For an existing policy not in Terraform state, import it by bucket name before
-applying. Review the complete policy diff: custom statements are not preserved.
-Do not leave an external policy resource managing the same bucket.
-
-Changing a managed mode back to `unmanaged` plans to **delete** the policy, removing
-its restrictions. To hand off ownership while retaining the policy, first move its
-state to the new owner, or remove it from state without destroying the remote policy.
-
-Before enabling isolation on an existing bucket, confirm that every intended caller
-uses keys from the allowed group. For state buckets, this includes the backend's
-credentials, which are separate from provider credentials. Verify the group's URN,
-retain access to its keys, and migrate policies before replacing or deleting the
-group; losing it can require recovery through STACKIT support. After applying,
-check allowed access, denied access from another group, and anonymous downloads
-where enabled. A successful plan or mocked test does not verify runtime enforcement.
-
-## Tests
-
-Run `terraform init -backend=false`, `terraform validate`, and `terraform test` in
-this directory. Tests use mocked providers and create no cloud resources.
+Ensure callers, including state backends, use the allowed group's keys. Preserve that group
+and its credentials to avoid losing access.
 
 <!-- BEGIN_TF_DOCS -->
 ## Requirements
