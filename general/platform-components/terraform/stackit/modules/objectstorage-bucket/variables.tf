@@ -18,3 +18,15 @@ variable "region" {
   type        = string
   default     = "eu01"
 }
+
+variable "access_policy" {
+  description = "Bucket policy mode: unmanaged preserves existing policy ownership, private restricts all access to this credential group, public-read additionally allows anonymous object downloads."
+  type        = string
+  default     = "unmanaged"
+  nullable    = false
+
+  validation {
+    condition     = contains(["unmanaged", "private", "public-read"], var.access_policy)
+    error_message = "access_policy must be unmanaged, private, or public-read."
+  }
+}
