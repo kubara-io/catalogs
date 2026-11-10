@@ -1,0 +1,15 @@
+{{- if .Values.argocdGatewayAuth }}
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: argocd-gateway-auth
+  namespace: argocd
+spec:
+  forwardAuth:
+    address: http://oauth2-proxy.oauth2-proxy.svc.cluster.local/oauth2/
+    trustForwardHeader: true
+    authResponseHeaders:
+      - X-Auth-Request-User
+      - X-Auth-Request-Email
+      - Authorization
+{{- end }}

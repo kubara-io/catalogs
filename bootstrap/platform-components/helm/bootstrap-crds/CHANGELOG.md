@@ -4,7 +4,11 @@ All notable changes to this chart will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this chart adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.0.1] - 2026-11-09
+## [2.1.0] - 2026-11-10
+### Added
+- Gateway API v1.6.1 Standard CRDs
+
+## [2.0.1] - 2026-11-09
 ### Changed
 - Updated chart dependency version: kube-prometheus-stack 93.1.0 → 93.1.1
 

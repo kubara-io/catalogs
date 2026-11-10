@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [8.1.0] - 2026-11-10
+### Added
+- Gateway API HTTPRoute support via template-library
+### Changed
+- Updated chart dependency version: template-library 0.4.0 → 0.5.0
+
 ## [8.0.1] - 2026-11-09
 ### Changed
 - Updated chart dependency version: kube-prometheus-stack 93.1.0 → 93.1.1
