@@ -25,7 +25,7 @@
 {{- end -}}
 
 {{- if (eq .cluster.type "hub") }}
-{{- $clusterSecretsProvider := dig "cluster" "argocd" "clusterSecrets" "provider" "auto-rotator" . -}}
+{{- $clusterSecretsProvider := dig "cluster" "argocd" "clusterSecrets" "provider" "auto-rotator" . }}
 clusterSecrets:
   useExternalSecrets: {{ eq $clusterSecretsProvider "external-secrets" }}
 
@@ -104,11 +104,13 @@ This is a fixed assumption and needs to be followed for spoke cluster onboarding
           path: cluster-credential-rotator
           namespace: kubara-system
 {{- range $serviceName := keys .cluster.services | sortAlpha }}
+{{- if ne $serviceName "cluster-credential-rotator" }}
         {{ $serviceName }}:
           name: {{ $serviceName }}
           path: {{ dig "catalog" "services" $serviceName "chartPath" $serviceName $ }}
 {{- if eq $serviceName "longhorn" }}
           namespace: longhorn
+{{- end }}
 {{- end }}
 {{- end }}
 

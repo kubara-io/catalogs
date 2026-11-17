@@ -3,7 +3,7 @@
 # To customize values, you can add additional files named values-*.yaml to this directory.
 
 {{- if (eq .cluster.type "hub") }}
-{{- $clusterSecretsProvider := dig "cluster" "argocd" "clusterSecrets" "provider" "auto-rotator" . -}}
+{{- $clusterSecretsProvider := dig "cluster" "argocd" "clusterSecrets" "provider" "auto-rotator" . }}
 namespace:
   labels:
     project-name: "{{ .cluster.name }}"

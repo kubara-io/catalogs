@@ -12,7 +12,7 @@ activeDeadlineSeconds: 300
 backoffLimit: 1
 image:
   repository: "ghcr.io/kubara-io/kubara"
-  tag: "v0.19.0-rc.1"
+  tag: "0.19.0-rc.1"
   pullPolicy: IfNotPresent
 serviceAccount:
   create: true
@@ -39,8 +39,8 @@ resources:
 agent:
   clusterRoleName: "cluster-admin"
 token:
-  duration: "1h"
-  refreshBefore: "15m"
+  duration: "3h"
+  refreshBefore: "1h"
 targets:
   argo:
     enabled: true
