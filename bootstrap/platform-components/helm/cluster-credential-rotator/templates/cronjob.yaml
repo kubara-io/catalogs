@@ -1,0 +1,66 @@
+{{- if (.Values.cronJob).enabled }}
+{{- $serviceAccountName := .Values.serviceAccount.name | default "cluster-credential-rotator" }}
+{{- $componentLabels := include "clusterCredentialRotator.labels" . }}
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: {{ $serviceAccountName }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- $componentLabels | nindent 4 }}
+spec:
+  schedule: {{ .Values.schedule | quote }}
+  concurrencyPolicy: {{ .Values.concurrencyPolicy }}
+  suspend: {{ .Values.suspend | default false }}
+  failedJobsHistoryLimit: {{ .Values.failedJobsHistoryLimit }}
+  successfulJobsHistoryLimit: {{ .Values.successfulJobsHistoryLimit }}
+  {{- with .Values.startingDeadlineSeconds }}
+  startingDeadlineSeconds: {{ . }}
+  {{- end }}
+  jobTemplate:
+    spec:
+      backoffLimit: {{ .Values.backoffLimit | default 1 }}
+      {{- with .Values.activeDeadlineSeconds }}
+      activeDeadlineSeconds: {{ . }}
+      {{- end }}
+      template:
+        metadata:
+          labels:
+            {{- $componentLabels | nindent 12 }}
+        spec:
+          restartPolicy: Never
+          serviceAccountName: {{ $serviceAccountName }}
+          automountServiceAccountToken: true
+          {{- with .Values.podSecurityContext }}
+          securityContext:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          containers:
+            - name: cluster-credential-rotator
+              image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+              imagePullPolicy: {{ .Values.image.pullPolicy }}
+              command:
+                - /kubara
+                - cluster
+                - rotate-credentials
+              args:
+                - --token-duration={{ .Values.token.duration | default "1h" }}
+                - --refresh-before={{ .Values.token.refreshBefore | default "15m" }}
+                - --cluster-role={{ (.Values.agent).clusterRoleName | default "cluster-admin" }}
+                {{- if (.Values.targets.argo).enabled }}
+                - --argo-enabled
+                - --argo-namespace={{ .Values.targets.argo.namespace | default "argocd" }}
+                {{- end }}
+                {{- if (.Values.targets.flux).enabled }}
+                - --flux-enabled
+                - --flux-namespace={{ .Values.targets.flux.namespace | default "flux-system" }}
+                {{- end }}
+              {{- with .Values.securityContext }}
+              securityContext:
+                {{- toYaml . | nindent 16 }}
+              {{- end }}
+              {{- with .Values.resources }}
+              resources:
+                {{- toYaml . | nindent 16 }}
+              {{- end }}
+{{- end }}
