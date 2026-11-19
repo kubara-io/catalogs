@@ -23,6 +23,7 @@
 {{- $kubePrometheusStatus := dig "cluster" "services" "kube-prometheus-stack" "status" "disabled" . }}
 {{- $longhornStatus := dig "cluster" "services" "longhorn" "status" "disabled" . }}
 {{- $kyvernoStatus := dig "cluster" "services" "kyverno" "status" "disabled" . }}
+{{- $radarStatus := dig "cluster" "services" "radar" "status" "disabled" . }}
 {{- $tCloudPublic := false }}
 {{- with .cluster.terraform }}
 {{- $tCloudPublic = eq .provider "t-cloud-public" }}
@@ -159,6 +160,13 @@ dashboardConfig:
           logo: "/assets/tools/kyverno.png"
           url: "/kyverno/"
           subtitle: "Policy Reporter Dashboard"
+          target: "_blank"
+        {{- end }}
+        {{- if and (eq $radarStatus "enabled") (eq $traefikStatus "enabled") (eq $oauth2ProxyStatus "enabled") }}
+        - name: "radar"
+          logo: "/assets/tools/radar.png"
+          url: "/radar/"
+          subtitle: "Kubernetes UI"
           target: "_blank"
         {{- end }}
         {{- if and (eq $traefikStatus "enabled") (eq $oauth2ProxyStatus "enabled") }}
