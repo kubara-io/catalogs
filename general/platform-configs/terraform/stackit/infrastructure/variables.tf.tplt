@@ -1,3 +1,4 @@
+{{- $ephemeral := index .cluster.terraform "ephemeralSecrets" -}}
 ## Global variables
 variable "project_id" {
   description = "STACKIT project ID"
@@ -63,8 +64,7 @@ variable "velero_credentials_group_name" {
   type        = string
 }
 
-{{ end -}}
-### DNS Zone variables
+{{ end }}### DNS Zone variables
 
 variable "dns_name" {
   description = "DNS zone name (e.g. example) but it will created FQDN example.runs.onstackit.cloud"
@@ -247,7 +247,8 @@ variable "grafana_admin_user" {
   default     = ""
 }
 variable "grafana_admin_password" {
-  type        = string
+{{ if $ephemeral }}  ephemeral   = true
+{{ end }}  type        = string
   sensitive   = true
   description = "Grafana Admin Password. If empty a random password will be generated."
   default     = ""
@@ -255,5 +256,18 @@ variable "grafana_admin_password" {
 
 locals {
   grafana_admin_user     = var.grafana_admin_user == "" ? random_string.grafana_admin_user[0].result : var.grafana_admin_user
-  grafana_admin_password = var.grafana_admin_password == "" ? random_password.grafana_admin_password[0].result : var.grafana_admin_password
+  grafana_admin_password = var.grafana_admin_password == "" ? {{ if $ephemeral }}ephemeral.{{ end }}random_password.grafana_admin_password{{ if not $ephemeral }}[0]{{ end }}.result : var.grafana_admin_password
 }
+
+{{ if $ephemeral }}# Keep revision overrides in secret-versions.auto.tfvars, not generated files.
+# This updates the stored credential; it does not reset an initialized Grafana DB.
+variable "grafana_admin_credentials_version" {
+  description = "Positive integer revision for the Grafana admin payload. Increment to update."
+  type        = number
+  default     = 1
+  validation {
+    condition     = var.grafana_admin_credentials_version >= 1 && var.grafana_admin_credentials_version == floor(var.grafana_admin_credentials_version)
+    error_message = "The secret version must be a positive integer."
+  }
+}
+{{ end }}

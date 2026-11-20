@@ -1,3 +1,4 @@
+{{- $ephemeral := index .cluster.terraform "ephemeralSecrets" -}}
 resource "vault_mount" "kv" {
   count = var.manage_openbao_kv_mount ? 1 : 0
 
@@ -104,7 +105,7 @@ resource "random_string" "grafana_admin_user" {
   special = false
 }
 
-resource "random_password" "grafana_admin_password" {
+{{ if $ephemeral }}ephemeral{{ else }}resource{{ end }} "random_password" "grafana_admin_password" {
   count = var.manage_grafana_admin_credentials ? 1 : 0
 
   length = 32
@@ -117,7 +118,7 @@ locals {
   manage_namespace_kv_read_role                = var.manage_openbao_kubernetes_auth_backend && var.manage_openbao_namespace_kv_read_role
   external_secrets_password                    = local.manage_external_secrets_userpass ? (var.external_secrets_password != "" ? var.external_secrets_password : random_password.external_secrets_password[0].result) : null
   grafana_admin_user                           = var.manage_grafana_admin_credentials ? (var.grafana_admin_user == "" ? random_string.grafana_admin_user[0].result : var.grafana_admin_user) : null
-  grafana_admin_password                       = var.manage_grafana_admin_credentials ? (var.grafana_admin_password != "" ? var.grafana_admin_password : random_password.grafana_admin_password[0].result) : null
+  grafana_admin_password                       = var.manage_grafana_admin_credentials ? (var.grafana_admin_password != "" ? var.grafana_admin_password : {{ if $ephemeral }}ephemeral.{{ end }}random_password.grafana_admin_password[0].result) : null
 }
 
 resource "vault_policy" "external_secrets_read" {
@@ -214,12 +215,14 @@ resource "vault_generic_endpoint" "external_secrets_user" {
 resource "vault_kv_secret_v2" "grafana_admin_credentials" {
   count = var.manage_grafana_admin_credentials ? 1 : 0
 
+{{ if $ephemeral }}  data_json_wo_version = var.grafana_admin_credentials_version
+{{ end }}
   mount = var.openbao_kv_mount_path
   # Namespace-isolated under the kube-prometheus-stack namespace, where Grafana
   # runs and reads it through that namespace's SecretStore.
   name = "{{ .cluster.name }}/{{ .cluster.stage }}/kube-prometheus-stack/grafana_credentials"
 
-  data_json = jsonencode({
+  data_json{{ if $ephemeral }}_wo{{ end }} = jsonencode({
     "admin-user"     = local.grafana_admin_user
     "admin-password" = local.grafana_admin_password
   })
