@@ -1,11 +1,11 @@
 ---
 apiVersion: v2
 name: traefik
-version: 3.5.2
+version: 3.5.3
 description: This Chart deploys traefik.
 dependencies:
   - name: traefik
-    version: 42.4.2
+    version: 42.4.3
     repository: oci://ghcr.io/traefik/helm
   - name: template-library
     repository: file://../template-library
