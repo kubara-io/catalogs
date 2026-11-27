@@ -1,0 +1,17 @@
+---
+namespace: {}
+radar:
+  # Radar keeps its informer cache in memory; it is designed to run as a
+  # single replica.
+  replicaCount: 1
+  # The upstream defaults are read-only: no Helm writes, pod exec, port
+  # forwarding, Secret reads or RBAC/webhook visibility. Opt in per cluster
+  # with a values-*.yaml override, e.g. radar.rbac.podExec: true.
+  rbac:
+    create: true
+  auth:
+    # Radar sits behind the platform oauth2-proxy, which forwards no groups,
+    # so every signed-in user sees what Radar's ServiceAccount can read.
+    mode: none
+  ingress:
+    enabled: false

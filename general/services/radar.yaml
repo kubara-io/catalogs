@@ -1,0 +1,11 @@
+---
+apiVersion: kubara.io/v1alpha1
+kind: ServiceDefinition
+metadata:
+  name: radar
+  annotations:
+    kubara.io/category: observability
+spec:
+  chartPath: radar
+  status: disabled
+  clusterTypes: [hub, spoke]
