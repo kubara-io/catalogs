@@ -13,6 +13,11 @@ Today this repo contains the official catalogs that kubara uses as its default p
 
 These catalogs are versioned and meant to be packaged and distributed as OCI artifacts.
 
+## Ephemeral secrets
+
+For opt-in write-only secret handling, rotation and recovery, see
+[Ephemeral secrets](docs/ephemeral-secrets.md).
+
 
 ## Versioning
 
