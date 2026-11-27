@@ -37,6 +37,22 @@ env:
   ARTIFACT_RETENTION_DAYS: "15"
 
 jobs:
+  object-storage-policy:
+    name: Test STACKIT object storage access policies
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: general/platform-components/terraform/stackit/modules/objectstorage-bucket
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: hashicorp/setup-terraform@dfe3c3f87815947d99a8997f908cb6525fc44e9e # v4.0.1
+        with:
+          terraform_version: v1.17.1
+      - run: terraform fmt -check -recursive
+      - run: terraform init -backend=false -input=false
+      - run: terraform validate
+      - run: terraform test
+
   integration-generate:
     name: Generate all services (${{ matrix.target }})
     runs-on: ubuntu-latest
